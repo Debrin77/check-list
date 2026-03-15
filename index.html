@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HYDROCARU">
+<title>HYDROCARU — Checklist</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;0,900;1,300&display=swap');
+
+  :root {
+    --green-deep:   #0d2b1a;
+    --green-dark:   #1a4a2e;
+    --green-mid:    #2d7a4f;
+    --green-light:  #4caf7d;
+    --green-pale:   #c8f0d8;
+    --green-ultra:  #f0faf4;
+    --yellow:       #f5e642;
+    --orange:       #ff7043;
+    --red:          #e53935;
+    --white:        #fafdf8;
+    --mono:         'DM Mono', monospace;
+    --serif:        'Fraunces', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--green-deep);
+    color: var(--white);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-deep) 100%);
+    padding: 20px 16px 16px;
+    border-bottom: 2px solid var(--green-mid);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--green-pale);
+    letter-spacing: -0.5px;
+  }
+  .app-header p {
+    font-size: 11px;
+    color: var(--green-light);
+    margin-top: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    background: var(--green-dark);
+    height: 6px;
+    border-radius: 3px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-light), var(--yellow));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 11px;
+    color: var(--green-light);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin: 16px 12px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(77, 175, 125, 0.2);
+  }
+  .section-header {
+    background: var(--green-dark);
+    padding: 12px 14px;
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green-pale);
+    letter-spacing: 0.3px;
+    border-bottom: 1px solid rgba(77, 175, 125, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── DATOS REGISTRO ── */
+  .datos-grid {
+    background: rgba(26, 74, 46, 0.4);
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .datos-grid .full { grid-column: 1 / -1; }
+
+  .field-group label {
+    display: block;
+    font-size: 10px;
+    color: var(--green-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    width: 100%;
+    background: rgba(13, 43, 26, 0.8);
+    border: 1px solid rgba(77, 175, 125, 0.4);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field-group input:focus,
+  .field-group select:focus,
+  .field-group textarea:focus {
+    border-color: var(--green-light);
+    background: rgba(13, 43, 26, 0.95);
+  }
+  .field-group select option { background: var(--green-deep); }
+  .field-group textarea { resize: none; height: 70px; }
+
+  /* ── CHECKLIST ITEMS ── */
+  .check-list { background: rgba(13, 43, 26, 0.3); }
+
+  .check-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(77, 175, 125, 0.1);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item.checked { background: rgba(77, 175, 125, 0.08); }
+  .check-item.alert { background: rgba(229, 57, 53, 0.06); border-left: 3px solid var(--red); }
+
+  .check-box {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border: 2px solid var(--green-mid);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    margin-top: 1px;
+  }
+  .check-box.checked {
+    background: var(--green-light);
+    border-color: var(--green-light);
+  }
+  .check-box svg { display: none; }
+  .check-box.checked svg { display: block; }
+
+  .check-content { flex: 1; }
+
+  .check-step {
+    font-size: 10px;
+    color: var(--green-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .check-desc {
+    font-size: 13px;
+    color: var(--white);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .check-note {
+    font-size: 11px;
+    color: rgba(200, 240, 216, 0.6);
+    line-height: 1.3;
+    font-style: italic;
+  }
+  .check-alert-tag {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ── CAMPO DATO INLINE ── */
+  .inline-field {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .inline-field label {
+    font-size: 11px;
+    color: var(--green-light);
+    white-space: nowrap;
+  }
+  .inline-field input {
+    background: rgba(13, 43, 26, 0.8);
+    border: 1px solid rgba(77, 175, 125, 0.3);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 4px 8px;
+    outline: none;
+    width: 90px;
+    transition: border-color 0.2s;
+  }
+  .inline-field input:focus { border-color: var(--green-light); }
+  .inline-field input.wide { width: 140px; }
+
+  /* ── DATOS GENERALES ── */
+  .datos-riego {
+    background: rgba(26, 74, 46, 0.4);
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── BOTÓN GUARDAR ── */
+  .save-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, transparent, var(--green-deep) 30%);
+    padding: 20px 16px 28px;
+    display: flex;
+    gap: 10px;
+  }
+  .btn-save {
+    flex: 1;
+    background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+    color: var(--green-deep);
+    border: none;
+    border-radius: 14px;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 900;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-save:active { transform: scale(0.97); }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-reset {
+    background: rgba(77, 175, 125, 0.15);
+    color: var(--green-light);
+    border: 1px solid rgba(77, 175, 125, 0.3);
+    border-radius: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-reset:active { background: rgba(77, 175, 125, 0.25); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--green-light);
+    color: var(--green-deep);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 24px;
+    border-radius: 24px;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.error {
+    background: var(--red);
+    color: white;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: rgba(77, 175, 125, 0.15);
+    margin: 6px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>🌿 HYDROCARU</h1>
+  <p>Checklist Limpieza y Recarga</p>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-text" id="progressText">0 / 26 completados</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── DATOS REGISTRO ── -->
+<div class="section">
+  <div class="section-header">📋 Datos de Registro</div>
+  <div class="datos-grid">
+    <div class="field-group">
+      <label>📅 Fecha</label>
+      <input type="date" id="fecha">
+    </div>
+    <div class="field-group">
+      <label>🕐 Hora inicio</label>
+      <input type="time" id="horaInicio">
+    </div>
+    <div class="field-group">
+      <label>🌱 Nº plantas</label>
+      <input type="number" id="plantas" placeholder="15">
+    </div>
+    <div class="field-group">
+      <label>📆 Semanas edad</label>
+      <input type="number" id="semanas" placeholder="4">
+    </div>
+    <div class="field-group">
+      <label>📆 Días desde última limpieza</label>
+      <input type="number" id="diasCiclo" placeholder="15">
+    </div>
+    <div class="field-group">
+      <label>🌡️ Temperatura exterior</label>
+      <input type="text" id="tempExterior" placeholder="18°C">
+    </div>
+    <div class="field-group">
+      <label>🎨 Color agua anterior</label>
+      <select id="colorAgua">
+        <option value="">Seleccionar...</option>
+        <option>Transparente</option>
+        <option>Ligeramente amarilla</option>
+        <option>Amarilla</option>
+        <option>Naranja claro</option>
+        <option>Naranja oscuro</option>
+        <option>Rojiza</option>
+        <option>Marrón</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>⚠️ Sedimento fondo</label>
+      <select id="sedimento">
+        <option value="">Seleccionar...</option>
+        <option>Ninguno</option>
+        <option>Poco</option>
+        <option>Medio</option>
+        <option>Mucho</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROGRAMA RIEGO (del atajo iOS) ── -->
+<div class="section">
+  <div class="section-header">💧 Programa Riego iOS (P4)</div>
+  <div class="datos-riego">
+    <div class="field-group">
+      <label>General — MinON</label>
+      <input type="number" id="riegoMinON" placeholder="13">
+    </div>
+    <div class="field-group">
+      <label>General — MinOFF</label>
+      <input type="number" id="riegoMinOFF" placeholder="21">
+    </div>
+    <div class="field-group">
+      <label>General — Ciclos</label>
+      <input type="number" id="riegoCiclos" placeholder="24">
+    </div>
+    <div class="field-group">
+      <label>General — VPD</label>
+      <input type="number" step="0.01" id="riegoVPD" placeholder="1.02">
+    </div>
+    <div class="field-group">
+      <label>Mediodía — MinON</label>
+      <input type="number" id="medioMinON" placeholder="15">
+    </div>
+    <div class="field-group">
+      <label>Mediodía — MinOFF</label>
+      <input type="number" id="medioMinOFF" placeholder="16">
+    </div>
+    <div class="field-group">
+      <label>Mediodía — Ciclos</label>
+      <input type="number" id="medioCiclos" placeholder="7">
+    </div>
+    <div class="field-group">
+      <label>VPD Mediodía</label>
+      <input type="number" step="0.01" id="medioVPD" placeholder="1.55">
+    </div>
+  </div>
+</div>
+
+<!-- ── PREPARACIÓN ── -->
+<div class="section">
+  <div class="section-header">🌙 Preparación</div>
+  <div class="check-list" id="checkList">
+
+    <div class="check-item" data-id="P1">
+      <div class="check-box" onclick="toggle('P1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">P1</div>
+        <div class="check-desc">Preparar solución provisional (5L): 1.5ml CalMag + 10ml Aqua Vega A + 10ml Aqua Vega B</div>
+        <div class="inline-field">
+          <label>EC provisional:</label>
+          <input type="number" step="0.01" id="ecProvisional" placeholder="0.8"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+        <div class="check-note">Para mantener raíces húmedas durante los 45 min sin bomba</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="P2">
+      <div class="check-box" onclick="toggle('P2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">P2</div>
+        <div class="check-desc">Verificar stock: agua destilada, CalMag, Aqua Vega A+B, pH+, agua oxigenada 3%, esponja</div>
+        <div class="check-note">Comprar lo faltante antes de empezar</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="P3">
+      <div class="check-box" onclick="toggle('P3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">P3</div>
+        <div class="check-desc">Poner el TOLDO si hay sol directo o temperatura > 20°C</div>
+        <div class="check-note">Reduce transpiración durante los 45 min sin bomba</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 1 ── -->
+<div class="section">
+  <div class="section-header">⏹️ Paso 1 — Apagar y riego provisional</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="1.1">
+      <div class="check-box" onclick="toggle('1.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">1.1</div>
+        <div class="check-desc">Apagar la bomba de riego</div>
+        <div class="inline-field">
+          <label>Hora apagado:</label>
+          <input type="time" id="horaApagado" class="wide">
+        </div>
+        <div class="check-note">Esperar 5 min a que drene toda el agua</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="1.2">
+      <div class="check-box" onclick="toggle('1.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">1.2</div>
+        <div class="check-desc">Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta</div>
+        <div class="inline-field">
+          <label>ml/cesta:</label>
+          <input type="number" id="mlCesta" placeholder="75">
+        </div>
+        <div class="check-note">Mantener esponjas húmedas. Prioridad antes de vaciar</div>
+      </div>
+    </div>
+
+    <div class="check-item alert" data-id="1.3">
+      <div class="check-box" onclick="toggle('1.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-alert-tag">⚠️ Crítico</div>
+        <div class="check-step">1.3</div>
+        <div class="check-desc">Anotar hora límite — máximo 45 minutos sin bomba</div>
+        <div class="check-note">No superar 45 min. Estrés hídrico irreversible</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 2 ── -->
+<div class="section">
+  <div class="section-header">🧹 Paso 2 — Vaciar y limpiar</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="2.1">
+      <div class="check-box" onclick="toggle('2.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">2.1</div>
+        <div class="check-desc">Vaciar completamente el depósito</div>
+        <div class="check-note">Anotar color y olor para registro histórico (campo arriba)</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="2.2">
+      <div class="check-box" onclick="toggle('2.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">2.2</div>
+        <div class="check-desc">Fotografiar sedimento del fondo antes de limpiar</div>
+        <div class="check-note">Registro visual para comparar evolución entre recargas</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="2.3">
+      <div class="check-box" onclick="toggle('2.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">2.3</div>
+        <div class="check-desc">Limpiar paredes con agua oxigenada 3%: 15ml en 5L agua. Frotar con esponja suave</div>
+        <div class="check-note">Especial atención a manchas rojizas de quelatos de hierro</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="2.4">
+      <div class="check-box" onclick="toggle('2.4')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">2.4</div>
+        <div class="check-desc">Aclarar con agua limpia — mínimo 2 veces</div>
+        <div class="check-note">Eliminar todo residuo de agua oxigenada</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="2.5">
+      <div class="check-box" onclick="toggle('2.5')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">2.5</div>
+        <div class="check-desc">Limpiar tubos, bomba exterior y conexiones</div>
+        <div class="check-note">Algas en tubos reducen el flujo de riego</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 3 ── -->
+<div class="section">
+  <div class="section-header">🖤 Paso 3 — Cubrir depósito</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="3.1">
+      <div class="check-box" onclick="toggle('3.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">3.1</div>
+        <div class="check-desc">Envolver exterior con bolsa negra opaca o film negro completamente</div>
+        <div class="check-note">Elimina entrada de luz. Previene algas y oxidación del hierro</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="3.2">
+      <div class="check-box" onclick="toggle('3.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">3.2</div>
+        <div class="check-desc">Verificar que no queda ninguna zona translúcida — especialmente tapa y esquinas</div>
+        <div class="check-note">Es la mejora más importante para reducir el agua rojiza</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 4 ── -->
+<div class="section">
+  <div class="section-header">🧪 Paso 4 — Nueva solución nutritiva</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="4.1">
+      <div class="check-box" onclick="toggle('4.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">4.1</div>
+        <div class="check-desc">Llenar con 18 litros de agua destilada</div>
+        <div class="inline-field">
+          <label>EC inicial:</label>
+          <input type="number" step="0.01" id="ecInicial" placeholder="0.0"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+        <div class="check-note">EC inicial siempre 0.0 con agua destilada</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="4.2">
+      <div class="check-box" onclick="toggle('4.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">4.2</div>
+        <div class="check-desc">Añadir CalMag: 5-6 ml — remover 2 minutos</div>
+        <div class="inline-field">
+          <label>ml CalMag:</label>
+          <input type="number" step="0.1" id="calmagMl" placeholder="5.5">
+          <label>EC:</label>
+          <input type="number" step="0.01" id="ecCalMag" placeholder="0.4"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+        <div class="check-note">Objetivo EC 0.3-0.4. Estabiliza pH y aporta Ca y Mg</div>
+      </div>
+    </div>
+
+    <div class="check-item alert" data-id="4.3">
+      <div class="check-box" onclick="toggle('4.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-alert-tag">⚠️ Nunca mezclar A+B puros</div>
+        <div class="check-step">4.3</div>
+        <div class="check-desc">Agitar botella Aqua Vega A. Añadir 36 ml — remover 2 minutos</div>
+        <div class="inline-field">
+          <label>EC tras A:</label>
+          <input type="number" step="0.01" id="ecA" placeholder="0.85"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="4.4">
+      <div class="check-box" onclick="toggle('4.4')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">4.4</div>
+        <div class="check-desc">Agitar botella Aqua Vega B. Añadir 36 ml — remover 3 minutos</div>
+        <div class="inline-field">
+          <label>EC tras A+B:</label>
+          <input type="number" step="0.01" id="ecAB" placeholder="1.30"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+        <div class="check-note">Mantener proporción 1:1 entre A y B siempre</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 5 ── -->
+<div class="section">
+  <div class="section-header">🔌 Paso 5 — Encender sistema</div>
+  <div class="check-list">
+
+    <div class="check-item alert" data-id="5.1">
+      <div class="check-box" onclick="toggle('5.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-alert-tag">⚠️ Prioridad máxima</div>
+        <div class="check-step">5.1</div>
+        <div class="check-desc">Encender bomba inmediatamente</div>
+        <div class="inline-field">
+          <label>Hora encendido:</label>
+          <input type="time" id="horaEncendido" class="wide">
+          <label>Min sin bomba:</label>
+          <input type="number" id="minSinBomba" placeholder="40">
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="5.2">
+      <div class="check-box" onclick="toggle('5.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">5.2</div>
+        <div class="check-desc">Encender difusor de aire</div>
+        <div class="check-note">Homogeneiza la solución y oxigena el agua</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="5.3">
+      <div class="check-box" onclick="toggle('5.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">5.3</div>
+        <div class="check-desc">Encender calentador — objetivo 20°C constante</div>
+        <div class="inline-field">
+          <label>Temp inicial agua:</label>
+          <input type="number" step="0.1" id="tempAguaInicial" placeholder="17"> <span style="font-size:11px;color:var(--green-light)">°C</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="5.4">
+      <div class="check-box" onclick="toggle('5.4')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">5.4</div>
+        <div class="check-desc">Esperar 20 minutos con difusor en marcha antes de medir</div>
+        <div class="check-note">Con difusor activo 20 min son suficientes para homogeneizar</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 6 ── -->
+<div class="section">
+  <div class="section-header">📊 Paso 6 — Medir y ajustar EC y pH</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="6.1">
+      <div class="check-box" onclick="toggle('6.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">6.1</div>
+        <div class="check-desc">Medir EC — objetivo 1.30 mS/cm</div>
+        <div class="inline-field">
+          <label>EC medida:</label>
+          <input type="number" step="0.01" id="ecMedida" placeholder="1.30"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+        </div>
+        <div class="check-note">Si EC &lt; 1.20 → más A+B · Si EC > 1.40 → añadir agua destilada</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="6.2">
+      <div class="check-box" onclick="toggle('6.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">6.2</div>
+        <div class="check-desc">Medir pH — objetivo 5.8 (rango 5.5-6.2)</div>
+        <div class="inline-field">
+          <label>pH medido:</label>
+          <input type="number" step="0.1" id="phMedido" placeholder="5.8">
+        </div>
+        <div class="check-note">Con CalMag necesitarás menos pH+ que antes</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="6.3">
+      <div class="check-box" onclick="toggle('6.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">6.3</div>
+        <div class="check-desc">Ajustar pH con pH+ si necesario — gota a gota, esperar 2 min entre mediciones</div>
+        <div class="inline-field">
+          <label>ml pH+ añadidos:</label>
+          <input type="number" step="0.1" id="phMas" placeholder="0.5">
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="6.4">
+      <div class="check-box" onclick="toggle('6.4')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">6.4</div>
+        <div class="check-desc">Medición final EC, pH y temperatura del agua</div>
+        <div class="inline-field">
+          <label>EC final:</label>
+          <input type="number" step="0.01" id="ecFinal" placeholder="1.30"> <span style="font-size:11px;color:var(--green-light)">mS/cm</span>
+          <label>pH:</label>
+          <input type="number" step="0.1" id="phFinal" placeholder="5.8">
+          <label>Temp:</label>
+          <input type="number" step="0.1" id="tempAgua" placeholder="20"> <span style="font-size:11px;color:var(--green-light)">°C</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PASO 7 ── -->
+<div class="section">
+  <div class="section-header">✅ Paso 7 — Verificación final</div>
+  <div class="check-list">
+
+    <div class="check-item" data-id="7.1">
+      <div class="check-box" onclick="toggle('7.1')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">7.1</div>
+        <div class="check-desc">Verificar que la bomba funciona y el agua circula por los 3 niveles</div>
+        <div class="check-note">Comprobar que el agua llega a cada cesta correctamente</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="7.2">
+      <div class="check-box" onclick="toggle('7.2')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">7.2</div>
+        <div class="check-desc">Observar las plantas 30 minutos después — sin signos de estrés</div>
+        <div class="inline-field">
+          <label>Estado plantas:</label>
+          <select id="estadoPlantas" style="background:rgba(13,43,26,0.8);border:1px solid rgba(77,175,125,0.3);border-radius:6px;color:var(--white);font-family:var(--mono);font-size:13px;padding:4px 8px;outline:none;">
+            <option value="">Seleccionar...</option>
+            <option>Turgentes — correcto</option>
+            <option>Ligeramente lacias</option>
+            <option>Muy lacias — revisar bomba</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="7.3">
+      <div class="check-box" onclick="toggle('7.3')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">7.3</div>
+        <div class="check-desc">Ejecutar atajo iOS — verificar que los valores de riego coinciden con P4</div>
+        <div class="check-note">Comparar MinON, MinOFF y ciclos con los anotados en el programa de riego arriba</div>
+      </div>
+    </div>
+
+    <div class="check-item" data-id="7.4">
+      <div class="check-box" onclick="toggle('7.4')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-step">7.4</div>
+        <div class="check-desc">Retirar toldo si lo pusiste y las condiciones lo permiten</div>
+        <div class="check-note">Las plantas ya tienen riego. Pueden recibir luz normal</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── OBSERVACIONES ── -->
+<div class="section" style="margin-bottom: 16px;">
+  <div class="section-header">📝 Observaciones</div>
+  <div style="padding:14px;background:rgba(13,43,26,0.3);">
+    <div class="field-group">
+      <label>Hora fin</label>
+      <input type="time" id="horaFin">
+    </div>
+    <div style="height:10px"></div>
+    <div class="field-group">
+      <label>Notas y observaciones libres</label>
+      <textarea id="observaciones" placeholder="Incidencias, mejoras observadas, próximas acciones..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOTONES ── -->
+<div class="save-bar">
+  <button class="btn-reset" onclick="resetAll()">🔄 Reset</button>
+  <button class="btn-save" id="btnSave" onclick="guardar()">💾 Guardar en Google Sheets</button>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-pI9Jm55yS78xfEnHD2r5_saNZu-S637DofHAFT1XP9i6sAJjKDSaUWsSqPZItCTh/exec';
+const TOTAL_CHECKS = 26;
+const STORAGE_KEY = 'hydrocaru_session';
+let checked = new Set();
+
+function saveLocal() {
+  const fields = {};
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.id) fields[el.id] = el.value;
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      checked: [...checked],
+      fields,
+      savedAt: new Date().toISOString()
+    }));
+  } catch(e) {}
+}
+
+function restoreLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    Object.entries(state.fields || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+    (state.checked || []).forEach(id => {
+      checked.add(id);
+      const item = document.querySelector(`[data-id="${id}"]`);
+      if (item) {
+        item.querySelector('.check-box').classList.add('checked');
+        item.classList.add('checked');
+      }
+    });
+    updateProgress();
+    return state.savedAt;
+  } catch(e) { return false; }
+}
+
+window.onload = () => {
+  const savedAt = restoreLocal();
+  if (savedAt) {
+    const d = new Date(savedAt);
+    const timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    showToast(`📂 Sesión restaurada (${dateStr} ${timeStr})`);
+  } else {
+    const now = new Date();
+    document.getElementById('fecha').value = now.toISOString().split('T')[0];
+    document.getElementById('horaInicio').value = now.toTimeString().slice(0,5);
+    updateProgress();
+  }
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', saveLocal);
+    el.addEventListener('change', saveLocal);
+  });
+};
+
+function toggle(id) {
+  const item = document.querySelector(`[data-id="${id}"]`);
+  const box = item.querySelector('.check-box');
+  if (checked.has(id)) {
+    checked.delete(id);
+    box.classList.remove('checked');
+    item.classList.remove('checked');
+  } else {
+    checked.add(id);
+    box.classList.add('checked');
+    item.classList.add('checked');
+  }
+  updateProgress();
+  saveLocal();
+}
+
+function updateProgress() {
+  const pct = Math.round((checked.size / TOTAL_CHECKS) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${checked.size} / ${TOTAL_CHECKS} completados`;
+}
+
+function showToast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function g(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+async function guardar() {
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando...';
+
+  const data = {
+    fecha: g('fecha'),
+    horaInicio: g('horaInicio'),
+    horaFin: g('horaFin'),
+    plantas: g('plantas'),
+    semanas: g('semanas'),
+    diasCiclo: g('diasCiclo'),
+    colorAgua: g('colorAgua'),
+    sedimento: g('sedimento'),
+    tempExterior: g('tempExterior'),
+    riegoMinON: g('riegoMinON'),
+    riegoMinOFF: g('riegoMinOFF'),
+    riegoCiclos: g('riegoCiclos'),
+    riegoVPD: g('riegoVPD'),
+    medioMinON: g('medioMinON'),
+    medioMinOFF: g('medioMinOFF'),
+    medioCiclos: g('medioCiclos'),
+    medioVPD: g('medioVPD'),
+    ecProvisional: g('ecProvisional'),
+    calmagMl: g('calmagMl'),
+    ecInicial: g('ecInicial'),
+    ecCalMag: g('ecCalMag'),
+    ecA: g('ecA'),
+    ecAB: g('ecAB'),
+    ecMedida: g('ecMedida'),
+    ecFinal: g('ecFinal'),
+    phMedido: g('phMedido'),
+    phMas: g('phMas'),
+    phFinal: g('phFinal'),
+    tempAgua: g('tempAgua'),
+    minSinBomba: g('minSinBomba'),
+    estadoPlantas: g('estadoPlantas'),
+    checksCompletados: checked.size + ' / ' + TOTAL_CHECKS,
+    observaciones: g('observaciones'),
+  };
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    showToast('✅ Guardado en Google Sheets');
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  } catch (e) {
+    showToast('❌ Error al guardar', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar en Google Sheets';
+}
+
+function resetAll() {
+  if (!confirm('¿Resetear todos los campos?')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  checked.clear();
+  document.querySelectorAll('.check-box').forEach(b => b.classList.remove('checked'));
+  document.querySelectorAll('.check-item').forEach(i => i.classList.remove('checked'));
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.type === 'date') {
+      el.value = new Date().toISOString().split('T')[0];
+    } else if (el.type === 'time' && el.id === 'horaInicio') {
+      el.value = new Date().toTimeString().slice(0,5);
+    } else {
+      el.value = '';
+    }
+  });
+  updateProgress();
+  showToast('🔄 Formulario reseteado');
+}
+</script>
+</body>
+</html>
