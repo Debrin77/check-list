@@ -323,9 +323,104 @@
     background: rgba(77, 175, 125, 0.15);
     margin: 6px 0;
   }
+
+  /* ── PIN SCREEN ── */
+  .pin-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--green-deep);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: 24px;
+  }
+  .pin-screen h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--green-pale);
+  }
+  .pin-screen p {
+    font-size: 12px;
+    color: var(--green-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .pin-dots {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+  }
+  .pin-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--green-mid);
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .pin-dot.filled { background: var(--green-light); border-color: var(--green-light); }
+  .pin-dot.error { background: var(--red); border-color: var(--red); }
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 72px);
+    gap: 12px;
+  }
+  .pin-key {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid rgba(77,175,125,0.3);
+    background: rgba(26,74,46,0.4);
+    color: var(--white);
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key:active { background: rgba(77,175,125,0.3); transform: scale(0.93); }
+  .pin-key.del { font-size: 18px; border-color: rgba(229,57,53,0.3); color: var(--red); }
+  .pin-key.empty { border: none; background: transparent; cursor: default; }
+  .pin-error { font-size: 13px; color: var(--red); height: 18px; font-family: var(--mono); }
+
 </style>
 </head>
 <body>
+
+<!-- ── PIN SCREEN ── -->
+<div class="pin-screen" id="pinScreen">
+  <h2>🌿 HYDROCARU</h2>
+  <p>Introduce tu PIN</p>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+  <div class="pin-keypad">
+    <div class="pin-key" onclick="pinPress('1')">1</div>
+    <div class="pin-key" onclick="pinPress('2')">2</div>
+    <div class="pin-key" onclick="pinPress('3')">3</div>
+    <div class="pin-key" onclick="pinPress('4')">4</div>
+    <div class="pin-key" onclick="pinPress('5')">5</div>
+    <div class="pin-key" onclick="pinPress('6')">6</div>
+    <div class="pin-key" onclick="pinPress('7')">7</div>
+    <div class="pin-key" onclick="pinPress('8')">8</div>
+    <div class="pin-key" onclick="pinPress('9')">9</div>
+    <div class="pin-key empty"></div>
+    <div class="pin-key" onclick="pinPress('0')">0</div>
+    <div class="pin-key del" onclick="pinDel()">⌫</div>
+  </div>
+</div>
+
 
 <div class="app-header">
   <h1>🌿 HYDROCARU</h1>
@@ -961,6 +1056,50 @@
 </div>
 
 <script>
+
+// ── PIN ──
+const CORRECT_PIN = '2506';
+let pinEntry = '';
+
+function pinPress(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updateDots();
+  if (pinEntry.length === 4) {
+    setTimeout(checkPin, 200);
+  }
+}
+
+function pinDel() {
+  pinEntry = pinEntry.slice(0, -1);
+  updateDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.className = 'pin-dot' + (i < pinEntry.length ? ' filled' : '');
+  }
+}
+
+function checkPin() {
+  if (pinEntry === CORRECT_PIN) {
+    document.getElementById('pinScreen').style.display = 'none';
+    try { sessionStorage.setItem('pin_ok', '1'); } catch(e) {}
+  } else {
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('dot' + i).className = 'pin-dot error';
+    }
+    document.getElementById('pinError').textContent = 'PIN incorrecto';
+    setTimeout(() => {
+      pinEntry = '';
+      updateDots();
+      document.getElementById('pinError').textContent = '';
+    }, 1000);
+  }
+}
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-pI9Jm55yS78xfEnHD2r5_saNZu-S637DofHAFT1XP9i6sAJjKDSaUWsSqPZItCTh/exec';
 const TOTAL_CHECKS = 26;
 const STORAGE_KEY = 'hydrocaru_session';
@@ -1003,6 +1142,10 @@ function restoreLocal() {
 }
 
 window.onload = () => {
+  if (sessionStorage.getItem("pin_ok") === "1") {
+    document.getElementById("pinScreen").style.display = "none";
+  }
+
   const savedAt = restoreLocal();
   if (savedAt) {
     const d = new Date(savedAt);
