@@ -13,30 +13,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:         #080f0a;
-  --bg2:        #0e1a11;
-  --bg3:        #152019;
-  --border:     rgba(52,211,153,0.15);
-  --green:      #34d399;
-  --green-dim:  #1a7a52;
-  --green-pale: #a7f3d0;
-  --gold:       #fbbf24;
-  --gold-dim:   #78350f;
-  --red:        #f87171;
-  --red-dim:    #7f1d1d;
-  --orange:     #fb923c;
-  --blue:       #60a5fa;
-  --white:      #f0fdf4;
-  --muted:      rgba(167,243,208,0.45);
+  /* ── TEMA DIURNO — optimizado para uso en exterior ── */
+  --bg:         #f5f7f2;
+  --bg2:        #ffffff;
+  --bg3:        #eef1eb;
+  --border:     rgba(34,139,74,0.18);
+  --green:      #16a34a;
+  --green-dim:  #15803d;
+  --green-pale: #dcfce7;
+  --gold:       #d97706;
+  --gold-dim:   #fef3c7;
+  --red:        #dc2626;
+  --red-dim:    #fee2e2;
+  --orange:     #ea580c;
+  --blue:       #2563eb;
+  --white:      #1a2e1a;   /* texto principal oscuro */
+  --muted:      #6b7c6b;   /* texto secundario */
   --font-display: 'Syne', sans-serif;
   --font-mono:    'Inconsolata', monospace;
-  /* iPhone 13: 390x844, notch 47px, home indicator 34px */
   --safe-top:    env(safe-area-inset-top, 47px);
   --safe-bottom: env(safe-area-inset-bottom, 34px);
   --tab-h:      calc(54px + env(safe-area-inset-bottom, 34px));
   --header-h:   calc(52px + env(safe-area-inset-top, 0px));
   --screen-w:   390px;
-  --touch-min:  44px; /* Apple HIG mínimo área táctil */
+  --touch-min:  44px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -52,29 +52,19 @@ body {
   color: var(--white);
   font-family: var(--font-mono);
   overflow: hidden;
-  /* Prevent iOS bounce */
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
-  /* Prevent callout on long press */
   -webkit-touch-callout: none;
 }
 
 /* ══ GRAIN OVERLAY ══ */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.4;
-}
+body::before { display: none; }
 
 /* ══ PIN SCREEN ══ */
 .pin-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: linear-gradient(160deg, #f0fdf4 0%, #dcfce7 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -96,10 +86,11 @@ body::before {
 .pin-dot {
   width: 14px; height: 14px;
   border-radius: 50%;
-  border: 2px solid var(--green-dim);
+  border: 2px solid var(--border);
+  background: var(--bg3);
   transition: all 0.2s;
 }
-.pin-dot.on { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); }
+.pin-dot.on { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(22,163,74,0.4); }
 .pin-dot.err { background: var(--red); border-color: var(--red); }
 .pin-err { font-size: 12px; color: var(--red); height: 16px; }
 .pin-pad { display: grid; grid-template-columns: repeat(3, 68px); gap: 10px; }
@@ -109,6 +100,7 @@ body::before {
   border: 1px solid var(--border);
   background: var(--bg2);
   color: var(--white);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 600;
@@ -138,6 +130,7 @@ body::before {
   height: var(--header-h);
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -164,7 +157,7 @@ body::before {
   width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 6px var(--green);
+  box-shadow: 0 0 6px rgba(22,163,74,0.5);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -191,6 +184,7 @@ body::before {
   height: var(--tab-h);
   background: var(--bg2);
   border-top: 1px solid var(--border);
+  box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
   display: flex;
   align-items: flex-start;
   flex-shrink: 0;
@@ -250,6 +244,7 @@ body::before {
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 .card-title {
   font-family: var(--font-display);
@@ -322,6 +317,7 @@ body::before {
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 .torre-wrapper {
@@ -362,7 +358,7 @@ body::before {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--blue) 0%, var(--green) 60%, var(--green-dim) 100%);
+  background: linear-gradient(180deg, #2563eb 0%, #16a34a 60%, #15803d 100%);
   border-radius: 2px;
   box-shadow: 0 0 8px rgba(52,211,153,0.3);
   left: 50%;
@@ -530,21 +526,25 @@ body::before {
 
 /* Estados por color con gradientes */
 .cesta.plantula {
-  border-color: rgba(96,165,250,0.6);
-  background: linear-gradient(160deg, rgba(96,165,250,0.12) 0%, rgba(96,165,250,0.04) 100%);
+  border-color: rgba(37,99,235,0.5);
+  background: linear-gradient(160deg, rgba(37,99,235,0.08) 0%, rgba(37,99,235,0.02) 100%);
 }
 .cesta.crecimiento {
-  border-color: rgba(52,211,153,0.6);
-  background: linear-gradient(160deg, rgba(52,211,153,0.12) 0%, rgba(52,211,153,0.04) 100%);
+  border-color: rgba(22,163,74,0.5);
+  background: linear-gradient(160deg, rgba(22,163,74,0.08) 0%, rgba(22,163,74,0.02) 100%);
 }
 .cesta.madurez {
-  border-color: rgba(251,191,36,0.6);
-  background: linear-gradient(160deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.04) 100%);
+  border-color: rgba(217,119,6,0.5);
+  background: linear-gradient(160deg, rgba(217,119,6,0.08) 0%, rgba(217,119,6,0.02) 100%);
 }
 .cesta.cosecha {
-  border-color: rgba(248,113,113,0.7);
-  background: linear-gradient(160deg, rgba(248,113,113,0.15) 0%, rgba(248,113,113,0.05) 100%);
+  border-color: rgba(220,38,38,0.6);
+  background: linear-gradient(160deg, rgba(220,38,38,0.1) 0%, rgba(220,38,38,0.03) 100%);
   animation: glow-cosecha 1.5s infinite;
+}
+@keyframes glow-cosecha {
+  0%, 100% { box-shadow: 0 0 4px rgba(220,38,38,0.2); }
+  50% { box-shadow: 0 0 10px rgba(220,38,38,0.4); }
 }
 
 @keyframes glow-cosecha {
@@ -639,6 +639,7 @@ body::before {
 .modal {
   background: var(--bg2);
   border: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 390px;
@@ -679,16 +680,15 @@ body::before {
 .form-input, .form-select {
   width: 100%;
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 10px;
   color: var(--white);
   font-family: var(--font-mono);
-  font-size: 16px; /* Mínimo 16px para evitar zoom automático en iOS */
+  font-size: 16px;
   padding: 12px 14px;
   outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
-  /* Prevent iOS styling */
   -webkit-border-radius: 10px;
 }
 .form-input:focus, .form-select:focus { border-color: var(--green); }
@@ -1045,12 +1045,12 @@ body::before {
 .param-input {
   flex: 1;
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 10px;
   color: var(--white);
   font-family: var(--font-mono);
   font-size: 22px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 10px 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -1739,6 +1739,7 @@ body::before {
   inset: 0;
   background: var(--bg);
   z-index: 800;
+  /* sombra suave en tema claro */
   display: none;
   flex-direction: column;
   overflow: hidden;
@@ -1928,6 +1929,94 @@ body::before {
   gap: 8px;
   z-index: 810;
 }
+
+/* ══ CONSEJOS ══ */
+.consejos-cats {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+.consejos-cats::-webkit-scrollbar { display: none; }
+.consejo-cat-btn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.consejo-cat-btn.active {
+  color: var(--bg2);
+  border-color: transparent;
+}
+.consejo-card {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform 0.15s;
+}
+.consejo-card:active { transform: scale(0.98); }
+.consejo-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.consejo-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.consejo-titulo {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.2;
+}
+.consejo-nivel {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+.consejo-texto {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.consejo-texto strong { color: var(--white); }
+.consejo-alerta {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  gap: 6px;
+}
+.consejo-alerta.info  { background: rgba(37,99,235,0.08); color: #1d4ed8; border: 1px solid rgba(37,99,235,0.2); }
+.consejo-alerta.warn  { background: rgba(217,119,6,0.08); color: #92400e; border: 1px solid rgba(217,119,6,0.2); }
+.consejo-alerta.ok    { background: rgba(22,163,74,0.08); color: #14532d; border: 1px solid rgba(22,163,74,0.2); }
 
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
@@ -2345,7 +2434,10 @@ body::before {
         <div class="riego-field">
           <label>📆 Edad (semanas)</label>
           <input type="number" id="riegoEdad" value="4"
-            inputmode="numeric" min="1" max="20" oninput="calcularRiego()">
+            inputmode="decimal" step="0.1" min="0.1" max="20" oninput="calcularRiego()">
+          <div id="riegoEdadInfo" style="font-size:10px;color:var(--muted);margin-top:4px">
+            Auto: calculando...
+          </div>
         </div>
       </div>
 
@@ -2542,6 +2634,20 @@ body::before {
     </div>
     <!-- FIN TAB METEO -->
 
+    <!-- TAB 8: CONSEJOS ════════════════════════════════ -->
+    <div class="tab-panel" id="tab-consejos">
+
+      <div class="section-title">💡 <span class="accent">Consejos</span></div>
+
+      <!-- Categorías -->
+      <div class="consejos-cats" id="consejosCats"></div>
+
+      <!-- Cards de consejos -->
+      <div id="consejosLista"></div>
+
+    </div>
+    <!-- FIN TAB CONSEJOS -->
+
     <!-- TAB 7: HISTORIAL ════════════════════════════════ -->
     <div class="tab-panel" id="tab-historial">
 
@@ -2665,6 +2771,12 @@ body::before {
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
       Historial
+    </button>
+    <button class="tab-btn" id="btn-consejos" onclick="goTab('consejos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      Consejos
     </button>
   </div>
 
@@ -2965,6 +3077,7 @@ function goTab(tab) {
   if (tab === 'meteo') cargarMeteo();
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
   if (tab === 'historial') cargarHistorial();
+  if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
     // Pre-rellenar con datos de la torre si hay plantas
     const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
@@ -4144,6 +4257,150 @@ function renderHistRecargas() {
 }
 
 // ══════════════════════════════════════════════════
+// CONSEJOS — LÓGICA
+// ══════════════════════════════════════════════════
+
+const CONSEJOS_DATA = {
+  cultivo: {
+    nombre: '🌿 Cultivo', color: '#15803d', bg: 'rgba(22,163,74,0.1)',
+    consejos: [
+      { icono:'🌱', titulo:'Plántulas — primeros días',
+        texto:'Las primeras 48h son críticas. Mantén la esponja siempre húmeda pero no encharcada. El sistema de cascada debe estar activo desde el primer momento. <strong>No expongas las raíces al aire.</strong>',
+        alerta:{ tipo:'info', txt:'ℹ️ Las plántulas nuevas pueden necesitar 2-3 días para adaptarse al sistema hidropónico si vienen de semillero en tierra.' } },
+      { icono:'🥬', titulo:'Señales de lechuga sana',
+        texto:'Hojas turgentes y brillantes, color verde intenso o rojizo según variedad, crecimiento visible día a día. Las raíces deben ser blancas o ligeramente crema, nunca marrones o con mal olor.',
+        alerta:{ tipo:'ok', txt:'✅ Una lechuga sana puede crecer 2-3 cm al día en condiciones óptimas.' } },
+      { icono:'✂️', titulo:'Cuándo y cómo cosechar',
+        texto:'Cosecha cuando la lechuga tenga 15-20cm de diámetro o empiece a compactar el centro. <strong>Corta a 2cm de la base</strong> — muchas variedades rebrotan. Cosechar por la mañana temprano cuando están más hidratadas.',
+        alerta:{ tipo:'warn', txt:'⚠️ Si aparece un tallo central alargado (espigado) la lechuga está a punto de florecer y se volverá amarga. Cosechar inmediatamente.' } },
+      { icono:'🔃', titulo:'Rotación escalonada',
+        texto:'Con 3 niveles activos, rota cada 12-15 días: cosecha nivel 5 → todo sube un nivel → nuevas plántulas en nivel 1. Así tienes producción continua y el depósito siempre tiene plantas en todas las etapas.',
+        alerta:{ tipo:'info', txt:'ℹ️ Al rotar, ajusta la EC del depósito al estado del cultivo predominante.' } },
+      { icono:'🌿', titulo:'Mizuna y Komatsuna',
+        texto:'Las asiáticas crecen más rápido que las lechugas (35-40 días). Son perfectas para el nivel 1 mientras esperas trasplantar nuevas plántulas. <strong>Son compatibles con lechugas</strong> en el mismo depósito.',
+        alerta:{ tipo:'ok', txt:'✅ La Mizuna aguanta mejor el calor que las lechugas — buena opción para verano en Castelló.' } },
+    ]
+  },
+  agua: {
+    nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)',
+    consejos: [
+      { icono:'⚡', titulo:'Entender la EC',
+        texto:'La EC mide la concentración de nutrientes. <strong>1300-1400 µS/cm</strong> es el rango óptimo para lechugas. Si baja mucho las plantas tienen hambre. Si sube demasiado hay estrés osmótico — las raíces no pueden absorber agua.',
+        alerta:{ tipo:'info', txt:'ℹ️ La EC sube naturalmente cuando las plantas transpiran más agua que nutrientes. En verano controla más frecuentemente.' } },
+      { icono:'🟤', titulo:'Agua rojiza en el depósito',
+        texto:'El color rojizo-anaranjado viene de la oxidación del hierro quelado del Aqua Vega y los ácidos húmicos. <strong>Es normal pero indica que toca recarga</strong>. Cubrir el depósito con material opaco negro reduce mucho este problema.',
+        alerta:{ tipo:'warn', txt:'⚠️ El depósito debe estar completamente opaco a la luz. Incluso pequeñas filtraciones de luz aceleran la proliferación de algas.' } },
+      { icono:'🧪', titulo:'Protocolo de nutrientes',
+        texto:'Siempre en este orden: <strong>1º Agua destilada → 2º CalMag → 3º Aqua Vega A → 4º Aqua Vega B</strong>. Nunca mezcles A y B puros. Espera 20 min con difusor antes de medir EC y pH.',
+        alerta:{ tipo:'ok', txt:'✅ Con agua destilada el CalMag es imprescindible — sin él el pH fluctúa mucho y los nutrientes se precipitan.' } },
+      { icono:'💧', titulo:'Reposición de agua',
+        texto:'Cuando el volumen baja de 16L repón solo con agua destilada si la EC está en rango. Si la EC también está baja, añade nutrientes proporcionales: por cada litro añadido, 0.33ml CalMag + 2ml Vega A + 2ml Vega B.',
+        alerta:{ tipo:'info', txt:'ℹ️ En verano el depósito puede bajar 1-2L al día por evaporación y absorción. Controla el volumen cada 2-3 días.' } },
+    ]
+  },
+  clima: {
+    nombre: '🌡️ Clima', color: '#b45309', bg: 'rgba(217,119,6,0.1)',
+    consejos: [
+      { icono:'☀️', titulo:'Ola de calor (> 30°C)',
+        texto:'Despliega el toldo antes de las 10h. Aumenta la frecuencia de riego — el atajo lo calcula automáticamente con VPD alto. <strong>Riesgo de espigado</strong> en lechugas con temperaturas sostenidas > 28°C.',
+        alerta:{ tipo:'warn', txt:'⚠️ Si las lechugas se ponen lacias a mediodía y no se recuperan al atardecer, hay estrés hídrico real. Añadir ciclo extra de riego.' } },
+      { icono:'🥶', titulo:'Noches frías (< 5°C)',
+        texto:'El calentador del depósito es esencial. Por debajo de 14°C en el agua el crecimiento casi se detiene. <strong>Objetivo siempre 20°C</strong> en el agua del depósito.',
+        alerta:{ tipo:'info', txt:'ℹ️ En Castelló las heladas son raras pero en enero-febrero pueden darse temperaturas de 2-4°C por las noches.' } },
+      { icono:'💨', titulo:'Viento fuerte (> 30 km/h)',
+        texto:'El viento aumenta la transpiración y el estrés hídrico. El sistema calcula esto automáticamente aumentando el riego. <strong>Protege las plántulas</strong> del nivel superior si el viento es muy fuerte.',
+        alerta:{ tipo:'ok', txt:'✅ El viento moderado (10-25 km/h) es beneficioso — aumenta la transpiración y reduce el riesgo de tipburn por mejor circulación de calcio.' } },
+      { icono:'🌧️', titulo:'Días de lluvia',
+        texto:'La lluvia no llega a la torre ni al depósito. El sistema de riego sigue siendo necesario igual. Con alta humedad ambiental el programa de riego se ajusta automáticamente reduciendo los ciclos.',
+        alerta:{ tipo:'info', txt:'ℹ️ Con probabilidad de lluvia > 50% el VPD baja y el atajo reduce el riego automáticamente. No es necesario ajuste manual.' } },
+    ]
+  },
+  problemas: {
+    nombre: '🔍 Problemas', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',
+    consejos: [
+      { icono:'🟡', titulo:'Hojas amarillas',
+        texto:'Amarillo uniforme en hojas viejas: deficiencia de nitrógeno — subir EC ligeramente. Amarillo entre nervios en hojas jóvenes: deficiencia de hierro o manganeso — bajar pH a 5.8-6.0. Amarillo con manchas: puede ser enfermedad fúngica.',
+        alerta:{ tipo:'warn', txt:'⚠️ El pH fuera de 5.5-6.5 bloquea la absorción de micronutrientes aunque estén presentes en la solución.' } },
+      { icono:'🟤', titulo:'Puntas marrones (tipburn)',
+        texto:'Deficiencia de calcio en las hojas jóvenes por baja transpiración. <strong>Causas:</strong> humedad muy alta, poco viento, EC muy alta o temperatura agua baja. Aplicar spray foliar de calcio 2 veces por semana.',
+        alerta:{ tipo:'ok', txt:'✅ El tipburn es estético — no afecta al sabor ni a la salud de la planta. Pero indica que hay que mejorar la circulación de aire.' } },
+      { icono:'🐛', titulo:'Plagas comunes',
+        texto:'<strong>Pulgones:</strong> chorro de agua a presión + jabón potásico diluido. <strong>Mosca blanca:</strong> trampas amarillas adhesivas + neem. <strong>Orugas:</strong> retirar manualmente. La albahaca en la torre repele pulgones de forma natural.',
+        alerta:{ tipo:'warn', txt:'⚠️ Inspecciona el envés de las hojas semanalmente. Los pulgones se multiplican muy rápido en primavera.' } },
+      { icono:'🦠', titulo:'Raíces marrones o con mal olor',
+        texto:'Señal de Pythium u otra infección fúngica. <strong>Causas principales:</strong> agua > 24°C, falta de oxígeno, EC muy alta. Solución: vaciar y limpiar depósito con agua oxigenada, bajar temperatura agua, aumentar aireación.',
+        alerta:{ tipo:'warn', txt:'⚠️ El difusor de aire encendido 24h es la mejor prevención contra Pythium. El oxígeno disuelto es esencial.' } },
+    ]
+  },
+  variedades: {
+    nombre: '🌱 Variedades', color: '#047857', bg: 'rgba(5,150,105,0.08)',
+    consejos: [
+      { icono:'🥬', titulo:'Mejores lechugas para Castelló',
+        texto:'<strong>Primavera/Otoño:</strong> Romana, Trocadero, Batavia — crecimiento rápido y sabor excelente. <strong>Verano:</strong> Lolo Rosso, Hoja Roble Rojo — más resistentes al calor. <strong>Invierno:</strong> Maravilla, Mantecosa — toleran temperaturas bajas.',
+        alerta:{ tipo:'ok', txt:'✅ La Romana es la más productiva y versátil para hidropónica — buena elección para empezar.' } },
+      { icono:'🌿', titulo:'Mizuna — la más fácil',
+        texto:'La Mizuna es la variedad asiática más recomendada para principiantes en hidropónica. Crece en 35-40 días, tolera tanto el calor como el frío moderado, y produce hojas delicadas de sabor suave-picante. <strong>Muy productiva.</strong>',
+        alerta:{ tipo:'info', txt:'ℹ️ La Komatsuna es similar pero con hojas más grandes y sabor más suave. Ambas son perfectas mezcladas con lechugas.' } },
+      { icono:'🌿', titulo:'Albahaca — compañera perfecta',
+        texto:'Aunque necesita más calor (mínimo 18°C), la albahaca en la torre tiene una función extra: <strong>repele pulgones y mosca blanca</strong> de forma natural. Ponla en el nivel superior donde recibe más sol. EC compatible con lechugas.',
+        alerta:{ tipo:'warn', txt:'⚠️ La albahaca no tolera temperaturas < 10°C. Solo usarla de mayo a octubre en Castelló.' } },
+      { icono:'❌', titulo:'Qué NO cultivar en esta torre',
+        texto:'<strong>Tomates, pepinos, pimientos:</strong> necesitan EC 1800-2500 y soporte físico — incompatibles. <strong>Fresas:</strong> pueden funcionar pero compiten con lechugas por EC. <strong>Plantas grandes:</strong> bloquean la luz a los niveles inferiores.',
+        alerta:{ tipo:'warn', txt:'⚠️ Mezclar frutales con lechugas en el mismo depósito provoca deficiencias en unas u otras inevitablemente.' } },
+    ]
+  },
+};
+
+let consejoCatActiva = 'cultivo';
+
+function renderConsejos() {
+  const cats = document.getElementById('consejosCats');
+  const lista = document.getElementById('consejosLista');
+
+  // Render categorías
+  cats.innerHTML = Object.entries(CONSEJOS_DATA).map(([key, cat]) => `
+    <button class="consejo-cat-btn ${key === consejoCatActiva ? 'active' : ''}"
+      id="catBtn-${key}"
+      onclick="selConsejoCat('${key}')"
+      style="${key === consejoCatActiva ? `background:${cat.color};border-color:${cat.color};` : ''}">
+      ${cat.nombre}
+    </button>
+  `).join('');
+
+  renderConsejosLista();
+}
+
+function selConsejoCat(key) {
+  consejoCatActiva = key;
+  renderConsejos();
+  document.getElementById('consejosLista').scrollTop = 0;
+}
+
+function renderConsejosLista() {
+  const cat = CONSEJOS_DATA[consejoCatActiva];
+  const lista = document.getElementById('consejosLista');
+
+  lista.innerHTML = cat.consejos.map(c => `
+    <div class="consejo-card">
+      <div class="consejo-header">
+        <div class="consejo-icon" style="background:${cat.bg}">
+          ${c.icono}
+        </div>
+        <div>
+          <div class="consejo-titulo">${c.titulo}</div>
+        </div>
+      </div>
+      <div class="consejo-texto">${c.texto}</div>
+      ${c.alerta ? `
+        <div class="consejo-alerta ${c.alerta.tipo}">
+          <span>${c.alerta.txt}</span>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════
 // CALENDARIO — LÓGICA
 // ══════════════════════════════════════════════════
 
@@ -4621,9 +4878,48 @@ function toggleToldo() {
   calcularRiego();
 }
 
+// Calcular edad automática desde las plantas más jóvenes de la Torre
+function calcularEdadAutomatica() {
+  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  let edadMinDias = Infinity;
+  let totalDias = 0;
+  let totalPlantas = 0;
+
+  nivelesActivos.forEach(n => {
+    state.torre[n].forEach(c => {
+      if (c.variedad && c.fecha) {
+        const dias = getDias(c.fecha);
+        totalDias += dias;
+        totalPlantas++;
+        if (dias < edadMinDias) edadMinDias = dias;
+      }
+    });
+  });
+
+  if (totalPlantas === 0) return null;
+
+  // Usar la edad mínima (plantas más jóvenes) en semanas
+  const edadMinSem = Math.max(0.1, edadMinDias / 7);
+  return { semanas: Math.round(edadMinSem * 10) / 10, plantas: totalPlantas };
+}
+
 async function calcularRiego() {
   const nPlantas = parseInt(document.getElementById('riegoNPlantas').value) || 15;
-  const edadSem  = parseInt(document.getElementById('riegoEdad').value) || 4;
+
+  // Usar edad automática de la Torre si está disponible
+  const edadAuto = calcularEdadAutomatica();
+  let edadSem;
+  if (edadAuto) {
+    edadSem = edadAuto.semanas;
+    document.getElementById('riegoEdad').value = Math.round(edadAuto.semanas * 10) / 10;
+    document.getElementById('riegoEdadInfo').textContent =
+      `Auto: ${edadAuto.plantas} plantas · mín ${Math.round(edadAuto.semanas * 7)}d`;
+    document.getElementById('riegoEdadInfo').style.color = 'var(--green)';
+  } else {
+    edadSem = parseFloat(document.getElementById('riegoEdad').value) || 4;
+    document.getElementById('riegoEdadInfo').textContent = 'Manual — añade plantas en Torre';
+    document.getElementById('riegoEdadInfo').style.color = 'var(--muted)';
+  }
 
   document.getElementById('riegoLoader').style.display = 'flex';
   document.getElementById('riegoResultado').style.display = 'none';
