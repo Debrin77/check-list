@@ -2403,19 +2403,31 @@ body::before { display: none; }
               </div>
             </div>
             <!-- Fallback manual -->
-            <div>
-              <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600">O introduce manualmente:</label>
+            <div style="margin-bottom:10px">
+              <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600">O introduce la EC manualmente:</label>
               <div style="display:flex;align-items:center;gap:8px">
                 <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
                   style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:110px;outline:none"
                   oninput="actualizarECBase()">
                 <span style="font-size:13px;color:var(--muted)">µS/cm</span>
-                <a href="https://sinac.sanidad.gob.es/sinacservlet/sacmarcador?op=2" target="_blank"
-                  style="font-size:11px;color:#2563eb;text-decoration:none;margin-left:auto;font-weight:600">
-                  📋 Consultar SINAC →
+                <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank"
+                  style="font-size:11px;color:#1d4ed8;text-decoration:none;margin-left:auto;font-weight:700;
+                         padding:6px 10px;background:#eff6ff;border-radius:6px;border:1px solid #93c5fd">
+                  📋 Abrir SINAC →
                 </a>
               </div>
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">Si tu municipio no aparece en la lista, consulta el SINAC (Ministerio de Sanidad) o introduce el valor manualmente.</div>
+            </div>
+
+            <!-- Guía SINAC -->
+            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:4px">
+              <div style="font-size:12px;font-weight:700;color:#78350f;margin-bottom:8px">📖 Qué buscar en el SINAC</div>
+              <div style="font-size:11px;color:#92400e;line-height:1.7">
+                <div style="margin-bottom:4px"><strong>1. Conductividad</strong> — el más importante. < 400 µS/cm = buena, < 600 = aceptable, > 700 = problemática para hidropónica</div>
+                <div style="margin-bottom:4px"><strong>2. Bicarbonatos (HCO₃)</strong> — > 200 mg/L sube mucho el pH, necesitarás más pH-</div>
+                <div style="margin-bottom:4px"><strong>3. Sodio (Na)</strong> — > 50 mg/L dificulta absorción de calcio y potasio</div>
+                <div style="margin-bottom:4px"><strong>4. Cloro residual</strong> — > 0.5 mg/L puede afectar a las raíces. Dejar reposar 24h o usar vitamina C</div>
+                <div><strong>Cómo llegar:</strong> sinac.sanidad.gob.es → Acceso ciudadano → Información actual → Elige provincia y municipio → Busca "Conductividad" en la tabla de parámetros</div>
+              </div>
             </div>
           </div>
         </div>
@@ -3977,7 +3989,7 @@ async function detectarMunicipio() {
           mostrarGeoEstado('info',
             `📍 Ubicación: <strong>${ciudad}</strong><br>` +
             `No está en nuestra base de datos. Introduce la EC manualmente o consulta el ` +
-            `<a href="https://sinac.sanidad.gob.es" target="_blank" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
+            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
           );
           document.getElementById('inputBuscarMunicipio').value = ciudad;
           resetGeoBtn();
