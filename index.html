@@ -195,38 +195,54 @@ body::before { display: none; }
 .tab-btn {
   flex: 1;
   height: 54px;
-  min-width: var(--touch-min);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   cursor: pointer;
   border: none;
   background: transparent;
-  color: var(--muted);
-  transition: color 0.2s;
+  color: #9ca3af;
+  transition: all 0.2s;
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.3px;
+  font-size: 9px;
+  letter-spacing: 0.2px;
   text-transform: uppercase;
-  padding: 0;
+  padding: 0 2px;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
-.tab-btn svg { width: 22px; height: 22px; }
-.tab-btn.active { color: var(--green); }
+.tab-btn svg { width: 22px; height: 22px; transition: transform 0.15s; }
+.tab-btn:active svg { transform: scale(0.88); }
+
+/* Colores únicos por pestaña — inactivo suave, activo vivo */
+.tab-btn#btn-inicio      { --tab-color: #16a34a; }
+.tab-btn#btn-mediciones  { --tab-color: #2563eb; }
+.tab-btn#btn-torre       { --tab-color: #15803d; }
+.tab-btn#btn-calendario  { --tab-color: #7c3aed; }
+.tab-btn#btn-riego       { --tab-color: #0891b2; }
+.tab-btn#btn-meteo       { --tab-color: #ea580c; }
+.tab-btn#btn-historial   { --tab-color: #b45309; }
+.tab-btn#btn-consejos    { --tab-color: #db2777; }
+
+.tab-btn.active {
+  color: var(--tab-color);
+}
+.tab-btn.active svg {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tab-color) 60%, transparent));
+}
 .tab-btn.active::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: var(--green);
-  border-radius: 0 0 2px 2px;
-  box-shadow: 0 0 8px var(--green);
+  left: 15%;
+  right: 15%;
+  height: 2.5px;
+  background: var(--tab-color);
+  border-radius: 0 0 3px 3px;
 }
 .tab-badge {
   position: absolute;
@@ -235,7 +251,7 @@ body::before { display: none; }
   width: 8px; height: 8px;
   background: var(--red);
   border-radius: 50%;
-  border: 1px solid var(--bg2);
+  border: 1.5px solid var(--bg2);
 }
 
 /* ══ CARDS ══ */
@@ -2160,19 +2176,19 @@ body::before { display: none; }
     <div class="pin-dot" id="d3"></div>
   </div>
   <div class="pin-err" id="pinErr"></div>
-  <div class="pin-pad">
-    <div class="pin-key" onclick="pinPress('1')">1</div>
-    <div class="pin-key" onclick="pinPress('2')">2</div>
-    <div class="pin-key" onclick="pinPress('3')">3</div>
-    <div class="pin-key" onclick="pinPress('4')">4</div>
-    <div class="pin-key" onclick="pinPress('5')">5</div>
-    <div class="pin-key" onclick="pinPress('6')">6</div>
-    <div class="pin-key" onclick="pinPress('7')">7</div>
-    <div class="pin-key" onclick="pinPress('8')">8</div>
-    <div class="pin-key" onclick="pinPress('9')">9</div>
+  <div class="pin-pad" id="pinPad">
+    <div class="pin-key" data-digit="1">1</div>
+    <div class="pin-key" data-digit="2">2</div>
+    <div class="pin-key" data-digit="3">3</div>
+    <div class="pin-key" data-digit="4">4</div>
+    <div class="pin-key" data-digit="5">5</div>
+    <div class="pin-key" data-digit="6">6</div>
+    <div class="pin-key" data-digit="7">7</div>
+    <div class="pin-key" data-digit="8">8</div>
+    <div class="pin-key" data-digit="9">9</div>
     <div class="pin-key empty"></div>
-    <div class="pin-key" onclick="pinPress('0')">0</div>
-    <div class="pin-key del" onclick="pinDel()">⌫</div>
+    <div class="pin-key" data-digit="0">0</div>
+    <div class="pin-key del" id="pinDelBtn">⌫</div>
   </div>
 </div>
 
@@ -2345,11 +2361,62 @@ body::before { display: none; }
             ⚠️ <strong>Castelló de la Plana:</strong> El agua del grifo tiene EC ~850 µS/cm (agua muy dura). Solo quedarían ~550 µS/cm de margen para nutrientes, insuficiente para lechugas. Se recomienda encarecidamente usar agua destilada u ósmosis.
           </div>
           <div class="config-ec-base" id="ecBaseGrifo">
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">EC base del agua del grifo (µS/cm)</label>
-            <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
-              style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:120px;outline:none"
-              oninput="actualizarECBase()">
-            <span style="font-size:12px;color:var(--muted);margin-left:6px">µS/cm</span>
+
+            <!-- Botón geolocalización -->
+            <button id="btnGeolocalizacion" onclick="detectarMunicipio()"
+              style="width:100%;padding:12px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;
+                     font-family:var(--font-display);font-size:14px;font-weight:700;color:#1d4ed8;
+                     cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;
+                     gap:8px;-webkit-tap-highlight-color:transparent">
+              <span>📍</span><span>Detectar mi municipio automáticamente</span>
+            </button>
+
+            <!-- Estado geolocalización -->
+            <div id="geoEstado" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.4"></div>
+
+            <!-- Separador -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div style="flex:1;height:1px;background:var(--border)"></div>
+              <span style="font-size:11px;color:var(--muted);font-weight:600">O BUSCA MANUALMENTE</span>
+              <div style="flex:1;height:1px;background:var(--border)"></div>
+            </div>
+
+            <!-- Buscador de municipio -->
+            <div style="margin-bottom:10px">
+              <input type="text" id="inputBuscarMunicipio" placeholder="Escribe tu municipio..."
+                inputmode="search"
+                style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:10px 12px;outline:none;box-sizing:border-box"
+                oninput="onBuscarMunicipio(this.value)">
+              <div id="municipioResultados" style="display:none;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;margin-top:4px;overflow:hidden"></div>
+              <div id="municipioSeleccionado" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:8px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:#14532d" id="municipioNombre">—</div>
+                    <div style="font-size:12px;color:#166534;margin-top:2px" id="municipioInfo">—</div>
+                  </div>
+                  <button onclick="resetMunicipio()"
+                    style="background:none;border:none;font-size:11px;color:#16a34a;cursor:pointer;
+                           font-weight:600;white-space:nowrap;padding:2px 0 0 8px;-webkit-tap-highlight-color:transparent">
+                    ✏️ Cambiar
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Fallback manual -->
+            <div>
+              <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600">O introduce manualmente:</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
+                  style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:110px;outline:none"
+                  oninput="actualizarECBase()">
+                <span style="font-size:13px;color:var(--muted)">µS/cm</span>
+                <a href="https://sinac.sanidad.gob.es/sinacservlet/sacmarcador?op=2" target="_blank"
+                  style="font-size:11px;color:#2563eb;text-decoration:none;margin-left:auto;font-weight:600">
+                  📋 Consultar SINAC →
+                </a>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Si tu municipio no aparece en la lista, consulta el SINAC (Ministerio de Sanidad) o introduce el valor manualmente.</div>
+            </div>
           </div>
         </div>
 
@@ -3727,6 +3794,92 @@ function clearCesta() {
 // CONFIGURACIÓN AGUA Y SUSTRATO
 // ══════════════════════════════════════════════════
 
+// ── Base de datos EC agua del grifo por municipio ───────────────────────────
+// Fuente: SINAC Ministerio de Sanidad + análisis medios conocidos
+// EC en µS/cm (media anual aproximada)
+const AGUA_MUNICIPIOS = {
+  // Comunidad Valenciana
+  "Castelló de la Plana":  { ec: 850, dureza: "Muy dura",  nota: "Agua del río Mijares — muy dura" },
+  "Valencia":              { ec: 620, dureza: "Dura",       nota: "Mezcla ríos Turia y Júcar" },
+  "Alicante":              { ec: 740, dureza: "Dura",       nota: "Agua desalada + acuíferos" },
+  "Elche":                 { ec: 780, dureza: "Muy dura",   nota: "Acuíferos locales" },
+  "Torrevieja":            { ec: 690, dureza: "Dura",       nota: "Desaladora del Júcar" },
+  "Benidorm":              { ec: 680, dureza: "Dura",       nota: "Marina Baixa" },
+  "Gandia":                { ec: 590, dureza: "Dura",       nota: "Río Serpis" },
+  "Sagunto":               { ec: 710, dureza: "Dura",       nota: "Canal del Camp de Morvedre" },
+  "Torrent":               { ec: 600, dureza: "Dura",       nota: "EMIVASA Valencia" },
+  "Vila-real":             { ec: 830, dureza: "Muy dura",   nota: "Mismo sistema que Castelló" },
+  // Cataluña
+  "Barcelona":             { ec: 180, dureza: "Blanda",     nota: "Río Ter — blanda en España" },
+  "L'Hospitalet":          { ec: 190, dureza: "Blanda",     nota: "Red metropolitana Barcelona" },
+  "Badalona":              { ec: 195, dureza: "Blanda",     nota: "Red metropolitana Barcelona" },
+  "Terrassa":              { ec: 210, dureza: "Blanda",     nota: "Consorci Aigues Ter-Llobregat" },
+  "Sabadell":              { ec: 205, dureza: "Blanda",     nota: "Consorci Aigues Ter-Llobregat" },
+  "Tarragona":             { ec: 420, dureza: "Moderada",   nota: "Río Ebre" },
+  "Lleida":                { ec: 480, dureza: "Moderada",   nota: "Canal d'Urgell" },
+  "Girona":                { ec: 210, dureza: "Blanda",     nota: "Río Ter" },
+  // Madrid
+  "Madrid":                { ec: 250, dureza: "Blanda",     nota: "Embalses sierra — muy buena" },
+  "Alcalá de Henares":     { ec: 380, dureza: "Moderada",   nota: "Canal de Isabel II" },
+  "Leganés":               { ec: 260, dureza: "Blanda",     nota: "Canal de Isabel II" },
+  "Getafe":                { ec: 270, dureza: "Blanda",     nota: "Canal de Isabel II" },
+  "Alcorcón":              { ec: 255, dureza: "Blanda",     nota: "Canal de Isabel II" },
+  "Torrejón de Ardoz":     { ec: 390, dureza: "Moderada",   nota: "Canal de Isabel II" },
+  // Andalucía
+  "Sevilla":               { ec: 420, dureza: "Moderada",   nota: "Río Guadalquivir" },
+  "Málaga":                { ec: 390, dureza: "Moderada",   nota: "Embalse del Guadalhorce" },
+  "Córdoba":               { ec: 450, dureza: "Moderada",   nota: "Río Guadalquivir" },
+  "Granada":               { ec: 280, dureza: "Blanda",     nota: "Sierra Nevada — buena calidad" },
+  "Almería":               { ec: 710, dureza: "Dura",       nota: "Acuíferos + desaladora" },
+  "Cádiz":                 { ec: 350, dureza: "Moderada",   nota: "Embalses locales" },
+  "Jerez de la Frontera":  { ec: 460, dureza: "Moderada",   nota: "Embalse de Guadalcacín" },
+  "Huelva":                { ec: 380, dureza: "Moderada",   nota: "Embalse del Chanza" },
+  "Jaén":                  { ec: 320, dureza: "Moderada",   nota: "Embalse del Quiebrajano" },
+  // País Vasco
+  "Bilbao":                { ec: 170, dureza: "Muy blanda", nota: "Embalse de Ordunte — excelente" },
+  "San Sebastián":         { ec: 165, dureza: "Muy blanda", nota: "Urumea — agua de montaña" },
+  "Vitoria-Gasteiz":       { ec: 175, dureza: "Muy blanda", nota: "Embalse de Ullibarri" },
+  // Aragón / Navarra / La Rioja
+  "Zaragoza":              { ec: 540, dureza: "Dura",        nota: "Río Ebro" },
+  "Pamplona":              { ec: 290, dureza: "Blanda",      nota: "Embalse de Eugui" },
+  "Logroño":               { ec: 380, dureza: "Moderada",    nota: "Río Ebro — embalse Pajares" },
+  // Castilla y León / Castilla-La Mancha
+  "Valladolid":            { ec: 320, dureza: "Moderada",    nota: "Río Duero" },
+  "Burgos":                { ec: 280, dureza: "Blanda",      nota: "Río Arlanzón" },
+  "Salamanca":             { ec: 290, dureza: "Blanda",      nota: "Río Tormes" },
+  "Toledo":                { ec: 490, dureza: "Moderada",    nota: "Río Tajo" },
+  "Albacete":              { ec: 560, dureza: "Dura",        nota: "Acuíferos manchegos" },
+  // Galicia
+  "Vigo":                  { ec: 120, dureza: "Muy blanda",  nota: "Embalse de Eiras — la más blanda" },
+  "A Coruña":              { ec: 130, dureza: "Muy blanda",  nota: "Embalse de Cecebre" },
+  "Santiago de Compostela":{ ec: 125, dureza: "Muy blanda",  nota: "Embalse de Pontevea" },
+  // Murcia / Extremadura
+  "Murcia":                { ec: 680, dureza: "Dura",        nota: "Trasvase Tajo-Segura" },
+  "Cartagena":             { ec: 720, dureza: "Dura",        nota: "Desaladora + trasvase" },
+  "Badajoz":               { ec: 290, dureza: "Blanda",      nota: "Río Guadiana" },
+  "Cáceres":               { ec: 210, dureza: "Blanda",      nota: "Embalse de Valdesalor" },
+  // Islas
+  "Palma de Mallorca":     { ec: 620, dureza: "Dura",        nota: "Acuíferos + desaladora" },
+  "Las Palmas de GC":      { ec: 660, dureza: "Dura",        nota: "Desaladora oceánica" },
+  "Santa Cruz de Tenerife":{ ec: 580, dureza: "Dura",        nota: "Desaladora + galerías" },
+  // Asturias / Cantabria
+  "Oviedo":                { ec: 155, dureza: "Muy blanda",  nota: "Embalse de Trasona" },
+  "Gijón":                 { ec: 160, dureza: "Muy blanda",  nota: "Embalse de Trasona" },
+  "Santander":             { ec: 145, dureza: "Muy blanda",  nota: "Embalse del Ebro" },
+};
+
+// Función para buscar municipio
+function buscarMunicipio(query) {
+  if (!query || query.length < 2) return [];
+  const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return Object.entries(AGUA_MUNICIPIOS)
+    .filter(([nombre]) => {
+      const n = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      return n.includes(q);
+    })
+    .slice(0, 6);
+}
+
 // Constantes por tipo de agua
 const CONFIG_AGUA = {
   destilada: {
@@ -3767,6 +3920,203 @@ const CONFIG_SUSTRATO = {
     nota: 'Alta retención — ciclos más espaciados'
   }
 };
+
+// ── Geolocalización — detectar municipio más cercano ────────────────────────
+async function detectarMunicipio() {
+  const btn    = document.getElementById('btnGeolocalizacion');
+  const estado = document.getElementById('geoEstado');
+
+  if (!navigator.geolocation) {
+    mostrarGeoEstado('warn', '⚠️ Tu navegador no soporta geolocalización. Usa la búsqueda manual.');
+    return;
+  }
+
+  // Estado cargando
+  btn.style.background = '#fef3c7';
+  btn.style.borderColor = '#d97706';
+  btn.style.color = '#92400e';
+  btn.innerHTML = '<span>⏳</span><span>Obteniendo ubicación...</span>';
+  btn.disabled = true;
+  estado.style.display = 'none';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      btn.innerHTML = '<span>🌐</span><span>Buscando municipio...</span>';
+
+      try {
+        // Usar Nominatim (OpenStreetMap) para geocodificación inversa — sin API key
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=es`;
+        const res  = await fetch(url, { headers: { 'User-Agent': 'HydroCaru/1.0' } });
+        const data = await res.json();
+
+        const ciudad = data.address?.city
+          || data.address?.town
+          || data.address?.village
+          || data.address?.municipality
+          || '';
+
+        if (!ciudad) {
+          mostrarGeoEstado('warn', '⚠️ No se pudo identificar el municipio. Usa la búsqueda manual.');
+          resetGeoBtn();
+          return;
+        }
+
+        // Buscar en base de datos local
+        const resultados = buscarMunicipio(ciudad);
+
+        if (resultados.length > 0) {
+          // Encontrado — seleccionar automáticamente el primero
+          const [nombre, data2] = resultados[0];
+          seleccionarMunicipio(nombre, data2.ec, data2.dureza, data2.nota);
+          document.getElementById('inputBuscarMunicipio').value = nombre;
+          mostrarGeoEstado('ok', `✅ Municipio detectado: <strong>${nombre}</strong> (${data2.ec} µS/cm)`);
+          btn.style.display = 'none'; // ocultar botón tras éxito
+        } else {
+          // No en la base de datos — mostrar nombre y sugerir búsqueda manual o SINAC
+          mostrarGeoEstado('info',
+            `📍 Ubicación: <strong>${ciudad}</strong><br>` +
+            `No está en nuestra base de datos. Introduce la EC manualmente o consulta el ` +
+            `<a href="https://sinac.sanidad.gob.es" target="_blank" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
+          );
+          document.getElementById('inputBuscarMunicipio').value = ciudad;
+          resetGeoBtn();
+        }
+
+      } catch(e) {
+        mostrarGeoEstado('warn', '⚠️ Error al obtener datos de ubicación. Usa la búsqueda manual.');
+        resetGeoBtn();
+      }
+    },
+    (err) => {
+      let msg = '';
+      switch(err.code) {
+        case 1: msg = '❌ Permiso de ubicación denegado. Actívalo en Ajustes > Safari > Ubicación.'; break;
+        case 2: msg = '⚠️ No se pudo obtener la ubicación. Comprueba el GPS.'; break;
+        case 3: msg = '⚠️ Tiempo de espera agotado. Inténtalo de nuevo.'; break;
+        default: msg = '⚠️ Error desconocido. Usa la búsqueda manual.';
+      }
+      mostrarGeoEstado('warn', msg);
+      resetGeoBtn();
+    },
+    { timeout: 10000, maximumAge: 300000 } // 10s timeout, caché 5min
+  );
+}
+
+function mostrarGeoEstado(tipo, html) {
+  const el = document.getElementById('geoEstado');
+  el.style.display = 'block';
+  const colores = {
+    ok:   { bg: '#f0fdf4', border: '#16a34a', color: '#14532d' },
+    warn: { bg: '#fef3c7', border: '#d97706', color: '#78350f' },
+    info: { bg: '#eff6ff', border: '#93c5fd', color: '#1e40af' },
+  };
+  const c = colores[tipo] || colores.info;
+  el.style.background   = c.bg;
+  el.style.border       = `1px solid ${c.border}`;
+  el.style.borderRadius = '8px';
+  el.style.color        = c.color;
+  el.innerHTML          = html;
+}
+
+function resetGeoBtn() {
+  const btn = document.getElementById('btnGeolocalizacion');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.style.background   = '#eff6ff';
+  btn.style.borderColor  = '#93c5fd';
+  btn.style.color        = '#1d4ed8';
+  btn.innerHTML = '<span>📍</span><span>Detectar mi municipio automáticamente</span>';
+}
+
+// Búsqueda de municipio
+function onBuscarMunicipio(query) {
+  const resEl = document.getElementById('municipioResultados');
+  const selEl = document.getElementById('municipioSeleccionado');
+
+  if (!query || query.length < 2) {
+    resEl.style.display = 'none';
+    return;
+  }
+
+  const resultados = buscarMunicipio(query);
+  if (resultados.length === 0) {
+    resEl.style.display = 'block';
+    resEl.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--muted)">No encontrado — prueba otro nombre o introduce EC manualmente</div>';
+    return;
+  }
+
+  resEl.style.display = 'block';
+  // Guardar en variable global para acceso por índice (evita problemas con apóstrofes en nombres)
+  window._municipioResultados = resultados;
+  resEl.innerHTML = resultados.map(([nombre, data], idx) => {
+    const color = data.ec < 300 ? '#15803d' : data.ec < 500 ? '#b45309' : data.ec < 700 ? '#d97706' : '#dc2626';
+    return `<div onclick="seleccionarMunicipioPorIdx(${idx})"
+      style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;-webkit-tap-highlight-color:transparent">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--white)">${nombre}</div>
+        <div style="font-size:11px;color:var(--muted)">${data.nota}</div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:${color};margin-left:8px">${data.ec} µS</div>
+    </div>`;
+  }).join('');
+}
+
+function seleccionarMunicipioPorIdx(idx) {
+  if (!window._municipioResultados || !window._municipioResultados[idx]) return;
+  const [nombre, data] = window._municipioResultados[idx];
+  seleccionarMunicipio(nombre, data.ec, data.dureza, data.nota);
+}
+
+function seleccionarMunicipio(nombre, ec, dureza, nota) {
+  document.getElementById('municipioResultados').style.display = 'none';
+  document.getElementById('inputBuscarMunicipio').value = nombre;
+
+  const selEl = document.getElementById('municipioSeleccionado');
+  selEl.style.display = 'block';
+
+  const ecColor = ec < 300 ? '#15803d' : ec < 500 ? '#b45309' : '#dc2626';
+  const viable = ec < 600;
+  document.getElementById('municipioNombre').innerHTML =
+    `${nombre} — <span style="color:${ecColor}">${ec} µS/cm</span> · ${dureza}`;
+  document.getElementById('municipioInfo').innerHTML =
+    `${nota}<br>${viable
+      ? '✅ Usable para hidropónica con CalMag reducido'
+      : '⚠️ EC alta — muy poco margen para nutrientes. Recomendable ósmosis.'}`;
+
+  // Actualizar el input manual
+  document.getElementById('inputECBaseGrifo').value = ec;
+  CONFIG_AGUA.grifo.ecBase = ec;
+  state.configAguaEC = ec;
+  state.configAguaMunicipio = nombre;
+  saveState();
+  actualizarRangoEC();
+
+  // Si EC > 600 mostrar advertencia adicional
+  const warnEl = document.getElementById('warningGrifo');
+  if (ec > 600) {
+    warnEl.classList.add('show');
+    warnEl.innerHTML = `⚠️ <strong>${nombre}:</strong> EC ${ec} µS/cm — agua ${dureza.toLowerCase()}. Solo quedan ~${1400 - ec} µS/cm de margen para nutrientes. Se recomienda usar agua destilada u ósmosis.`;
+  } else {
+    warnEl.innerHTML = `ℹ️ <strong>${nombre}:</strong> EC ${ec} µS/cm — ${dureza}. ${nota}. Ajusta la dosis de CalMag en consecuencia.`;
+    warnEl.classList.add('show');
+    warnEl.style.background = '#eff6ff';
+    warnEl.style.borderColor = '#93c5fd';
+    warnEl.style.color = '#1e40af';
+  }
+}
+
+function resetMunicipio() {
+  state.configAguaMunicipio = null;
+  state.configAguaEC = null;
+  saveState();
+  document.getElementById('inputBuscarMunicipio').value = '';
+  document.getElementById('municipioSeleccionado').style.display = 'none';
+  document.getElementById('municipioResultados').style.display = 'none';
+  document.getElementById('geoEstado').style.display = 'none';
+  const btn = document.getElementById('btnGeolocalizacion');
+  if (btn) { btn.style.display = 'flex'; resetGeoBtn(); }
+}
 
 function setAgua(tipo) {
   state.configAgua = tipo;
@@ -3828,7 +4178,6 @@ function initConfigUI() {
   const agua = state.configAgua || 'destilada';
   const sustrato = state.configSustrato || 'esponja';
 
-  // Restaurar selección
   ['destilada','osmosis','grifo'].forEach(t => {
     document.getElementById('opt-' + t)?.classList.toggle('selected', t === agua);
   });
@@ -3839,6 +4188,21 @@ function initConfigUI() {
   if (agua === 'grifo') {
     document.getElementById('warningGrifo')?.classList.add('show');
     document.getElementById('ecBaseGrifo')?.classList.add('show');
+    // Restaurar municipio seleccionado
+    if (state.configAguaMunicipio) {
+      document.getElementById('inputBuscarMunicipio').value = state.configAguaMunicipio;
+      const data = AGUA_MUNICIPIOS[state.configAguaMunicipio];
+      if (data) {
+        seleccionarMunicipio(state.configAguaMunicipio, data.ec, data.dureza, data.nota);
+        // Ocultar botón geo si ya hay municipio guardado
+        const btn = document.getElementById('btnGeolocalizacion');
+        if (btn) btn.style.display = 'none';
+      }
+    }
+    if (state.configAguaEC) {
+      document.getElementById('inputECBaseGrifo').value = state.configAguaEC;
+      CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
+    }
   }
 }
 
@@ -5888,17 +6252,30 @@ function showToast(msg, error=false) {
 // ARRANQUE
 // ══════════════════════════════════════════════════
 window.onload = () => {
+  // ── Registrar listeners del PIN (evitar onclick inline) ──────────────────
+  document.querySelectorAll('.pin-key[data-digit]').forEach(key => {
+    key.addEventListener('click', () => pinPress(key.dataset.digit));
+  });
+  document.getElementById('pinDelBtn')?.addEventListener('click', pinDel);
+
+  // ── Soporte teclado físico para el PIN ────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('pinScreen').style.display === 'none') return;
+    if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+    if (e.key === 'Backspace') pinDel();
+  });
+
+  // ── Comprobar auth guardada ───────────────────────────────────────────────
   try {
     const authTs = localStorage.getItem('hc_auth');
     const OCHO_HORAS = 8 * 60 * 60 * 1000;
     if (authTs && (Date.now() - parseInt(authTs)) < OCHO_HORAS) {
-      // Auth válida — saltar PIN
       document.getElementById('pinScreen').style.display = 'none';
       initApp();
       return;
     }
   } catch(e) {}
-  // Sin auth válida — mostrar PIN
+  // Sin auth válida — mostrar PIN (ya visible por defecto)
 };
 </script>
 </body>
