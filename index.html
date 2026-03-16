@@ -2143,6 +2143,54 @@ body::before { display: none; }
 }
 .config-ec-base.show { display: block; }
 
+/* ══ RIEGO DÍA SELECTOR ══ */
+.dia-selector {
+  display: flex;
+  gap: 0;
+  background: var(--bg3);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border: 1.5px solid var(--border);
+}
+.dia-sel-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.3;
+}
+.dia-sel-btn.active {
+  background: var(--bg2);
+  color: var(--white);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.dia-sel-btn.manana.active {
+  background: #1d4ed8;
+  color: white;
+}
+.dia-manana-badge {
+  display: inline-block;
+  background: #1d4ed8;
+  color: white;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
   display: flex;
@@ -2674,6 +2722,23 @@ body::before { display: none; }
     <div class="tab-panel" id="tab-riego">
 
       <div class="section-title">💧 Cálculo de <span class="accent">Riego</span></div>
+
+      <!-- Selector Hoy / Mañana -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="btnRiegoHoy" onclick="setDiaRiego('hoy')"
+          style="flex:1;padding:12px;border-radius:12px;border:2px solid #16a34a;background:#f0fdf4;
+                 font-family:var(--font-display);font-size:14px;font-weight:700;color:#15803d;
+                 cursor:pointer;-webkit-tap-highlight-color:transparent">
+          ☀️ Hoy
+        </button>
+        <button id="btnRiegoManana" onclick="setDiaRiego('manana')"
+          style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg2);
+                 font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--muted);
+                 cursor:pointer;-webkit-tap-highlight-color:transparent">
+          🌙 Mañana
+        </button>
+      </div>
+      <div id="riegoDiaInfo" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center"></div>
 
       <!-- Inputs plantas y edad -->
       <div class="riego-input-grid">
@@ -3466,6 +3531,7 @@ function goTab(tab) {
     if (totalPlantas > 0) {
       document.getElementById('riegoNPlantas').value = totalPlantas;
     }
+    initDiaRiego();   // auto-seleccionar hoy o mañana según hora
     calcularRiego();
   }
 }
@@ -5754,6 +5820,40 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
 // ══════════════════════════════════════════════════
 
 let toldoDesplegado = false;
+let diaRiego = 'hoy'; // 'hoy' o 'manana'
+
+function setDiaRiego(dia) {
+  diaRiego = dia;
+
+  const btnHoy    = document.getElementById('btnRiegoHoy');
+  const btnManana = document.getElementById('btnRiegoManana');
+  const infoEl    = document.getElementById('riegoDiaInfo');
+
+  if (dia === 'hoy') {
+    btnHoy.style.borderColor  = '#16a34a';
+    btnHoy.style.background   = '#f0fdf4';
+    btnHoy.style.color        = '#15803d';
+    btnManana.style.borderColor = 'var(--border)';
+    btnManana.style.background  = 'var(--bg2)';
+    btnManana.style.color       = 'var(--muted)';
+    infoEl.textContent = '';
+  } else {
+    btnManana.style.borderColor = '#7c3aed';
+    btnManana.style.background  = '#f5f3ff';
+    btnManana.style.color       = '#6d28d9';
+    btnHoy.style.borderColor    = 'var(--border)';
+    btnHoy.style.background     = 'var(--bg2)';
+    btnHoy.style.color          = 'var(--muted)';
+    // Calcular fecha de mañana
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    const nombreDia = manana.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    infoEl.textContent = `Previsión para ${nombreDia}`;
+    infoEl.style.color = '#6d28d9';
+  }
+
+  calcularRiego();
+}
 let esRecarga = false;
 
 function toggleRecarga() {
@@ -5818,36 +5918,41 @@ async function calcularRiego() {
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
     // ECMWF para temperatura y humedad (más preciso para Castelló)
+    const diasForecast = diaRiego === 'manana' ? 2 : 1;
+    const idx = diaRiego === 'manana' ? 1 : 0; // índice del día en el array
+    const offsetHoras = idx * 24; // offset para datos horarios
+
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=39.9864&longitude=-0.0513' +
       '&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,precipitation_probability_max,precipitation_sum' +
       '&hourly=relative_humidity_2m,temperature_2m' +
-      '&forecast_days=1&timezone=auto&models=ecmwf_ifs';
+      `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
     // Modelo default para UV (ECMWF no soporta uv_index_max)
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=39.9864&longitude=-0.0513' +
       '&daily=uv_index_max' +
-      '&forecast_days=1&timezone=auto';
+      `&forecast_days=${diasForecast}&timezone=auto`;
 
     const [resECMWF, resUV] = await Promise.all([fetch(urlECMWF), fetch(urlUV)]);
     const data   = await resECMWF.json();
     const dataUV = await resUV.json();
 
-    const tempMax  = data.daily.temperature_2m_max[0];
-    const tempMin  = data.daily.temperature_2m_min[0];
+    const tempMax  = data.daily.temperature_2m_max[idx];
+    const tempMin  = data.daily.temperature_2m_min[idx];
     const tempMedia = (tempMax + tempMin) / 2;
-    const uvMax    = dataUV.daily?.uv_index_max?.[0] ?? 0;
-    const viento   = data.daily.windspeed_10m_max[0];
-    const probLluvia = data.daily.precipitation_probability_max[0];
+    const uvMax    = dataUV.daily?.uv_index_max?.[idx] ?? 0;
+    const viento   = data.daily.windspeed_10m_max[idx];
+    const probLluvia = data.daily.precipitation_probability_max[idx];
 
-    // Humedad media del día (horas 0-23)
-    const humHoras = data.hourly.relative_humidity_2m.slice(0, 24);
+    // Humedad media del día seleccionado (24h correspondientes)
+    const humHoras = data.hourly.relative_humidity_2m.slice(offsetHoras, offsetHoras + 24);
     const humMedia = Math.round(humHoras.reduce((a,b) => a+b, 0) / humHoras.length);
 
     // Temp y humedad media 13-15h para VPD mediodía
-    const temp1315 = Math.round((data.hourly.temperature_2m[13] + data.hourly.temperature_2m[14] + data.hourly.temperature_2m[15]) / 3);
-    const hum1315  = Math.round((data.hourly.relative_humidity_2m[13] + data.hourly.relative_humidity_2m[14] + data.hourly.relative_humidity_2m[15]) / 3);
+    const tempHoras = data.hourly.temperature_2m.slice(offsetHoras, offsetHoras + 24);
+    const temp1315 = Math.round((tempHoras[13] + tempHoras[14] + tempHoras[15]) / 3);
+    const hum1315  = Math.round((humHoras[13] + humHoras[14] + humHoras[15]) / 3);
 
     // ── Calcular VPD general ──────────────────────────────────────────────
     const calcVPD = (t, h) => {
@@ -5976,7 +6081,9 @@ async function calcularRiego() {
 
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const agua2 = CONFIG_AGUA[state.configAgua || 'destilada'];
+    const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
     document.getElementById('riegoClimaUsado').innerHTML =
+      `<strong style="color:var(--white)">${etiquetaDia}</strong><br>` +
       `🌡️ Temp: ${tempMin}°C / ${tempMax}°C · Media: ${Math.round(tempMedia*10)/10}°C<br>` +
       `💧 Humedad media: ${humMedia}% · Viento: ${viento} km/h<br>` +
       `☀️ UV máximo: ${uvMax} · Prob. lluvia: ${probLluvia}%<br>` +
