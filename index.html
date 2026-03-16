@@ -3061,6 +3061,85 @@ body::before { display: none; }
 
 </div>
 
+<!-- ══ MODAL FUENTES AGUA ══ -->
+<div class="modal-overlay" id="modalAgua" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Consulta la calidad del agua</div>
+
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+      El SINAC del Ministerio sufre caídas frecuentes. Aquí tienes alternativas fiables:
+    </div>
+
+    <!-- Opción 1: SINAC ciudadano -->
+    <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:4px">🏛️ SINAC — Ministerio de Sanidad</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:8px">Portal oficial. Puede estar caído. Si carga: Acceso Ciudadano → tu municipio → análisis Completo → busca <strong>Conductividad</strong></div>
+      <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionEntrada.do"
+        target="_blank"
+        style="display:block;text-align:center;padding:8px;background:#1d4ed8;color:white;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">
+        Abrir SINAC →
+      </a>
+    </div>
+
+    <!-- Opción 2: Empresa suministradora -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:#14532d;margin-bottom:4px">💧 Tu empresa suministradora</div>
+      <div style="font-size:12px;color:#166534;margin-bottom:6px">
+        La opción más fiable y con datos actualizados. Búscala en tu factura del agua o en el buscador:
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <a href="https://www.aiguescastello.es" target="_blank"
+          style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
+          <span style="font-size:12px;font-weight:600;color:#15803d">💧 Aigues de Castelló</span>
+          <span style="font-size:11px;color:#16a34a">Abrir →</span>
+        </a>
+        <a href="https://www.canaldeisabelsegunda.es/calidad-del-agua" target="_blank"
+          style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
+          <span style="font-size:12px;font-weight:600;color:#15803d">💧 Canal Isabel II (Madrid)</span>
+          <span style="font-size:11px;color:#16a34a">Abrir →</span>
+        </a>
+        <a href="https://www.aiguestribasa.cat/ca/qualitat-de-laigua" target="_blank"
+          style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
+          <span style="font-size:12px;font-weight:600;color:#15803d">💧 ATLL / Aigues (Barcelona)</span>
+          <span style="font-size:11px;color:#16a34a">Abrir →</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Qué parámetro buscar -->
+    <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;color:#78350f;margin-bottom:6px">🔍 Qué buscar en los análisis</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+        <div style="background:white;padding:6px 8px;border-radius:6px">
+          <div style="font-weight:700;color:#b45309">⚡ Conductividad</div>
+          <div style="color:#374151">El dato clave.<br>Introdúcelo en la app.</div>
+          <div style="color:#15803d;font-weight:600;font-size:11px">&lt;300 µS/cm ideal</div>
+        </div>
+        <div style="background:white;padding:6px 8px;border-radius:6px">
+          <div style="font-weight:700;color:#b45309">💧 Dureza total</div>
+          <div style="color:#374151">Ca + Mg disueltos.<br>Confirma viabilidad.</div>
+          <div style="color:#15803d;font-weight:600;font-size:11px">&lt;200 mg/L ideal</div>
+        </div>
+        <div style="background:white;padding:6px 8px;border-radius:6px">
+          <div style="font-weight:700;color:#b45309">🧪 pH del agua</div>
+          <div style="color:#374151">pH&gt;8 sube el pH<br>del depósito.</div>
+          <div style="color:#15803d;font-weight:600;font-size:11px">6.5–7.5 ideal</div>
+        </div>
+        <div style="background:white;padding:6px 8px;border-radius:6px">
+          <div style="font-weight:700;color:#b45309">🧂 Sodio (Na)</div>
+          <div style="color:#374151">Compite con Ca/Mg.<br>Tóxico en exceso.</div>
+          <div style="color:#15803d;font-weight:600;font-size:11px">&lt;100 mg/L ideal</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="document.getElementById('modalAgua').classList.remove('open')">
+      Cerrar
+    </button>
+  </div>
+</div>
+
 <!-- ══ MODAL EDITAR CESTA ══ -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal" id="modal">
@@ -4116,6 +4195,10 @@ function seleccionarMunicipio(nombre, ec, dureza, nota) {
     warnEl.style.borderColor = '#93c5fd';
     warnEl.style.color = '#1e40af';
   }
+}
+
+function mostrarAlternativasSINAC() {
+  document.getElementById('modalAgua').classList.add('open');
 }
 
 function resetMunicipio() {
