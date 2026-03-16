@@ -99,8 +99,8 @@ body {
 
 .splash-img-wrap {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 230px;
+  height: 230px;
   animation: splashImgIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
 }
 
@@ -131,8 +131,9 @@ body {
 }
 
 .splash-title-wrap {
-  margin-top: 20px;
+  margin-top: 14px;
   animation: splashTitleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.35s both;
+  width: 100%;
 }
 @keyframes splashTitleIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -141,11 +142,12 @@ body {
 
 .splash-title {
   font-family: 'Syne', sans-serif;
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 900;
   letter-spacing: -1px;
-  line-height: 1;
+  line-height: 1.2;
   text-align: center;
+  padding: 0 20px;
 }
 .splash-title .t-hydro { color: #4ade80; }
 .splash-title .t-caru  { color: #fbbf24; }
@@ -163,7 +165,7 @@ body {
 }
 
 .splash-loader {
-  margin-top: 40px;
+  margin-top: 24px;
   width: 48px;
   height: 3px;
   background: rgba(255,255,255,0.1);
