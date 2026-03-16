@@ -2029,6 +2029,104 @@ body::before { display: none; }
 .consejo-alerta.warn  { background: #fffbeb; color: #78350f; border: 1px solid #fcd34d; font-weight:600; }
 .consejo-alerta.ok    { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; font-weight:600; }
 
+/* ══ CONFIGURACIÓN AGUA / SUSTRATO ══ */
+.config-section {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.config-section-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.config-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.config-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.config-option.selected {
+  border-color: var(--green);
+  background: #f0fdf4;
+}
+.config-option-radio {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.config-option.selected .config-option-radio {
+  border-color: var(--green);
+  background: var(--green);
+}
+.config-option.selected .config-option-radio::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+.config-option-body { flex: 1; }
+.config-option-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+}
+.config-option-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.config-option.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.config-warning {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fef3c7;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.4;
+  display: none;
+}
+.config-warning.show { display: block; }
+.config-ec-base {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--white);
+  display: none;
+}
+.config-ec-base.show { display: block; }
+
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
   display: flex;
@@ -2212,6 +2310,69 @@ body::before { display: none; }
 
       <div class="section-title">
         📊 <span class="accent">Mediciones</span> diarias
+      </div>
+
+      <!-- Configuración agua y sustrato -->
+      <div id="configPanel">
+
+        <div class="config-section">
+          <div class="config-section-title">💧 Tipo de agua</div>
+          <div class="config-options">
+            <div class="config-option selected" id="opt-destilada" onclick="setAgua('destilada')">
+              <div class="config-option-radio"></div>
+              <div class="config-option-body">
+                <div class="config-option-title">Agua destilada</div>
+                <div class="config-option-desc">EC base: 0 µS/cm · CalMag: ~6.7 ml → EC 0.4</div>
+              </div>
+            </div>
+            <div class="config-option" id="opt-osmosis" onclick="setAgua('osmosis')">
+              <div class="config-option-radio"></div>
+              <div class="config-option-body">
+                <div class="config-option-title">Agua de ósmosis</div>
+                <div class="config-option-desc">EC base: 20-50 µS/cm · CalMag: ~6.0 ml → EC 0.4</div>
+              </div>
+            </div>
+            <div class="config-option" id="opt-grifo" onclick="setAgua('grifo')">
+              <div class="config-option-radio"></div>
+              <div class="config-option-body">
+                <div class="config-option-title">Agua del grifo</div>
+                <div class="config-option-desc">EC base variable según municipio</div>
+              </div>
+              <span style="font-size:18px">⚠️</span>
+            </div>
+          </div>
+          <div class="config-warning" id="warningGrifo">
+            ⚠️ <strong>Castelló de la Plana:</strong> El agua del grifo tiene EC ~850 µS/cm (agua muy dura). Solo quedarían ~550 µS/cm de margen para nutrientes, insuficiente para lechugas. Se recomienda encarecidamente usar agua destilada u ósmosis.
+          </div>
+          <div class="config-ec-base" id="ecBaseGrifo">
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">EC base del agua del grifo (µS/cm)</label>
+            <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
+              style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:120px;outline:none"
+              oninput="actualizarECBase()">
+            <span style="font-size:12px;color:var(--muted);margin-left:6px">µS/cm</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="config-section-title">🌱 Sustrato</div>
+          <div class="config-options">
+            <div class="config-option selected" id="opt-esponja" onclick="setSustrato('esponja')">
+              <div class="config-option-radio"></div>
+              <div class="config-option-body">
+                <div class="config-option-title">Esponja hidropónica</div>
+                <div class="config-option-desc">Retención 40-60% · MinOFF base: 25 min</div>
+              </div>
+            </div>
+            <div class="config-option" id="opt-lana" onclick="setSustrato('lana')">
+              <div class="config-option-radio"></div>
+              <div class="config-option-body">
+                <div class="config-option-title">Lana de roca</div>
+                <div class="config-option-desc">Retención 70-80% · MinOFF base: 32 min (+28%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Última medición -->
@@ -2950,22 +3111,40 @@ const MODOS_CULTIVO = {
 // ══════════════════════════════════════════════════
 // ESTADO
 // ══════════════════════════════════════════════════
-let state = loadState();
+// Variables globales — declaradas ANTES de loadState
 let currentTab = 'inicio';
 let editingCesta = null;
 let modoActual = 'lechuga';
+let state = null; // se inicializa después
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const s = JSON.parse(raw);
+      // Validar que tiene estructura correcta
+      if (!s.torre || !Array.isArray(s.torre)) {
+        console.warn('State corrupto — reiniciando');
+        return initState();
+      }
+      // Asegurar que torre tiene la estructura correcta (5 niveles x 5 cestas)
+      while (s.torre.length < NUM_NIVELES) {
+        s.torre.push(Array(NUM_CESTAS).fill({ variedad:'', fecha:'', notas:'' }));
+      }
+      s.torre.forEach((nivel, n) => {
+        while (nivel.length < NUM_CESTAS) nivel.push({ variedad:'', fecha:'', notas:'' });
+      });
       if (s.modo) modoActual = s.modo;
+      console.log('Estado cargado:', s.torre.flat().filter(c => c.variedad).length, 'plantas');
       return s;
     }
-  } catch(e) {}
+  } catch(e) { console.error('Error loading state:', e); }
+  console.log('Estado nuevo inicializado');
   return initState();
 }
+
+// Inicializar state DESPUÉS de declarar todas las variables
+state = loadState();
 
 function initState() {
   const torre = [];
@@ -2975,11 +3154,32 @@ function initState() {
       torre[n].push({ variedad: '', fecha: '', notas: '' });
     }
   }
-  return { torre, modo: 'lechuga', ultimaMedicion: null };
+  return {
+    torre,
+    modo: 'lechuga',
+    ultimaMedicion: null,
+    ultimaRecarga: null,
+    configAgua: 'destilada',
+    configSustrato: 'esponja'
+  };
 }
 
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // Verificar que se guardó correctamente
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) console.error('Error: estado no guardado en localStorage');
+  } catch(e) {
+    console.error('Error saving state:', e);
+    // Si falla por cuota, intentar limpiar datos antiguos
+    if (e.name === 'QuotaExceededError') {
+      try {
+        localStorage.removeItem('hc_auth');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch(e2) { console.error('No se pudo guardar:', e2); }
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -3041,6 +3241,7 @@ function resetApp() {
   renderTorre();
   updateTorreStats();
   updateDashboard();
+  initConfigUI();
   goTab('inicio');
 
   showToast('🔄 Sistema reseteado');
@@ -3059,6 +3260,7 @@ function initApp() {
   renderTorre();
   updateTorreStats();
   updateDashboard();
+  initConfigUI();
   setInterval(updateDashboard, 300000);
 
   // Detectar primera vez — solo si NO hay ningún dato guardado
@@ -3090,7 +3292,7 @@ function goTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('btn-' + tab).classList.add('active');
   currentTab = tab;
-  if (tab === 'mediciones') cargarUltimaMedicion();
+  if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') cargarMeteo();
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
@@ -3522,6 +3724,125 @@ function clearCesta() {
 }
 
 // ══════════════════════════════════════════════════
+// CONFIGURACIÓN AGUA Y SUSTRATO
+// ══════════════════════════════════════════════════
+
+// Constantes por tipo de agua
+const CONFIG_AGUA = {
+  destilada: {
+    nombre: 'Destilada',
+    ecBase: 0,
+    calmagMl: 6.7,       // ml para llegar a EC 0.4
+    calmagNecesario: true,
+    nota: 'Sin buffer — CalMag imprescindible'
+  },
+  osmosis: {
+    nombre: 'Ósmosis',
+    ecBase: 30,           // µS/cm base media
+    calmagMl: 6.0,
+    calmagNecesario: true,
+    nota: 'EC base baja — CalMag muy recomendado'
+  },
+  grifo: {
+    nombre: 'Grifo',
+    ecBase: 850,          // Castelló — se puede sobrescribir
+    calmagMl: 0,          // no necesario, el agua ya tiene Ca y Mg
+    calmagNecesario: false,
+    nota: 'Agua muy dura en Castelló — no recomendada'
+  }
+};
+
+// Constantes por sustrato
+const CONFIG_SUSTRATO = {
+  esponja: {
+    nombre: 'Esponja hidropónica',
+    retencion: 0.50,      // 40-60% media
+    minOFFBase: 25,       // minutos base
+    nota: 'Drenaje rápido — ciclos más frecuentes'
+  },
+  lana: {
+    nombre: 'Lana de roca',
+    retencion: 0.75,      // 70-80% media
+    minOFFBase: 32,       // minutos base (+28%)
+    nota: 'Alta retención — ciclos más espaciados'
+  }
+};
+
+function setAgua(tipo) {
+  state.configAgua = tipo;
+  saveState();
+
+  // Actualizar UI radio buttons
+  ['destilada','osmosis','grifo'].forEach(t => {
+    document.getElementById('opt-' + t)?.classList.toggle('selected', t === tipo);
+  });
+
+  // Mostrar/ocultar advertencia grifo
+  const warnEl = document.getElementById('warningGrifo');
+  const ecBaseEl = document.getElementById('ecBaseGrifo');
+  if (tipo === 'grifo') {
+    warnEl?.classList.add('show');
+    ecBaseEl?.classList.add('show');
+  } else {
+    warnEl?.classList.remove('show');
+    ecBaseEl?.classList.remove('show');
+  }
+
+  actualizarRangoEC();
+}
+
+function setSustrato(tipo) {
+  state.configSustrato = tipo;
+  saveState();
+
+  ['esponja','lana'].forEach(t => {
+    document.getElementById('opt-' + t)?.classList.toggle('selected', t === tipo);
+  });
+}
+
+function actualizarECBase() {
+  const val = parseInt(document.getElementById('inputECBaseGrifo').value) || 850;
+  if (state.configAgua === 'grifo') {
+    CONFIG_AGUA.grifo.ecBase = val;
+    actualizarRangoEC();
+  }
+}
+
+function actualizarRangoEC() {
+  const agua = CONFIG_AGUA[state.configAgua || 'destilada'];
+  const ecBase = agua.ecBase;
+  const margen = 1400 - ecBase;
+
+  // Actualizar rango mostrado en mediciones si el agua es grifo
+  const rangeEl = document.querySelector('#cardEC .param-range');
+  if (rangeEl) {
+    if (state.configAgua === 'grifo') {
+      rangeEl.textContent = `Margen: ${ecBase + 300}-${ecBase + 400} µS/cm (base: ${ecBase})`;
+    } else {
+      rangeEl.textContent = '1300 – 1400 µS/cm';
+    }
+  }
+}
+
+function initConfigUI() {
+  const agua = state.configAgua || 'destilada';
+  const sustrato = state.configSustrato || 'esponja';
+
+  // Restaurar selección
+  ['destilada','osmosis','grifo'].forEach(t => {
+    document.getElementById('opt-' + t)?.classList.toggle('selected', t === agua);
+  });
+  ['esponja','lana'].forEach(t => {
+    document.getElementById('opt-' + t)?.classList.toggle('selected', t === sustrato);
+  });
+
+  if (agua === 'grifo') {
+    document.getElementById('warningGrifo')?.classList.add('show');
+    document.getElementById('ecBaseGrifo')?.classList.add('show');
+  }
+}
+
+// ══════════════════════════════════════════════════
 // MEDICIONES — LÓGICA
 // ══════════════════════════════════════════════════
 
@@ -3540,8 +3861,8 @@ const RANGOS = {
 // pH+/pH-: ~0.1 unidades por ml en 18L (estimación estándar hidropónica)
 // Nota: el cálculo de corrección descuenta el CalMag ya disuelto (~400 µS/cm)
 const EC_POR_ML_AB      = 25;    // µS/cm por ml de A+B (1mlA+1mlB) en 18L
-const CALMAG_POR_ML     = 67;    // µS/cm por ml CalMag en 18L
-const EC_CALMAG_BASE    = 400;   // µS/cm que aporta el CalMag (6ml en 18L)
+const CALMAG_POR_ML     = 60;    // µS/cm por ml CalMag en 18L (calculado de etiqueta: 5.8%N, 6.8%CaO, 2.5%MgO)
+const EC_CALMAG_BASE    = 400;   // µS/cm objetivo tras CalMag (~6.7ml en 18L)
 const PH_MINUS_POR_ML   = 0.40;  // unidades pH por ml de pH- (75-81%) en 18L
 const PH_PLUS_POR_ML    = 0.30;  // unidades pH por ml de pH+ (25-30%) en 18L
 const VOL_OBJETIVO      = 18;    // litros objetivo depósito
@@ -3894,14 +4215,14 @@ const CL_PASOS = [
     nota:'Previene algas y oxidación del hierro' },
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
-    desc:'Llenar con 18 litros de agua destilada',
-    campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.0' }] },
+    desc:'Llenar con 18 litros de agua (destilada/ósmosis recomendado)',
+    campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
   { id:'4.2', seccion:null, paso:'4.2',
-    desc:'Añadir CalMag: 5-6 ml — remover 2 minutos',
-    nota:'Objetivo EC 0.3-0.4',
+    desc:'Añadir CalMag: ~6.7 ml agua destilada / ~6.0 ml ósmosis — remover 2 min',
+    nota:'Objetivo EC 0.4 (400 µS/cm). Con agua del grifo de Castelló omitir CalMag.',
     campos:[
-      { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder:'5.5' },
-      { id:'clEcCalMag', label:'EC tras CalMag:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.4' }
+      { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder:'6.7' },
+      { id:'clEcCalMag', label:'EC tras CalMag:', unit:'µS/cm', type:'number', step:'1', placeholder:'400' }
     ] },
   { id:'4.3', seccion:null, paso:'4.3', alert:true,
     desc:'Agitar botella Aqua Vega A. Añadir 36 ml — remover 2 minutos',
@@ -4059,7 +4380,10 @@ function gCL(id) {
 
 async function finalizarChecklist() {
   const now = new Date();
-  const fecha = now.toLocaleDateString('es-ES');
+  const dia2 = String(now.getDate()).padStart(2,'0');
+  const mes2 = String(now.getMonth()+1).padStart(2,'0');
+  const anyo2 = now.getFullYear();
+  const fecha = `${dia2}/${mes2}/${anyo2}`;
   const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
 
   const ecFinal  = gCL('clEcFinal');
@@ -4187,24 +4511,34 @@ function renderMiniChart(containerId, datos, min, max, color, colorBad) {
   if (!el) return;
   el.innerHTML = '';
 
-  const ultimos = datos.slice(-14); // últimas 14 mediciones
-  const vals = ultimos.map(d => parseFloat(d.val) || 0);
-  const maxVal = Math.max(...vals, max * 1.1);
-  const minVal = Math.min(...vals, 0);
+  const ultimos = datos.slice(-14);
+  if (ultimos.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:10px">Sin datos</div>';
+    return;
+  }
+
+  const vals = ultimos.map(d => parseFloat(d.val) || 0).filter(v => !isNaN(v));
+  if (vals.length === 0) return;
+
+  const maxVal = Math.max(...vals, max);
+  const minVal = Math.min(...vals, min * 0.9);
   const rango = maxVal - minVal || 1;
 
   ultimos.forEach((d, i) => {
-    const v = parseFloat(d.val) || 0;
+    const v = parseFloat(d.val);
+    if (isNaN(v)) return;
     const pct = Math.max(4, ((v - minVal) / rango) * 100);
     const enRango = v >= min && v <= max;
     const c = enRango ? color : colorBad;
     const showDate = i === 0 || i === ultimos.length - 1 || i % 4 === 0;
+    // fecha ya limpia (DD/MM)
+    const fechaLabel = d.fecha ? String(d.fecha).slice(0, 5) : '';
 
     const col = document.createElement('div');
     col.className = 'chart-bar-col';
     col.innerHTML = `
-      <div class="chart-bar-inner" style="height:${pct}%;background:${c}"></div>
-      <div class="chart-date">${showDate ? d.fecha.slice(0,5) : ''}</div>
+      <div class="chart-bar-inner" style="height:${pct}%;background:${c};border-radius:3px 3px 0 0"></div>
+      <div class="chart-date" style="font-size:9px;color:var(--muted)">${showDate ? fechaLabel : ''}</div>
     `;
     el.appendChild(col);
   });
@@ -4220,38 +4554,101 @@ function getClaseVal(param, val) {
   return 'bad';
 }
 
+// Limpia un valor de Google Sheets — elimina fechas ISO, convierte a número
+function limpiarVal(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const s = String(v).trim();
+  // Si parece fecha ISO (contiene T y Z o tiene formato YYYY-MM-DD largo) → descartar
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s) && s.length === 10) return null;
+  // Si es número válido → devolver número
+  const n = parseFloat(s);
+  if (!isNaN(n)) return n;
+  // Si es texto corto (fecha legible como "15/03/2026") → devolver string
+  if (s.length < 20) return s;
+  return null;
+}
+
+// Formatea fecha de Google Sheets a formato legible DD/MM
+function formatFecha(v) {
+  if (!v) return '—';
+  const s = String(v).trim();
+  // Fecha ISO → convertir
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const d = new Date(s);
+    if (!isNaN(d)) return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
+  }
+  // Fecha ISO simple
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const parts = s.split('-');
+    return `${parts[2]}/${parts[1]}`;
+  }
+  // Ya es legible — devolver tal cual (max 10 chars)
+  return s.slice(0, 10);
+}
+
+// Formatea hora
+function formatHora(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const d = new Date(s);
+    if (!isNaN(d)) return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+  return s.slice(0, 5);
+}
+
 function renderHistMediciones() {
   if (!histDatos || histDatos.length === 0) return;
 
-  // Última medición para valor actual
-  const ultima = histDatos[histDatos.length - 1];
-  // Columnas: [fecha, hora, ec, ph, temp, volumen, notas, alertas]
-  document.getElementById('histECActual').textContent   = ultima[2] || '—';
-  document.getElementById('histPHActual').textContent   = ultima[3] || '—';
-  document.getElementById('histTempActual').textContent = ultima[4] || '—';
-  document.getElementById('histVolActual').textContent  = ultima[5] || '—';
+  // Columnas Sheets: [fecha, hora, ec, ph, temp, volumen, notas, alertas]
+  // Pero Sheets puede devolver fechas como objetos ISO en cualquier columna
+  // Procesamos cada fila limpiando los valores
 
-  // Datos para gráficas
-  const datosEC   = histDatos.map(r => ({ fecha: r[0], val: r[2] }));
-  const datosPH   = histDatos.map(r => ({ fecha: r[0], val: r[3] }));
-  const datosTemp = histDatos.map(r => ({ fecha: r[0], val: r[4] }));
-  const datosVol  = histDatos.map(r => ({ fecha: r[0], val: r[5] }));
+  const filas = histDatos.map(r => ({
+    fecha: formatFecha(r[0]),
+    hora:  formatHora(r[1]),
+    ec:    limpiarVal(r[2]),
+    ph:    limpiarVal(r[3]),
+    temp:  limpiarVal(r[4]),
+    vol:   limpiarVal(r[5]),
+  })).filter(f => f.ec !== null || f.ph !== null || f.temp !== null);
 
-  renderMiniChart('chartEC',   datosEC,   1300, 1400, 'var(--green)', 'var(--red)');
-  renderMiniChart('chartPH',   datosPH,   5.7,  6.4,  'var(--blue)',  'var(--gold)');
-  renderMiniChart('chartTemp', datosTemp, 18,   22,   'var(--gold)',  'var(--red)');
-  renderMiniChart('chartVol',  datosVol,  16,   20,   'var(--blue)',  'var(--red)');
+  if (filas.length === 0) {
+    document.getElementById('histSinDatos').style.display = 'flex';
+    return;
+  }
+
+  // Última medición válida
+  const ultima = filas[filas.length - 1];
+  document.getElementById('histECActual').textContent   = ultima.ec   !== null ? ultima.ec   : '—';
+  document.getElementById('histPHActual').textContent   = ultima.ph   !== null ? ultima.ph   : '—';
+  document.getElementById('histTempActual').textContent = ultima.temp !== null ? ultima.temp : '—';
+  document.getElementById('histVolActual').textContent  = ultima.vol  !== null ? ultima.vol  : '—';
+
+  // Datos para gráficas — solo filas con valor válido
+  const datosEC   = filas.filter(f => f.ec   !== null).map(f => ({ fecha: f.fecha, val: f.ec }));
+  const datosPH   = filas.filter(f => f.ph   !== null).map(f => ({ fecha: f.fecha, val: f.ph }));
+  const datosTemp = filas.filter(f => f.temp !== null).map(f => ({ fecha: f.fecha, val: f.temp }));
+  const datosVol  = filas.filter(f => f.vol  !== null).map(f => ({ fecha: f.fecha, val: f.vol }));
+
+  renderMiniChart('chartEC',   datosEC,   1300, 1400, '#15803d', '#b91c1c');
+  renderMiniChart('chartPH',   datosPH,   5.7,  6.4,  '#1d4ed8', '#b45309');
+  renderMiniChart('chartTemp', datosTemp, 18,   22,   '#b45309', '#b91c1c');
+  renderMiniChart('chartVol',  datosVol,  16,   20,   '#1d4ed8', '#b91c1c');
 
   // Tabla últimas 10 mediciones
   const tabla = document.getElementById('histTabla');
-  const ultimas10 = histDatos.slice(-10).reverse();
-  tabla.innerHTML = ultimas10.map(r => `
+  const ultimas = filas.slice(-10).reverse();
+  tabla.innerHTML = ultimas.map(f => `
     <div class="hist-row">
-      <span class="hist-fecha">${r[0]}<br><span style="font-size:10px">${r[1]||''}</span></span>
-      <span class="hist-val ${getClaseVal('ec', r[2])}">${r[2]||'—'}</span>
-      <span class="hist-val ${getClaseVal('ph', r[3])}">${r[3]||'—'}</span>
-      <span class="hist-val ${getClaseVal('temp', r[4])}">${r[4]||'—'}</span>
-      <span class="hist-val ${getClaseVal('vol', r[5])}">${r[5]||'—'}</span>
+      <span class="hist-fecha">${f.fecha}<br>
+        <span style="font-size:10px;color:var(--muted)">${f.hora}</span>
+      </span>
+      <span class="hist-val ${getClaseVal('ec',   f.ec)}">${f.ec   !== null ? f.ec   : '—'}</span>
+      <span class="hist-val ${getClaseVal('ph',   f.ph)}">${f.ph   !== null ? f.ph   : '—'}</span>
+      <span class="hist-val ${getClaseVal('temp', f.temp)}">${f.temp !== null ? f.temp : '—'}</span>
+      <span class="hist-val ${getClaseVal('vol',  f.vol)}">${f.vol  !== null ? f.vol  : '—'}</span>
     </div>
   `).join('');
 }
@@ -4259,19 +4656,25 @@ function renderHistMediciones() {
 function renderHistRecargas() {
   const tabla = document.getElementById('histRecargasTabla');
   if (!histRecargasDatos || histRecargasDatos.length === 0) {
-    tabla.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--muted);text-align:center">Sin recargas registradas aún</div>';
+    tabla.innerHTML = '<div style="padding:14px;font-size:13px;color:var(--muted);text-align:center">Sin recargas registradas aún</div>';
     return;
   }
   // Columnas: [fecha, ecFinal, phFinal, tempAgua, calmagMl, vegaAMl, vegaBMl, phMasMl, observaciones]
-  tabla.innerHTML = histRecargasDatos.slice(-10).reverse().map(r => `
-    <div class="hist-row" style="grid-template-columns:80px 1fr 1fr 1fr 1fr">
-      <span class="hist-fecha">${r[0]||'—'}</span>
-      <span class="hist-val ${getClaseVal('ec', r[1])}">${r[1]||'—'}</span>
-      <span class="hist-val ${getClaseVal('ph', r[2])}">${r[2]||'—'}</span>
-      <span class="hist-val" style="color:var(--green)">${r[4]||'—'}ml</span>
-      <span class="hist-val" style="color:var(--muted)">${r[7]||'0'}ml</span>
-    </div>
-  `).join('');
+  tabla.innerHTML = histRecargasDatos.slice(-10).reverse().map(r => {
+    const fecha  = formatFecha(r[0]);
+    const ec     = limpiarVal(r[1]);
+    const ph     = limpiarVal(r[2]);
+    const calmag = limpiarVal(r[4]);
+    const phmas  = limpiarVal(r[7]);
+    return `
+    <div class="hist-row" style="grid-template-columns:70px 1fr 1fr 1fr 1fr">
+      <span class="hist-fecha">${fecha}</span>
+      <span class="hist-val ${getClaseVal('ec', ec)}">${ec !== null ? ec : '—'}</span>
+      <span class="hist-val ${getClaseVal('ph', ph)}">${ph !== null ? ph : '—'}</span>
+      <span class="hist-val" style="color:var(--green);font-weight:700">${calmag !== null ? calmag+'ml' : '—'}</span>
+      <span class="hist-val" style="color:var(--muted)">${phmas !== null ? phmas+'ml' : '0ml'}</span>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════
@@ -5036,6 +5439,10 @@ async function calcularRiego() {
     const minON    = Math.round(minONRaw);
 
     // ── Sección B: calcular MinOFF ────────────────────────────────────────
+    // Base MinOFF según sustrato
+    const sustrato = CONFIG_SUSTRATO[state.configSustrato || 'esponja'];
+    const minOFFBase = sustrato.minOFFBase; // 25 esponja, 32 lana de roca
+
     // Factor OFF por VPD
     let factorOFF;
     if      (vpd >= 1.6) factorOFF = 0.70;
@@ -5060,7 +5467,7 @@ async function calcularRiego() {
     if (toldoDesplegado) ajusteLuzOFF = 0;
     factorOFF += ajusteLuzOFF;
 
-    const minOFF = Math.round(25 * factorOFF);
+    const minOFF = Math.round(minOFFBase * factorOFF);
 
     // ── Sección C: ciclos ─────────────────────────────────────────────────
     const minCiclo    = minON + minOFF;
@@ -5084,7 +5491,7 @@ async function calcularRiego() {
     else                          factorOFFMedio = 1.40;
 
     const minONMedio   = Math.round(minONBase * factorONMedio);
-    const minOFFMedio  = Math.round(25 * factorOFFMedio);
+    const minOFFMedio  = Math.round(minOFFBase * factorOFFMedio);
     const ciclosMedio  = Math.floor(240 / (minONMedio + minOFFMedio));
     const totalONMedio = minONMedio * ciclosMedio;
 
@@ -5109,12 +5516,14 @@ async function calcularRiego() {
     document.getElementById('resMedioVPD').textContent    = Math.round(vpdMediodia * 100) / 100;
 
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
+    const agua2 = CONFIG_AGUA[state.configAgua || 'destilada'];
     document.getElementById('riegoClimaUsado').innerHTML =
       `🌡️ Temp: ${tempMin}°C / ${tempMax}°C · Media: ${Math.round(tempMedia*10)/10}°C<br>` +
       `💧 Humedad media: ${humMedia}% · Viento: ${viento} km/h<br>` +
       `☀️ UV máximo: ${uvMax} · Prob. lluvia: ${probLluvia}%<br>` +
       `🌿 Temp 13-15h: ${temp1315}°C · Humedad 13-15h: ${hum1315}%` +
-      (ajusteFoliar > 0 ? ` (+${ajusteFoliar}°C ajuste foliar)` : '');
+      (ajusteFoliar > 0 ? ` (+${ajusteFoliar}°C ajuste foliar)` : '') + '<br>' +
+      `⚙️ Sustrato: ${sustrato.nombre} (MinOFF base: ${minOFFBase} min) · Agua: ${agua2.nombre}`;
 
     // Guardar en state para uso en otros módulos
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
@@ -5349,7 +5758,11 @@ async function guardarMedicion() {
   }
 
   const now = new Date();
-  const fecha = now.toLocaleDateString('es-ES');
+  // Formato dd/mm/yyyy para que sea legible en Google Sheets
+  const dia = String(now.getDate()).padStart(2,'0');
+  const mes = String(now.getMonth()+1).padStart(2,'0');
+  const anyo = now.getFullYear();
+  const fecha = `${dia}/${mes}/${anyo}`;
   const hora  = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
   // Calcular alertas para el registro
