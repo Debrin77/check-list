@@ -13,22 +13,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* ── TEMA DIURNO — optimizado para uso en exterior ── */
-  --bg:         #f5f7f2;
+  /* ── TEMA DIURNO — alto contraste para uso en exterior ── */
+  --bg:         #f4f6f1;
   --bg2:        #ffffff;
-  --bg3:        #eef1eb;
-  --border:     rgba(34,139,74,0.18);
-  --green:      #16a34a;
-  --green-dim:  #15803d;
+  --bg3:        #eaede6;
+  --border:     rgba(0,0,0,0.12);
+  --green:      #15803d;    /* verde oscuro — buen contraste sobre blanco */
+  --green-dim:  #14532d;
   --green-pale: #dcfce7;
-  --gold:       #d97706;
+  --gold:       #b45309;    /* ámbar oscuro */
   --gold-dim:   #fef3c7;
-  --red:        #dc2626;
+  --red:        #b91c1c;    /* rojo oscuro */
   --red-dim:    #fee2e2;
-  --orange:     #ea580c;
-  --blue:       #2563eb;
-  --white:      #1a2e1a;   /* texto principal oscuro */
-  --muted:      #6b7c6b;   /* texto secundario */
+  --orange:     #c2410c;
+  --blue:       #1d4ed8;    /* azul oscuro */
+  --white:      #111827;    /* texto principal — casi negro */
+  --muted:      #374151;    /* texto secundario — gris oscuro legible */
   --font-display: 'Syne', sans-serif;
   --font-mono:    'Inconsolata', monospace;
   --safe-top:    env(safe-area-inset-top, 47px);
@@ -51,6 +51,7 @@ body {
   background: var(--bg);
   color: var(--white);
   font-family: var(--font-mono);
+  font-size: 14px;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
@@ -206,8 +207,8 @@ body::before { display: none; }
   color: var(--muted);
   transition: color 0.2s;
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
   padding: 0;
   position: relative;
@@ -248,10 +249,10 @@ body::before { display: none; }
 }
 .card-title {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 2px;
+  color: var(--white);
+  letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 12px;
   display: flex;
@@ -564,7 +565,7 @@ body::before { display: none; }
   padding: 0 2px;
 }
 .cesta-variedad {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--white);
   text-align: center;
   line-height: 1.2;
@@ -573,10 +574,10 @@ body::before { display: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: 700;
 }
 .cesta-dias {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-family: var(--font-mono);
   margin-top: 2px;
@@ -584,6 +585,7 @@ body::before { display: none; }
   align-items: center;
   justify-content: center;
   gap: 2px;
+  font-weight: 600;
 }
 .cesta-num {
   position: absolute;
@@ -776,12 +778,12 @@ body::before { display: none; }
 
 /* ══ INFO BANNER ══ */
 .info-banner {
-  background: rgba(52,211,153,0.08);
-  border: 1px solid rgba(52,211,153,0.2);
+  background: rgba(21,128,61,0.06);
+  border: 1px solid rgba(21,128,61,0.2);
   border-radius: 10px;
   padding: 10px 12px;
-  font-size: 12px;
-  color: var(--green-pale);
+  font-size: 13px;
+  color: var(--white);
   line-height: 1.5;
   margin-bottom: 10px;
   display: flex;
@@ -871,18 +873,19 @@ body::before { display: none; }
   border-radius: 6px;
   display: inline-block;
 }
-.tile-status.ok   { background: rgba(52,211,153,0.12); color: var(--green); }
-.tile-status.warn { background: rgba(251,191,36,0.12); color: var(--gold); }
-.tile-status.bad  { background: rgba(248,113,113,0.12); color: var(--red); }
+.tile-status.ok   { background: #dcfce7; color: #14532d; font-weight:700; }
+.tile-status.warn { background: #fef3c7; color: #78350f; font-weight:700; }
+.tile-status.bad  { background: #fee2e2; color: #7f1d1d; font-weight:700; }
 .tile-status.empty { background: var(--bg3); color: var(--muted); }
 
 /* Barra recarga depósito */
 .recarga-card {
   background: var(--bg2);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 .recarga-header {
   display: flex;
@@ -965,19 +968,19 @@ body::before { display: none; }
   align-items: flex-start;
   border: 1px solid;
 }
-.meteo-alert.ok     { background: rgba(52,211,153,0.07); border-color: rgba(52,211,153,0.25); }
-.meteo-alert.warn   { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.3); }
-.meteo-alert.bad    { background: rgba(248,113,113,0.07); border-color: rgba(248,113,113,0.35); }
+.meteo-alert.ok     { background: #f0fdf4; border-color: #16a34a; }
+.meteo-alert.warn   { background: #fffbeb; border-color: #d97706; }
+.meteo-alert.bad    { background: #fef2f2; border-color: #dc2626; }
 .meteo-alert-icon { font-size: 22px; flex-shrink: 0; }
 .meteo-alert-body {}
 .meteo-alert-title {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--white);
   margin-bottom: 3px;
 }
-.meteo-alert-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.meteo-alert-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
 /* Acciones rápidas */
 .quick-actions {
@@ -1025,7 +1028,7 @@ body::before { display: none; }
 }
 .param-label {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--white);
   display: flex;
@@ -1033,9 +1036,10 @@ body::before { display: none; }
   gap: 6px;
 }
 .param-range {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-family: var(--font-mono);
+  font-weight: 600;
 }
 .param-input-row {
   display: flex;
@@ -1071,22 +1075,23 @@ body::before { display: none; }
   margin-top: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
 }
-.param-status.ok   { background: rgba(52,211,153,0.1);  color: var(--green); }
-.param-status.warn { background: rgba(251,191,36,0.1);  color: var(--gold); }
-.param-status.bad  { background: rgba(248,113,113,0.1); color: var(--red); }
+.param-status.ok   { background: #dcfce7; color: #14532d; }
+.param-status.warn { background: #fef3c7; color: #78350f; }
+.param-status.bad  { background: #fee2e2; color: #7f1d1d; }
 .param-status.empty { display: none; }
 
 .correccion-box {
   margin-top: 8px;
   padding: 10px 12px;
-  background: rgba(251,191,36,0.08);
-  border: 1px solid rgba(251,191,36,0.25);
+  background: #fef3c7;
+  border: 1px solid #d97706;
   border-radius: 10px;
-  font-size: 12px;
-  color: var(--gold);
+  font-size: 13px;
+  color: #92400e;
   line-height: 1.6;
   display: none;
 }
@@ -1094,23 +1099,23 @@ body::before { display: none; }
 .correccion-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 4px;
-  color: var(--white);
+  color: #78350f;
 }
 .correccion-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(251,191,36,0.1);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(180,83,9,0.15);
 }
 .correccion-item:last-child { border-bottom: none; }
 .correccion-valor {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--gold);
+  font-weight: 800;
+  font-size: 15px;
+  color: #92400e;
 }
 
 .guardar-medicion-bar {
@@ -1391,11 +1396,12 @@ body::before { display: none; }
   line-height: 1;
 }
 .meteo-param-label {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin-top: 3px;
+  font-weight: 600;
 }
 
 /* VPD gauge */
@@ -1508,9 +1514,9 @@ body::before { display: none; }
   font-size: 12px;
   border: 1px solid;
 }
-.meteo-alerta-item.ok     { background: rgba(52,211,153,0.07); border-color: rgba(52,211,153,0.2); color: var(--green-pale); }
-.meteo-alerta-item.warn   { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.25); color: var(--gold); }
-.meteo-alerta-item.bad    { background: rgba(248,113,113,0.07); border-color: rgba(248,113,113,0.3); color: var(--red); }
+.meteo-alerta-item.ok     { background: #f0fdf4; border-color: #16a34a; color: #14532d; }
+.meteo-alerta-item.warn   { background: #fffbeb; border-color: #d97706; color: #78350f; }
+.meteo-alerta-item.bad    { background: #fef2f2; border-color: #dc2626; color: #7f1d1d; }
 
 /* ══ CALENDARIO ══ */
 .cal-header {
@@ -1608,12 +1614,12 @@ body::before { display: none; }
 .evento-body { flex: 1; }
 .evento-titulo {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--white);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
-.evento-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.evento-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .evento-tipo-control  { border-color: rgba(96,165,250,0.3); }
 .evento-tipo-recarga  { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.04); }
 .evento-tipo-cosecha  { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.04); }
@@ -1826,12 +1832,15 @@ body::before { display: none; }
   transition: all 0.2s;
 }
 .cl-item.checked {
-  background: rgba(52,211,153,0.06);
-  border-color: rgba(52,211,153,0.3);
+  background: #dcfce7;
+  border-color: #16a34a;
 }
+.cl-item.checked .cl-desc { color: #14532d; }
+.cl-item.checked .cl-note { color: #166534; }
+.cl-item.checked .cl-step { color: #15803d; }
 .cl-item.alert-item {
-  border-color: rgba(248,113,113,0.3);
-  background: rgba(248,113,113,0.04);
+  border-color: #dc2626;
+  background: #fef2f2;
 }
 
 .cl-checkbox {
@@ -1854,23 +1863,24 @@ body::before { display: none; }
 
 .cl-body { flex: 1; }
 .cl-step {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--green);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 2px;
+  font-weight: 700;
 }
 .cl-step.alert { color: var(--red); }
 .cl-desc {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--white);
-  line-height: 1.4;
+  line-height: 1.5;
   margin-bottom: 6px;
 }
 .cl-note {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
-  line-height: 1.3;
+  line-height: 1.4;
   font-style: italic;
 }
 .cl-alert-tag {
@@ -2000,11 +2010,11 @@ body::before { display: none; }
   font-weight: 600;
 }
 .consejo-texto {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.7;
 }
-.consejo-texto strong { color: var(--white); }
+.consejo-texto strong { color: var(--white); font-weight: 700; }
 .consejo-alerta {
   margin-top: 8px;
   padding: 7px 10px;
@@ -2014,9 +2024,9 @@ body::before { display: none; }
   display: flex;
   gap: 6px;
 }
-.consejo-alerta.info  { background: rgba(37,99,235,0.08); color: #1d4ed8; border: 1px solid rgba(37,99,235,0.2); }
-.consejo-alerta.warn  { background: rgba(217,119,6,0.08); color: #92400e; border: 1px solid rgba(217,119,6,0.2); }
-.consejo-alerta.ok    { background: rgba(22,163,74,0.08); color: #14532d; border: 1px solid rgba(22,163,74,0.2); }
+.consejo-alerta.info  { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; font-weight:600; }
+.consejo-alerta.warn  { background: #fffbeb; color: #78350f; border: 1px solid #fcd34d; font-weight:600; }
+.consejo-alerta.ok    { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; font-weight:600; }
 
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
@@ -5071,6 +5081,7 @@ async function calcularRiego() {
     document.getElementById('resMedioTotal').textContent  = totalONMedio;
     document.getElementById('resMedioVPD').textContent    = Math.round(vpdMediodia * 100) / 100;
 
+    document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     document.getElementById('riegoClimaUsado').innerHTML =
       `🌡️ Temp: ${tempMin}°C / ${tempMax}°C · Media: ${Math.round(tempMedia*10)/10}°C<br>` +
       `💧 Humedad media: ${humMedia}% · Viento: ${viento} km/h<br>` +
