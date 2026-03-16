@@ -89,6 +89,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0;
+  padding: 0 16px;
+  overflow: hidden;
   animation: splashFadeOut 0.6s ease-in 2.5s forwards;
 }
 
@@ -142,12 +144,14 @@ body {
 
 .splash-title {
   font-family: 'Syne', sans-serif;
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 900;
-  letter-spacing: -1px;
+  letter-spacing: 1px;
   line-height: 1.2;
   text-align: center;
-  padding: 0 20px;
+  width: 100%;
+  padding: 0 30px;
+  box-sizing: border-box;
 }
 .splash-title .t-hydro { color: #4ade80; }
 .splash-title .t-caru  { color: #fbbf24; }
