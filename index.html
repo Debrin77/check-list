@@ -3010,7 +3010,10 @@ function updatePinDots() {
 function checkPin() {
   if (pinEntry === PIN) {
     document.getElementById('pinScreen').style.display = 'none';
-    try { sessionStorage.setItem('hc_auth', '1'); } catch(e) {}
+    try {
+      // Guardar auth con timestamp de 8 horas
+      localStorage.setItem('hc_auth', Date.now().toString());
+    } catch(e) {}
     initApp();
   } else {
     for (let i = 0; i < 4; i++) document.getElementById('d' + i).className = 'pin-dot err';
@@ -3058,8 +3061,12 @@ function initApp() {
   updateDashboard();
   setInterval(updateDashboard, 300000);
 
-  // Detectar primera vez — si no hay última recarga ni medición
-  const esPrimeraVez = !state.ultimaRecarga && !state.ultimaMedicion;
+  // Detectar primera vez — solo si NO hay ningún dato guardado
+  // (ni recarga, ni medición, ni plantas en la torre)
+  const hayPlantas = MODOS_CULTIVO[modoActual].niveles.some(n =>
+    state.torre[n].some(c => c.variedad)
+  );
+  const esPrimeraVez = !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
   if (esPrimeraVez) {
     setTimeout(() => {
       showToast('👋 Bienvenido — completa el checklist inicial');
@@ -5468,10 +5475,17 @@ function showToast(msg, error=false) {
 // ARRANQUE
 // ══════════════════════════════════════════════════
 window.onload = () => {
-  if (sessionStorage.getItem('hc_auth') === '1') {
-    document.getElementById('pinScreen').style.display = 'none';
-    initApp();
-  }
+  try {
+    const authTs = localStorage.getItem('hc_auth');
+    const OCHO_HORAS = 8 * 60 * 60 * 1000;
+    if (authTs && (Date.now() - parseInt(authTs)) < OCHO_HORAS) {
+      // Auth válida — saltar PIN
+      document.getElementById('pinScreen').style.display = 'none';
+      initApp();
+      return;
+    }
+  } catch(e) {}
+  // Sin auth válida — mostrar PIN
 };
 </script>
 </body>
