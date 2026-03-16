@@ -2191,6 +2191,97 @@ body::before { display: none; }
   vertical-align: middle;
 }
 
+/* ══ RESPONSIVE — tablet y escritorio ══ */
+@media (min-width: 430px) {
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    box-shadow: 0 0 40px rgba(0,0,0,0.15);
+  }
+  body {
+    background: #e5e7eb;
+  }
+  .modal { max-width: 430px; }
+  .checklist-footer { max-width: 430px; left: 50%; transform: translateX(-50%); }
+}
+@media (min-width: 768px) {
+  body { background: #d1d5db; }
+  .app { border-radius: 24px; overflow: hidden; margin-top: 20px; height: calc(100vh - 40px); }
+}
+@media (min-width: 1024px) {
+  body { background: #9ca3af; display: flex; align-items: flex-start; justify-content: center; padding-top: 30px; }
+  .app { height: calc(100vh - 60px); }
+}
+
+/* ══ ROTACIÓN ESCALONADA ══ */
+.rotacion-card {
+  background: var(--bg2);
+  border: 2px solid #2563eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.12);
+}
+.rotacion-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: #1d4ed8;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rotacion-nivel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg3);
+  margin-bottom: 6px;
+}
+.rotacion-nivel-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.rotacion-nivel-info { flex: 1; }
+.rotacion-nivel-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+}
+.rotacion-nivel-dias {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.rotacion-arrow {
+  font-size: 18px;
+  color: var(--muted);
+  text-align: center;
+  padding: 2px 0;
+}
+.rotacion-alerta {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+.rotacion-alerta.urgente { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+.rotacion-alerta.pronto  { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; }
+.rotacion-alerta.ok      { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; }
+
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
   display: flex;
@@ -2619,6 +2710,9 @@ body::before { display: none; }
           <div class="stat-label">✂️ Cosechar</div>
         </div>
       </div>
+
+      <!-- Card rotación escalonada -->
+      <div id="rotacionCard" style="display:none"></div>
 
       <!-- Selector modo cultivo -->
       <div class="modo-selector" id="modoSelector">
@@ -3519,6 +3613,7 @@ function goTab(tab) {
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') cargarMeteo();
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
+  if (tab === 'torre') calcularRotacion();
   if (tab === 'historial') cargarHistorial();
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
@@ -3724,6 +3819,7 @@ function renderTorre() {
   }
 
   renderCompatGrid();
+  calcularRotacion();
 }
 
 function getGrupoCultivo(variedad) {
@@ -3845,6 +3941,174 @@ function updateTorreStats() {
   document.getElementById('statPlantas').textContent = totalPlantas;
   document.getElementById('statDiasMedia').textContent = totalPlantas > 0 ? Math.round(totalDias / totalPlantas) : '—';
   document.getElementById('statCosechas').textContent = cosechas;
+}
+
+// ══════════════════════════════════════════════════
+// ROTACIÓN ESCALONADA
+// ══════════════════════════════════════════════════
+
+function calcularRotacion() {
+  const card = document.getElementById('rotacionCard');
+  if (!card) return;
+
+  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+
+  // Solo mostrar en modo lechuga o mixto (3 niveles escalonados)
+  if (nivelesActivos.length < 2) { card.style.display = 'none'; return; }
+
+  // Detectar si es cultivo escalonado o único
+  // Escalonado = diferencia de días media entre niveles > 10 días
+  const edadesPorNivel = nivelesActivos.map(n => {
+    const plantas = state.torre[n].filter(c => c.variedad && c.fecha);
+    if (plantas.length === 0) return null;
+    const diasMedia = plantas.reduce((sum, c) => sum + getDias(c.fecha), 0) / plantas.length;
+    return { nivel: n, diasMedia, plantas };
+  }).filter(Boolean);
+
+  if (edadesPorNivel.length < 2) { card.style.display = 'none'; return; }
+
+  // Ordenar por edad (más joven primero = nivel superior)
+  edadesPorNivel.sort((a, b) => a.diasMedia - b.diasMedia);
+
+  const diferenciaMax = edadesPorNivel[edadesPorNivel.length-1].diasMedia - edadesPorNivel[0].diasMedia;
+  const esCultivoEscalonado = diferenciaMax > 8; // más de 8 días de diferencia entre niveles
+
+  if (!esCultivoEscalonado) { card.style.display = 'none'; return; }
+
+  // Calcular estado y alertas de cada nivel
+  const alertas = [];
+  let htmlNiveles = '';
+
+  edadesPorNivel.forEach((info, idx) => {
+    const esUltimo = idx === edadesPorNivel.length - 1;
+    const esPrimero = idx === 0;
+
+    // Calcular días a cosecha media del nivel
+    const diasTotalMedia = info.plantas.reduce((sum, c) => {
+      return sum + (DIAS_COSECHA[c.variedad] || 50);
+    }, 0) / info.plantas.length;
+
+    const diasRestantes = Math.round(diasTotalMedia - info.diasMedia);
+    const pct = Math.min(100, Math.round((info.diasMedia / diasTotalMedia) * 100));
+
+    // Determinar estado
+    let estado, colorBg, colorText, colorBorder, emoji;
+    if (diasRestantes <= 0) {
+      estado = '✂️ COSECHAR'; colorBg = '#fee2e2'; colorText = '#7f1d1d'; colorBorder = '#b91c1c'; emoji = '✂️';
+    } else if (diasRestantes <= 5) {
+      estado = `Cosecha en ${diasRestantes}d`; colorBg = '#fef3c7'; colorText = '#78350f'; colorBorder = '#d97706'; emoji = '🔶';
+    } else if (pct >= 66) {
+      estado = `Madurez — ${diasRestantes}d para cosecha`; colorBg = '#fffbeb'; colorText = '#92400e'; colorBorder = '#d97706'; emoji = '🥬';
+    } else if (pct >= 33) {
+      estado = `Crecimiento — ${diasRestantes}d para cosecha`; colorBg = '#f0fdf4'; colorText = '#14532d'; colorBorder = '#16a34a'; emoji = '🌿';
+    } else {
+      estado = `Plántula — ${diasRestantes}d para cosecha`; colorBg = '#eff6ff'; colorText = '#1e40af'; colorBorder = '#2563eb'; emoji = '🌱';
+    }
+
+    // Nombre legible del nivel
+    const nombreNivel = esPrimero ? 'Nivel superior' : esUltimo ? 'Nivel inferior' : 'Nivel central';
+    const numNivel = info.nivel + 1;
+
+    htmlNiveles += `
+      <div class="rotacion-nivel-row">
+        <div class="rotacion-nivel-num" style="background:${colorBg};color:${colorText};border:1.5px solid ${colorBorder}">
+          ${numNivel}
+        </div>
+        <div class="rotacion-nivel-info">
+          <div class="rotacion-nivel-titulo">${nombreNivel} — ${Math.round(info.diasMedia)} días</div>
+          <div class="rotacion-nivel-dias">${info.plantas.length} plantas · ${estado}</div>
+        </div>
+        <div style="font-size:20px">${emoji}</div>
+      </div>`;
+
+    // Generar alerta si hay acción pendiente
+    if (diasRestantes <= 0 && esUltimo) {
+      alertas.push({ tipo: 'urgente', texto: `✂️ <strong>Nivel ${numNivel} listo para cosechar.</strong> Cosechar, rotar niveles y trasplantar plántulas nuevas en nivel superior.` });
+    } else if (diasRestantes <= 5 && esUltimo) {
+      alertas.push({ tipo: 'pronto', texto: `🔶 <strong>Cosecha próxima en ${diasRestantes} días.</strong> Prepara las nuevas plántulas para trasplantar al nivel ${edadesPorNivel[0].nivel + 1}.` });
+    }
+  });
+
+  // Calcular próxima rotación
+  const nivelMasMaduro = edadesPorNivel[edadesPorNivel.length - 1];
+  const diasTotalMaduro = nivelMasMaduro.plantas.reduce((sum, c) =>
+    sum + (DIAS_COSECHA[c.variedad] || 50), 0) / nivelMasMaduro.plantas.length;
+  const diasParaRotacion = Math.max(0, Math.round(diasTotalMaduro - nivelMasMaduro.diasMedia));
+
+  if (alertas.length === 0) {
+    if (diasParaRotacion <= 10) {
+      alertas.push({ tipo: 'pronto', texto: `🔄 Rotación en aproximadamente <strong>${diasParaRotacion} días</strong>. Ve preparando plántulas nuevas.` });
+    } else {
+      alertas.push({ tipo: 'ok', texto: `✅ Cultivo escalonado en buen ritmo. Próxima rotación en <strong>${diasParaRotacion} días</strong>.` });
+    }
+  }
+
+  // Flecha entre niveles
+  // Las flechas se añaden directamente en el template
+  const htmlConFlechas = htmlNiveles;
+
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div class="rotacion-card">
+      <div class="rotacion-title">
+        🔄 Rotación escalonada
+      </div>
+      ${htmlConFlechas}
+      ${alertas.map(a => `
+        <div class="rotacion-alerta ${a.tipo}">
+          <span style="flex:1">${a.texto}</span>
+        </div>`).join('')}
+      ${diasParaRotacion <= 0 ? `
+      <button class="btn btn-primary" onclick="iniciarRotacion()" style="margin-top:10px;font-size:14px">
+        🔄 Iniciar rotación de niveles
+      </button>` : ''}
+    </div>`;
+}
+
+function iniciarRotacion() {
+  // Modal de confirmación con pasos de rotación
+  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const pasos = [
+    `✂️ Cosechar todas las plantas del nivel ${nivelesActivos[nivelesActivos.length-1] + 1}`,
+    `🔽 Mover plantas del nivel ${nivelesActivos[1] + 1} → nivel ${nivelesActivos[nivelesActivos.length-1] + 1}`,
+    `🔽 Mover plantas del nivel ${nivelesActivos[0] + 1} → nivel ${nivelesActivos[1] + 1}`,
+    `🌱 Trasplantar plántulas nuevas en nivel ${nivelesActivos[0] + 1}`,
+    `🧹 Limpiar cestas vacías con agua oxigenada`,
+  ];
+
+  const lista = pasos.map((p, i) => (i+1) + '. ' + p).join('\n');
+
+  if (confirm('ROTACIÓN DE NIVELES\n\n' + lista + '\n\n¿Confirmar rotación?\n\nEsto actualizará las fechas en la Torre.')) {
+    ejecutarRotacion();
+  }
+}
+
+function ejecutarRotacion() {
+  const nivelesActivos = [...MODOS_CULTIVO[modoActual].niveles];
+  // Ordenar por edad (mayor a menor — el más maduro primero)
+  const edadesPorNivel = nivelesActivos.map(n => {
+    const plantas = state.torre[n].filter(c => c.variedad && c.fecha);
+    if (plantas.length === 0) return { nivel: n, diasMedia: 0 };
+    return { nivel: n, diasMedia: plantas.reduce((s, c) => s + getDias(c.fecha), 0) / plantas.length };
+  }).sort((a, b) => b.diasMedia - a.diasMedia); // más maduro primero
+
+  // El más maduro se cosecha (vaciar)
+  const nivelCosecha = edadesPorNivel[0].nivel;
+  state.torre[nivelCosecha] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '' }));
+
+  // Los demás se mueven al nivel siguiente (más maduro)
+  for (let i = 1; i < edadesPorNivel.length; i++) {
+    const nivelOrigen = edadesPorNivel[i].nivel;
+    const nivelDestino = edadesPorNivel[i-1].nivel;
+    state.torre[nivelDestino] = JSON.parse(JSON.stringify(state.torre[nivelOrigen]));
+    state.torre[nivelOrigen] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '' }));
+  }
+
+  saveState();
+  renderTorre();
+  updateTorreStats();
+  calcularRotacion();
+  showToast('✅ Rotación completada — añade plántulas al nivel superior');
 }
 
 // ══════════════════════════════════════════════════
