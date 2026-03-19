@@ -5206,6 +5206,18 @@ function aplicarConfigTorre() {
   }
 }
 
+// ── Detectar si hay plántulas nuevas (< 5 días) en la torre ─────────────────
+function hayPlantulasNuevas() {
+  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  return nivelesActivos.some(n =>
+    (state.torre[n] || []).some(c => {
+      if (!c.variedad || !c.fecha) return false;
+      const dias = Math.floor((Date.now() - new Date(c.fecha)) / 86400000);
+      return dias <= 5;
+    })
+  );
+}
+
 // ══════════════════════════════════════════════════
 // ROTACIÓN ESCALONADA
 // ══════════════════════════════════════════════════
@@ -6268,6 +6280,13 @@ const CL_PASOS = [
     desc:'⚠️ Máximo 45 minutos sin bomba — anotar hora límite',
     nota:'Estrés hídrico irreversible si se supera' },
 
+  { id:'1.4', seccion:null, paso:'1.4', alert:true,
+    desc:'✂️ COSECHAR PRIMERO todas las plantas maduras antes de limpiar',
+    nota:'⚠️ CRÍTICO: Las raíces maduras miden 30-40cm y al sacar las cestas se rompen inevitablemente. Los fragmentos de raíz en el depósito fermentan, generan espuma y suben el pH. Orden correcto: 1º Cosechar → 2º Limpiar → 3º Trasplantar' },
+  { id:'1.5', seccion:null, paso:'1.5',
+    desc:'Si hay plantas en crecimiento que NO se cosechan: dejarlas en su sitio durante toda la limpieza',
+    nota:'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
+
   { id:'2.1', seccion:'🧹 Paso 2 — Vaciar y limpiar', paso:'2.1',
     desc:'Vaciar completamente el depósito y anotar color del agua',
     campos:[{
@@ -6609,20 +6628,22 @@ async function cargarHistorial() {
   }
 
   // ── Fallback: datos locales guardados en localStorage ────────────────────
-  if (!sheetsOk) {
-    const local = state.medicionesLocal || [];
-    if (local.length > 0) {
-      // Convertir formato local al formato esperado por renderHistMediciones
-      histDatos = local.map(m => ({
-        fecha: m.fecha, hora: m.hora,
-        ec:    m.ec   ? parseFloat(m.ec)   : null,
-        ph:    m.ph   ? parseFloat(m.ph)   : null,
-        temp:  m.temp ? parseFloat(m.temp) : null,
-        vol:   m.vol  ? parseFloat(m.vol)  : null,
-        notas: m.notas || ''
-      }));
-      if (!histRecargasDatos) histRecargasDatos = [];
-      showToast('📱 Mostrando datos locales (sin conexión a Sheets)');
+  // Siempre combinar datos locales con Sheets si existen
+  const local = state.medicionesLocal || [];
+  if (!sheetsOk && local.length > 0) {
+    // Sin Sheets — usar solo locales
+    histDatos = local; // renderHistMediciones ya sabe parsear el formato objeto
+    if (!histRecargasDatos) histRecargasDatos = [];
+    showToast('📱 Mostrando datos locales');
+  } else if (sheetsOk && local.length > 0) {
+    // Con Sheets — añadir mediciones locales recientes que aún no estén en Sheets
+    // (las de hoy probablemente no han llegado a Sheets todavía)
+    const fechasSheets = new Set((histDatos || []).map(r =>
+      Array.isArray(r) ? (r[0] + '|' + r[1]) : (r.fecha + '|' + r.hora)
+    ));
+    const soloLocales = local.filter(m => !fechasSheets.has(m.fecha + '|' + m.hora));
+    if (soloLocales.length > 0) {
+      histDatos = [...soloLocales, ...(histDatos || [])];
     }
   }
 
@@ -6750,17 +6771,24 @@ function renderHistMediciones() {
         notas: r[6] || '',
       };
     } else {
+      // Datos locales — vienen como strings, convertir a número o null
+      const parseVal = v => {
+        if (v === null || v === undefined || v === '') return null;
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      };
       return {
         fecha: r.fecha || '—',
         hora:  r.hora  || '—',
-        ec:    r.ec    !== null && r.ec    !== undefined ? r.ec    : null,
-        ph:    r.ph    !== null && r.ph    !== undefined ? r.ph    : null,
-        temp:  r.temp  !== null && r.temp  !== undefined ? r.temp  : null,
-        vol:   r.vol   !== null && r.vol   !== undefined ? r.vol   : null,
+        ec:    parseVal(r.ec),
+        ph:    parseVal(r.ph),
+        temp:  parseVal(r.temp),
+        vol:   parseVal(r.vol),
         notas: r.notas || '',
       };
     }
-  }).filter(f => f.ec !== null || f.ph !== null || f.temp !== null);
+  // Mantener fila si tiene AL MENOS UN valor válido (ec, ph, temp o vol)
+  }).filter(f => f.ec !== null || f.ph !== null || f.temp !== null || f.vol !== null);
 
   if (filas.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
@@ -6797,6 +6825,7 @@ function renderHistMediciones() {
       <span class="hist-val ${getClaseVal('ph',   f.ph)}">${f.ph   !== null ? f.ph   : '—'}</span>
       <span class="hist-val ${getClaseVal('temp', f.temp)}">${f.temp !== null ? f.temp : '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  f.vol)}">${f.vol  !== null ? f.vol  : '—'}</span>
+      ${f.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">${f.notas}</span>` : ''}
     </div>
   `).join('');
 }
@@ -6895,6 +6924,9 @@ const CONSEJOS_DATA = {
       { icono:'🌱', titulo:'Plántulas — primeros días',
         texto:'Las primeras 48h son críticas. Mantén la esponja siempre húmeda pero no encharcada. El sistema de cascada debe estar activo desde el primer momento. <strong>No expongas las raíces al aire.</strong>',
         alerta:{ tipo:'info', txt:'ℹ️ Las plántulas nuevas pueden necesitar 2-3 días para adaptarse al sistema hidropónico si vienen de semillero en tierra.' } },
+      { icono:'⚗️', titulo:'pH inestable tras trasplantar plántulas',
+        texto:'Es completamente normal que el pH suba 1-2 unidades en las primeras 24-72h tras añadir plántulas nuevas al sistema. Las raíces jóvenes absorben más aniones (nitratos) que cationes y liberan OH⁻ al agua, subiendo el pH. Con agua destilada este efecto es más pronunciado porque no hay carbonatos que amortigüen. <strong>No es un problema — es fisiología normal.</strong>',
+        alerta:{ tipo:'warn', txt:'⚠️ Primera semana con plántulas nuevas: mide el pH cada 6-8h y ajusta con pH- si supera 7.0. A partir del día 4-5 el pH se estabiliza solo. Si el pH sube DE NOCHE también, puede indicar actividad bacteriana — revisar raíces.' } },
       { icono:'🥬', titulo:'Señales de lechuga sana',
         texto:'Hojas turgentes y brillantes, color verde intenso o rojizo según variedad, crecimiento visible día a día. Las raíces deben ser blancas o ligeramente crema, nunca marrones o con mal olor.',
         alerta:{ tipo:'ok', txt:'✅ Una lechuga sana puede crecer 2-3 cm al día en condiciones óptimas.' } },
@@ -7566,6 +7598,12 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
       alertas.push({ tipo:'bad', icon:'⚡', txt:`EC ${ecActual} µS/cm — demasiado alta. Las plantas no absorben agua (estrés osmótico). Diluir con agua destilada.` });
     else if (ecActual < 900)
       alertas.push({ tipo:'warn', icon:'⚡', txt:`EC ${ecActual} µS/cm — baja. Las plantas pueden mostrar clorosis (hojas amarillas). Añadir nutrientes.` });
+  }
+
+  // ── 🌱 PLÁNTULAS NUEVAS — pH inestable ──────────────────────────────────────
+  if (hayPlantulasNuevas()) {
+    alertas.push({ tipo:'warn', icon:'🌱',
+      txt:'Plántulas nuevas en sistema (<5 días) — pH puede subir 1-2 unidades por actividad radicular. Normal. Mide cada 6-8h y corrige con pH- si supera 7.0. Se estabilizará en 3-5 días.' });
   }
 
   // ── 🌊 VPD ────────────────────────────────────────────────────────────────
