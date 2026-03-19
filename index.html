@@ -3610,18 +3610,24 @@ body::before { display: none; }
       <div class="section-title">📈 <span class="accent">Historial</span></div>
 
       <!-- Sub-tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-        <div class="hist-tabs" style="flex:1;margin-bottom:0">
+      <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+        <div class="hist-tabs" style="flex:1;margin-bottom:0;min-width:200px">
           <div class="hist-tab active" id="htab-mediciones" onclick="histTab('mediciones')">📊 Mediciones</div>
           <div class="hist-tab" id="htab-recargas" onclick="histTab('recargas')">🔄 Recargas</div>
+          <div class="hist-tab" id="htab-registro" onclick="histTab('registro')">📋 Registro</div>
         </div>
         <button onclick="abrirChecklist(false)"
           style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--green);
                  background:#f0fdf4;color:#15803d;font-family:var(--font-display);
                  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
                  -webkit-tap-highlight-color:transparent">
-          📋 Ver checklist
+          📋 Checklist
         </button>
+      </div>
+
+      <!-- Registro completo -->
+      <div id="histRegistro" style="display:none">
+        <div id="registroLista"></div>
       </div>
 
       <!-- Loader -->
@@ -4080,7 +4086,12 @@ body::before { display: none; }
     </div>
 
     <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar</button>
-    <button class="btn btn-danger" onclick="clearCesta()" style="margin-top:8px">🗑 Vaciar cesta</button>
+    <button class="btn" onclick="cosecharCesta()"
+      style="margin-top:8px;background:#f0fdf4;color:#15803d;border:2px solid #16a34a;
+             font-family:var(--font-display);font-weight:700;font-size:15px">
+      ✂️ Cosechar y registrar
+    </button>
+    <button class="btn btn-danger" onclick="clearCesta()" style="margin-top:8px">🗑 Vaciar sin registrar</button>
     <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   </div>
 </div>
@@ -4351,7 +4362,7 @@ function goTab(tab) {
   if (tab === 'meteo') cargarMeteo();
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
   if (tab === 'torre') calcularRotacion();
-  if (tab === 'historial') cargarHistorial();
+  if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
     // Pre-rellenar con datos de la torre si hay plantas
@@ -5462,6 +5473,70 @@ function closeModal(e) {
   }
 }
 
+// ══════════════════════════════════════════════════
+// REGISTRO COMPLETO — mediciones, cosechas, recargas
+// ══════════════════════════════════════════════════
+
+function initRegistro() {
+  if (!state.registro) state.registro = [];
+}
+
+function addRegistro(tipo, datos) {
+  initRegistro();
+  const now  = new Date();
+  const dia  = String(now.getDate()).padStart(2,'0');
+  const mes  = String(now.getMonth()+1).padStart(2,'0');
+  const fecha = dia + '/' + mes + '/' + now.getFullYear();
+  const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+  state.registro.unshift({ tipo, fecha, hora, ...datos });
+  if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
+  saveState();
+}
+
+// Cosechar una cesta y guardar trazabilidad completa
+function cosecharCesta() {
+  if (!editingCesta) return;
+  const { nivel, cesta } = editingCesta;
+  const data = state.torre[nivel][cesta];
+  if (!data.variedad) { closeModal(); return; }
+
+  const diasCultivo = data.fecha
+    ? Math.floor((Date.now() - new Date(data.fecha)) / 86400000)
+    : null;
+
+  // Guardar en registro con trazabilidad completa
+  addRegistro('cosecha', {
+    variedad:    data.variedad,
+    nivel:       nivel + 1,
+    cesta:       cesta + 1,
+    fechaSiembra: data.fecha || '',
+    diasCultivo: diasCultivo,
+    notas:       data.notas || '',
+    icono:       '✂️'
+  });
+
+  // También guardar en state.mediciones para el historial
+  if (!state.mediciones) state.mediciones = [];
+  state.mediciones.unshift({
+    fecha: state.registro[0].fecha,
+    hora:  state.registro[0].hora,
+    tipo:  'cosecha',
+    ec: '', ph: '', temp: '', vol: '',
+    notas: '✂️ Cosecha: ' + data.variedad +
+           ' · N' + (nivel+1) + ' C' + (cesta+1) +
+           (diasCultivo ? ' · ' + diasCultivo + ' días' : '') +
+           (data.notas ? ' · ' + data.notas : '')
+  });
+
+  // Vaciar la cesta
+  state.torre[nivel][cesta] = { variedad: '', fecha: '', notas: '' };
+  saveState();
+  renderTorre();
+  updateTorreStats();
+  closeModal();
+  showToast('✂️ ' + data.variedad + ' cosechada y registrada · ' + (diasCultivo || '?') + ' días');
+}
+
 function saveCesta() {
   if (!editingCesta) return;
   const { nivel, cesta } = editingCesta;
@@ -6526,9 +6601,19 @@ async function finalizarChecklist() {
   state.recargasLocal.unshift(recargaData);
   if (state.recargasLocal.length > 20) state.recargasLocal = state.recargasLocal.slice(0,20);
 
+  // Guardar en registro general
+  addRegistro('recarga', {
+    ecFinal: String(ecFinalNum), phFinal, tempAgua, volFinal,
+    calmagMl: recargaData.calmagMl, vegaAMl: recargaData.vegaAMl,
+    phMasMl: recargaData.phMasMl,
+    colorAgua: recargaData.colorAgua,
+    estadoPlantas: recargaData.estadoPlantas,
+    icono: '🔄'
+  });
+
   // También guardar como medición local
-  if (!state.medicionesLocal) state.medicionesLocal = [];
-  state.medicionesLocal.unshift({
+  if (!state.mediciones) state.mediciones = [];
+  state.mediciones.unshift({
     fecha, hora, ec: String(ecFinalNum), ph: phFinal,
     temp: tempAgua, vol: volFinal, notas: 'Recarga completa'
   });
@@ -6594,70 +6679,47 @@ let histRecargasDatos = [];
 function histTab(tab) {
   histTabActiva = tab;
   document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('htab-' + tab).classList.add('active');
+  const btn = document.getElementById('htab-' + tab);
+  if (btn) btn.classList.add('active');
+
+  const show = id => { const el = document.getElementById(id); if(el) el.style.display = 'block'; };
+  const hide = id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; };
+
+  hide('histMediciones');
+  hide('histRecargas');
+  const regEl = document.getElementById('histRegistroPanel');
+  if (regEl) regEl.style.display = 'none';
+
   if (tab === 'mediciones') {
-    document.getElementById('histMediciones').style.display = 'block';
-    document.getElementById('histRecargas').style.display = 'none';
-  } else {
-    document.getElementById('histMediciones').style.display = 'none';
-    document.getElementById('histRecargas').style.display = 'block';
+    show('histMediciones');
+  } else if (tab === 'recargas') {
+    show('histRecargas');
+  } else if (tab === 'registro') {
+    if (regEl) regEl.style.display = 'block';
+    renderRegistro();
   }
 }
 
-async function cargarHistorial() {
-  document.getElementById('histLoader').style.display = 'flex';
+function cargarHistorial() {
+  document.getElementById('histLoader').style.display = 'none';
+  document.getElementById('histSinDatos').style.display = 'none';
   document.getElementById('histMediciones').style.display = 'none';
   document.getElementById('histRecargas').style.display = 'none';
-  document.getElementById('histSinDatos').style.display = 'none';
 
-  // ── Intentar cargar de Google Sheets ────────────────────────────────────
-  let sheetsOk = false;
-  try {
-    const urlMed = SCRIPT_URL + '?action=mediciones';
-    const resMed = await fetch(urlMed);
-    const datosSheets = await resMed.json();
-    if (datosSheets && datosSheets.length > 0) {
-      histDatos = datosSheets;
-      sheetsOk  = true;
-    }
-    const urlRec = SCRIPT_URL + '?action=recargas';
-    const resRec = await fetch(urlRec);
-    histRecargasDatos = await resRec.json();
-  } catch(e) {
-    sheetsOk = false;
-  }
+  const mediciones = state.mediciones || [];
 
-  // ── Fallback: datos locales guardados en localStorage ────────────────────
-  // Siempre combinar datos locales con Sheets si existen
-  const local = state.medicionesLocal || [];
-  if (!sheetsOk && local.length > 0) {
-    // Sin Sheets — usar solo locales
-    histDatos = local; // renderHistMediciones ya sabe parsear el formato objeto
-    if (!histRecargasDatos) histRecargasDatos = [];
-    showToast('📱 Mostrando datos locales');
-  } else if (sheetsOk && local.length > 0) {
-    // Con Sheets — añadir mediciones locales recientes que aún no estén en Sheets
-    // (las de hoy probablemente no han llegado a Sheets todavía)
-    const fechasSheets = new Set((histDatos || []).map(r =>
-      Array.isArray(r) ? (r[0] + '|' + r[1]) : (r.fecha + '|' + r.hora)
-    ));
-    const soloLocales = local.filter(m => !fechasSheets.has(m.fecha + '|' + m.hora));
-    if (soloLocales.length > 0) {
-      histDatos = [...soloLocales, ...(histDatos || [])];
-    }
-  }
-
-  document.getElementById('histLoader').style.display = 'none';
-
-  if (!histDatos || histDatos.length === 0) {
+  if (mediciones.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
     return;
   }
 
+  // Usar directamente state.mediciones — sin transformaciones ni Sheets
+  histDatos = mediciones;
   renderHistMediciones();
   renderHistRecargas();
   document.getElementById('histMediciones').style.display = 'block';
 }
+
 
 function renderMiniChart(containerId, datos, min, max, color, colorBad) {
   const el = document.getElementById(containerId);
@@ -6751,84 +6813,116 @@ function formatHora(v) {
   return s.slice(0, 5);
 }
 
+function renderRegistro() {
+  const lista   = document.getElementById('registroLista');
+  const entries = (state.registro || []).slice(0, 100);
+
+  if (entries.length === 0) {
+    lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
+      '📋 El registro se irá llenando con mediciones, recargas y cosechas.</div>';
+    return;
+  }
+
+  const colores = {
+    medicion: { bg:'#f0fdf4', border:'#16a34a', color:'#15803d',  icon:'📊' },
+    recarga:  { bg:'#eff6ff', border:'#2563eb', color:'#1d4ed8',  icon:'🔄' },
+    cosecha:  { bg:'#fef3c7', border:'#d97706', color:'#b45309',  icon:'✂️' },
+  };
+
+  // Agrupar por fecha
+  const porFecha = {};
+  entries.forEach(e => {
+    const key = e.fecha || '—';
+    if (!porFecha[key]) porFecha[key] = [];
+    porFecha[key].push(e);
+  });
+
+  lista.innerHTML = Object.entries(porFecha).map(([fecha, evs]) => {
+    const cols = evs.map(e => {
+      const c = colores[e.tipo] || colores.medicion;
+      let detalle = '';
+      if (e.tipo === 'medicion') {
+        detalle = [
+          e.ec   ? '⚡ ' + e.ec + ' µS' : '',
+          e.ph   ? '🧪 ' + e.ph         : '',
+          e.temp ? '🌡️ ' + e.temp + '°C'  : '',
+          e.vol  ? '🪣 ' + e.vol + 'L'   : '',
+        ].filter(Boolean).join(' · ');
+        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+      } else if (e.tipo === 'recarga') {
+        detalle = [
+          e.ecFinal  ? '⚡ EC final: ' + e.ecFinal + ' µS' : '',
+          e.phFinal  ? '🧪 pH: ' + e.phFinal              : '',
+          e.calmagMl ? '💊 CalMag: ' + e.calmagMl + 'ml'   : '',
+          e.vegaAMl  ? '🌿 A+B: ' + e.vegaAMl + 'ml'       : '',
+        ].filter(Boolean).join(' · ');
+        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+      } else if (e.tipo === 'cosecha') {
+        detalle = e.variedad || '';
+        if (e.nivel) detalle += ' · N' + e.nivel + ' C' + e.cesta;
+        if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
+        if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
+        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+      }
+      return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:10px;' +
+        'padding:10px 12px;margin-bottom:6px">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+          '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
+            c.icon + ' ' + (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)) +
+          '</span>' +
+          '<span style="font-size:11px;color:var(--muted)">' + (e.hora||'') + '</span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:#374151;line-height:1.6">' + detalle + '</div>' +
+        '</div>';
+    }).join('');
+
+    return '<div style="margin-bottom:14px">' +
+      '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:var(--muted);' +
+        'text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;padding-bottom:4px;' +
+        'border-bottom:1px solid var(--border)">' + fecha + '</div>' +
+      cols + '</div>';
+  }).join('');
+}
+
+
 function renderHistMediciones() {
-  if (!histDatos || histDatos.length === 0) return;
-
-  // Columnas Sheets: [fecha, hora, ec, ph, temp, volumen, notas, alertas]
-  // Pero Sheets puede devolver fechas como objetos ISO en cualquier columna
-  // Procesamos cada fila limpiando los valores
-
-  const filas = histDatos.map(r => {
-    // Detectar si es formato objeto (local) o array (Sheets)
-    if (Array.isArray(r)) {
-      return {
-        fecha: formatFecha(r[0]),
-        hora:  formatHora(r[1]),
-        ec:    limpiarVal(r[2]),
-        ph:    limpiarVal(r[3]),
-        temp:  limpiarVal(r[4]),
-        vol:   limpiarVal(r[5]),
-        notas: r[6] || '',
-      };
-    } else {
-      // Datos locales — vienen como strings, convertir a número o null
-      const parseVal = v => {
-        if (v === null || v === undefined || v === '') return null;
-        const n = parseFloat(v);
-        return isNaN(n) ? null : n;
-      };
-      return {
-        fecha: r.fecha || '—',
-        hora:  r.hora  || '—',
-        ec:    parseVal(r.ec),
-        ph:    parseVal(r.ph),
-        temp:  parseVal(r.temp),
-        vol:   parseVal(r.vol),
-        notas: r.notas || '',
-      };
-    }
-  // Mantener fila si tiene AL MENOS UN valor válido (ec, ph, temp o vol)
-  }).filter(f => f.ec !== null || f.ph !== null || f.temp !== null || f.vol !== null);
-
-  if (filas.length === 0) {
+  const mediciones = (state.mediciones || []).slice(0, 20);
+  if (mediciones.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
     return;
   }
 
-  // Última medición válida
-  const ultima = filas[filas.length - 1];
-  document.getElementById('histECActual').textContent   = ultima.ec   !== null ? ultima.ec   : '—';
-  document.getElementById('histPHActual').textContent   = ultima.ph   !== null ? ultima.ph   : '—';
-  document.getElementById('histTempActual').textContent = ultima.temp !== null ? ultima.temp : '—';
-  document.getElementById('histVolActual').textContent  = ultima.vol  !== null ? ultima.vol  : '—';
+  // Actualizar valores actuales (primera = más reciente)
+  const ult = mediciones[0];
+  document.getElementById('histECActual').textContent   = ult.ec   || '—';
+  document.getElementById('histPHActual').textContent   = ult.ph   || '—';
+  document.getElementById('histTempActual').textContent = ult.temp || '—';
+  document.getElementById('histVolActual').textContent  = ult.vol  || '—';
 
-  // Datos para gráficas — solo filas con valor válido
-  const datosEC   = filas.filter(f => f.ec   !== null).map(f => ({ fecha: f.fecha, val: f.ec }));
-  const datosPH   = filas.filter(f => f.ph   !== null).map(f => ({ fecha: f.fecha, val: f.ph }));
-  const datosTemp = filas.filter(f => f.temp !== null).map(f => ({ fecha: f.fecha, val: f.temp }));
-  const datosVol  = filas.filter(f => f.vol  !== null).map(f => ({ fecha: f.fecha, val: f.vol }));
+  // Gráficas — orden cronológico (invertir para izq→der)
+  const asc = [...mediciones].reverse();
+  const toData = (arr, key) => arr.filter(m => m[key]).map(m => ({ fecha: m.fecha, val: parseFloat(m[key]) }));
+  renderMiniChart('chartEC',   toData(asc,'ec'),   1300, 1400, '#15803d', '#b91c1c');
+  renderMiniChart('chartPH',   toData(asc,'ph'),   5.7,  6.4,  '#1d4ed8', '#b45309');
+  renderMiniChart('chartTemp', toData(asc,'temp'), 18,   22,   '#b45309', '#b91c1c');
+  renderMiniChart('chartVol',  toData(asc,'vol'),  16,   20,   '#1d4ed8', '#b91c1c');
 
-  renderMiniChart('chartEC',   datosEC,   1300, 1400, '#15803d', '#b91c1c');
-  renderMiniChart('chartPH',   datosPH,   5.7,  6.4,  '#1d4ed8', '#b45309');
-  renderMiniChart('chartTemp', datosTemp, 18,   22,   '#b45309', '#b91c1c');
-  renderMiniChart('chartVol',  datosVol,  16,   20,   '#1d4ed8', '#b91c1c');
-
-  // Tabla últimas 10 mediciones
+  // Tabla
   const tabla = document.getElementById('histTabla');
-  const ultimas = filas.slice(-10).reverse();
-  tabla.innerHTML = ultimas.map(f => `
-    <div class="hist-row">
-      <span class="hist-fecha">${f.fecha}<br>
-        <span style="font-size:10px;color:var(--muted)">${f.hora}</span>
+  tabla.innerHTML = mediciones.map((m, i) => `
+    <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
+      <span class="hist-fecha">${m.fecha}<br>
+        <span style="font-size:10px;color:var(--muted)">${m.hora}</span>
       </span>
-      <span class="hist-val ${getClaseVal('ec',   f.ec)}">${f.ec   !== null ? f.ec   : '—'}</span>
-      <span class="hist-val ${getClaseVal('ph',   f.ph)}">${f.ph   !== null ? f.ph   : '—'}</span>
-      <span class="hist-val ${getClaseVal('temp', f.temp)}">${f.temp !== null ? f.temp : '—'}</span>
-      <span class="hist-val ${getClaseVal('vol',  f.vol)}">${f.vol  !== null ? f.vol  : '—'}</span>
-      ${f.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">${f.notas}</span>` : ''}
+      <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
+      <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
+      <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
+      <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
+      ${m.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">📝 ${m.notas}</span>` : ''}
     </div>
   `).join('');
 }
+
 
 function renderHistRecargas() {
   // Mostrar recargas locales (siempre disponibles)
@@ -7206,7 +7300,7 @@ function renderCalendario() {
   };
 
   // Mediciones locales guardadas
-  (state.medicionesLocal || []).forEach(m => {
+  (state.mediciones || []).forEach(m => {
     if (!m.fecha) return;
     const parts = m.fecha.split('/');
     if (parts.length < 3) return;
@@ -8176,10 +8270,13 @@ async function guardarMedicion() {
 
   // ── 1. GUARDAR SIEMPRE EN LOCAL PRIMERO ───────────────────────────────────
   state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol };
-  if (!state.medicionesLocal) state.medicionesLocal = [];
-  state.medicionesLocal.unshift({ fecha, hora, ec, ph, temp, vol, notas });
-  if (state.medicionesLocal.length > 100)
-    state.medicionesLocal = state.medicionesLocal.slice(0, 100);
+  if (!state.mediciones) state.mediciones = [];
+  state.mediciones.unshift({ fecha, hora, tipo:'medicion', ec, ph, temp, vol, notas });
+  if (state.mediciones.length > 200)
+    state.mediciones = state.mediciones.slice(0, 200);
+
+  // También al registro general
+  addRegistro('medicion', { ec, ph, temp, vol, notas, icono:'📊' });
 
   // Si es una recarga marcada
   if (esRecarga) {
@@ -8194,7 +8291,15 @@ async function guardarMedicion() {
     });
   }
 
+  // Guardar también en registro unificado
+  addRegistro('medicion', { ec, ph, temp, vol, notas });
+
   saveState(); // Guardar en localStorage SIEMPRE
+
+  // Refrescar historial si está visible
+  if (document.getElementById('tab-historial').classList.contains('active')) {
+    cargarHistorial();
+  }
 
   // ── 2. ACTUALIZAR UI ──────────────────────────────────────────────────────
   document.getElementById('depositoStats').textContent =
