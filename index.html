@@ -3272,20 +3272,11 @@ body::before { display: none; }
         <span id="compatAlertText"></span>
       </div>
 
-      <!-- Torre visual -->
+      <!-- Torre visual SVG -->
       <div class="torre-container">
-
-        <!-- Cabeza rociador -->
-        <div class="torre-head">
-          <div class="torre-head-icon">💧</div>
-        </div>
-
-        <!-- Cuerpo central con eje y niveles -->
-        <div class="torre-central">
-          <div class="torre-axis"></div>
-          <div class="torre-levels" id="torreLevels">
-            <!-- Generado por JS -->
-          </div>
+        <!-- SVG generado dinámicamente -->
+        <div id="torreSVGWrap" style="width:100%;overflow-x:auto">
+          <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">Cargando torre...</div>
         </div>
 
         <!-- Depósito -->
@@ -3328,22 +3319,39 @@ body::before { display: none; }
       <div class="section-title">📅 <span class="accent">Calendario</span></div>
 
       <!-- Navegación mes -->
-      <div class="cal-header">
-        <div class="cal-nav" onclick="calNavMes(-1)">‹</div>
-        <div class="cal-mes" id="calMesLabel">—</div>
-        <div class="cal-nav" onclick="calNavMes(1)">›</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <button onclick="calNavMes(-1)" style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">‹</button>
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--white)" id="calMesLabel">—</div>
+        <button onclick="calNavMes(1)"  style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">›</button>
+      </div>
+
+      <!-- Cabecera días semana -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">L</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">M</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">X</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">J</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">V</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">S</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">D</div>
       </div>
 
       <!-- Grid calendario -->
-      <div class="cal-grid" id="calGrid"></div>
+      <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px"></div>
 
-      <!-- Eventos del día seleccionado -->
+      <!-- Leyenda -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#0369a1"></div>Medición</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#16a34a"></div>Recarga</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#d97706"></div>Limpieza</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#dc2626"></div>Cosecha</div>
+      </div>
+
+      <!-- Próximos eventos -->
       <div class="card">
-        <div class="card-title" id="calDiaLabel">Selecciona un día</div>
-        <div class="eventos-lista" id="eventosDia">
-          <div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">
-            Toca un día para ver los eventos y recomendaciones
-          </div>
+        <div class="card-title">📋 Próximos eventos</div>
+        <div id="eventosDia" style="font-size:13px;color:var(--muted)">
+          <div style="text-align:center;padding:8px">Cargando eventos...</div>
         </div>
       </div>
 
@@ -4385,153 +4393,205 @@ function setModo(modo) {
   renderTorre();
 }
 
-function renderTorre() {
-  const levelsEl = document.getElementById('torreLevels');
-  levelsEl.innerHTML = '';
-
+function generarSVGTorre() {
   const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const numNiveles = NUM_NIVELES;
+  const numCestas  = NUM_CESTAS;
 
-  for (let n = 0; n < NUM_NIVELES; n++) {
+  // Dimensiones
+  const SVG_W    = 340;
+  const NIVEL_H  = 64;   // altura de cada nivel
+  const NIVEL_GAP = 10;  // espacio entre niveles
+  const CESTA_R  = 14;   // radio cesta
+  const EJE_W    = 14;   // ancho eje central
+  const MARG_T   = 50;   // margen arriba (rociador)
+  const MARG_B   = 20;
+  const CX       = SVG_W / 2;
+
+  const totalH = MARG_T + numNiveles * NIVEL_H + (numNiveles-1) * NIVEL_GAP + MARG_B;
+
+  // Y del centro de cada nivel (de arriba a abajo = nivel 1 arriba)
+  const nivelY = (n) => MARG_T + n * (NIVEL_H + NIVEL_GAP) + NIVEL_H/2;
+
+  let s = '';
+
+  // ── DEFS ──────────────────────────────────────────────────────────────────
+  s += `<defs>
+    <linearGradient id="ejeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="nivelGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="100%" stop-color="#dcfce7"/>
+    </linearGradient>
+    <linearGradient id="nivelInacGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f9fafb"/>
+      <stop offset="100%" stop-color="#f3f4f6"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.10"/>
+    </filter>
+    <marker id="waterDrop" markerWidth="6" markerHeight="6" refX="3" refY="3">
+      <circle cx="3" cy="3" r="2" fill="#38bdf8" opacity="0.7"/>
+    </marker>
+  </defs>`;
+
+  // ── EJE CENTRAL (tubo) ────────────────────────────────────────────────────
+  const ejeTop = MARG_T - 30;
+  const ejeBot = MARG_T + numNiveles * NIVEL_H + (numNiveles-1) * NIVEL_GAP + 10;
+  s += `<rect x="${CX - EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot - ejeTop}"
+    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.9" filter="url(#shadow)"/>`;
+
+  // Agua cayendo por el eje (animación)
+  s += `<line x1="${CX}" y1="${ejeTop}" x2="${CX}" y2="${ejeBot}"
+    stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 10" stroke-linecap="round" opacity="0.5">
+    <animate attributeName="stroke-dashoffset" from="0" to="36" dur="1.2s" repeatCount="indefinite"/>
+  </line>`;
+
+  // ── ROCIADOR ARRIBA ───────────────────────────────────────────────────────
+  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="22" ry="10"
+    fill="#86efac" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>`;
+  s += `<text x="${CX}" y="${ejeTop + 4}" font-size="12" text-anchor="middle">💧</text>`;
+  // Gotas
+  [-18,-8,2,12,22].forEach((dx, i) => {
+    s += `<circle cx="${CX + dx}" cy="${ejeTop + 18 + i%2*4}" r="2.5"
+      fill="#93c5fd" opacity="0.7">
+      <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+28}"
+        dur="${0.8+i*0.15}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="0.8" to="0"
+        dur="${0.8+i*0.15}s" repeatCount="indefinite"/>
+    </circle>`;
+  });
+
+  // ── NIVELES ───────────────────────────────────────────────────────────────
+  const NIVEL_W = 280; // ancho del nivel (bandeja)
+  const NIVEL_H_REAL = NIVEL_H - 8;
+
+  for (let n = 0; n < numNiveles; n++) {
+    const ny     = nivelY(n);
     const activo = nivelesActivos.includes(n);
+    const nx     = CX - NIVEL_W/2;
 
-    const levelDiv = document.createElement('div');
-    levelDiv.className = 'torre-level' + (activo ? ' active' : ' inactive');
+    // Bandeja del nivel
+    s += `<rect x="${nx}" y="${ny - NIVEL_H_REAL/2}" width="${NIVEL_W}" height="${NIVEL_H_REAL}"
+      rx="12" fill="${activo ? 'url(#nivelGrad)' : 'url(#nivelInacGrad)'}"
+      stroke="${activo ? '#86efac' : '#e5e7eb'}" stroke-width="${activo ? 2 : 1}"
+      opacity="${activo ? 1 : 0.4}" filter="url(#shadow)"/>`;
 
-    // Header
-    const header = document.createElement('div');
-    header.className = 'level-header';
-    header.style.cursor = activo ? 'pointer' : 'default';
+    // Etiqueta nivel
+    s += `<text x="${nx - 8}" y="${ny + 4}"
+      font-family="Syne,sans-serif" font-size="11" font-weight="800"
+      fill="${activo ? '#15803d' : '#9ca3af'}" text-anchor="end">N${n+1}</text>`;
 
-    const nameEl = document.createElement('div');
-    nameEl.className = 'level-name' + (activo ? '' : ' inactive-label');
+    if (!activo) continue;
 
-    if (activo) {
-      const plantas = state.torre[n].filter(c => c.variedad).length;
-      const cosechas = state.torre[n].filter(c => {
-        if (!c.variedad) return false;
-        return getEstado(c.variedad, getDias(c.fecha)) === 'cosecha';
-      }).length;
+    // ── CESTAS ──────────────────────────────────────────────────────────────
+    const cestaSpacing = (NIVEL_W - 20) / (numCestas + 1);
+    for (let c = 0; c < numCestas; c++) {
+      const cx2 = nx + 10 + cestaSpacing * (c + 1);
+      const cy2 = ny;
+      const cestaData = state.torre[n] && state.torre[n][c] ? state.torre[n][c] : { variedad:'', fecha:'' };
+      const dias = cestaData.fecha ? Math.floor((Date.now() - new Date(cestaData.fecha)) / 86400000) : 0;
+      const estado = cestaData.variedad ? getEstado(cestaData.variedad, dias) : '';
+      const diasTotal = DIAS_COSECHA[cestaData.variedad] || 50;
+      const pct = cestaData.variedad ? Math.min(100, Math.round((dias/diasTotal)*100)) : 0;
 
-      // Progreso del nivel
-      const pctPlantas = Math.round((plantas / NUM_CESTAS) * 100);
-      const cosechaTag = cosechas > 0
-        ? `<span style="background:rgba(248,113,113,0.2);color:var(--red);padding:2px 6px;border-radius:6px;font-size:10px">✂️ ${cosechas}</span>`
-        : '';
-      const warningTag = checkNivelCompat(n)
-        ? `<span style="color:var(--gold);font-size:10px">⚠️</span>`
-        : '';
-
-      nameEl.innerHTML = `
-        <div class="nivel-toggle" onclick="toggleNivel(${n})">
-          <div class="level-num">${n + 1}</div>
-          <span>Nivel ${n + 1}</span>
-          <span class="nivel-chevron" id="chevron-${n}">▾</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <div style="flex:1;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden">
-            <div style="height:100%;width:${pctPlantas}%;background:var(--green);border-radius:2px;transition:width 0.3s"></div>
-          </div>
-          <span style="font-size:10px;color:var(--muted)">${plantas}/5</span>
-          ${cosechaTag}
-          ${warningTag}
-        </div>
-      `;
-    } else {
-      nameEl.innerHTML = `<span style="font-size:12px;color:var(--muted)">Nivel ${n + 1} — inactivo</span>`;
-    }
-
-    const statsEl = document.createElement('div');
-    statsEl.className = 'level-stats';
-
-    header.appendChild(nameEl);
-    levelDiv.appendChild(header);
-
-    // Cestas grid 3+2
-    const cestasGrid = document.createElement('div');
-    cestasGrid.className = 'level-cestas';
-
-    const row1 = document.createElement('div');
-    row1.className = 'cestas-row top';
-    const row2 = document.createElement('div');
-    row2.className = 'cestas-row bottom';
-
-    for (let c = 0; c < NUM_CESTAS; c++) {
-      const cesta = state.torre[n][c];
-      const cestaEl = document.createElement('div');
-
-      if (activo) {
-        if (cesta.variedad) {
-          const dias = getDias(cesta.fecha);
-          const estado = getEstado(cesta.variedad, dias);
-          const diasTotal = DIAS_COSECHA[cesta.variedad] || 50;
-          const pct = Math.min(100, Math.round((dias / diasTotal) * 100));
-
-          // Colores por estado
-          const colores = {
-            plantula:    { badge: '#3b82f6', badgeBg: '#eff6ff', bar: '#3b82f6' },
-            crecimiento: { badge: '#16a34a', badgeBg: '#f0fdf4', bar: '#16a34a' },
-            madurez:     { badge: '#d97706', badgeBg: '#fffbeb', bar: '#d97706' },
-            cosecha:     { badge: '#dc2626', badgeBg: '#fee2e2', bar: '#dc2626' },
-          };
-          const col = colores[estado] || colores.plantula;
-
-          // Nombre abreviado
-          const nombreCorto = cesta.variedad.length > 8
-            ? cesta.variedad.slice(0, 7) + '…'
-            : cesta.variedad;
-
-          cestaEl.className = 'cesta ' + estado;
-          cestaEl.innerHTML =
-            '<div class="cesta-num">' + (c + 1) + '</div>' +
-            '<div class="cesta-dias-badge" style="background:' + col.badgeBg + ';color:' + col.badge + '">' + dias + 'd</div>' +
-            '<div class="cesta-emoji">' + getEmoji(estado) + '</div>' +
-            '<div class="cesta-info">' +
-              '<div class="cesta-variedad">' + nombreCorto + '</div>' +
-              '<div class="cesta-progress">' +
-                '<div class="cesta-progress-fill" style="width:' + pct + '%;background:' + col.bar + '"></div>' +
-              '</div>' +
-            '</div>';
-        } else {
-          cestaEl.className = 'cesta empty';
-          cestaEl.innerHTML =
-            '<div class="cesta-num">' + (c + 1) + '</div>' +
-            '<div class="cesta-add">＋</div>' +
-            '<div class="cesta-vacia-txt">vacía</div>';
-        }
-        cestaEl.onclick = () => openModal(n, c);
+      let fill, stroke, plantEmoji;
+      if (!cestaData.variedad) {
+        fill='#f9fafb'; stroke='#d1d5db'; plantEmoji='';
+      } else if (estado === 'plantula') {
+        fill='#eff6ff'; stroke='#3b82f6'; plantEmoji='🌱';
+      } else if (estado === 'crecimiento') {
+        fill='#f0fdf4'; stroke='#16a34a'; plantEmoji=getEmoji(estado);
+      } else if (estado === 'madurez') {
+        fill='#fffbeb'; stroke='#d97706'; plantEmoji=getEmoji(estado);
       } else {
-        cestaEl.className = 'cesta';
-        cestaEl.style.cssText = 'cursor:default;opacity:0.2;min-height:108px;background:#f9fafb';
-        cestaEl.innerHTML = '<div class="cesta-num">' + (c + 1) + '</div>';
+        fill='#fff5f5'; stroke='#dc2626'; plantEmoji='✂️';
       }
 
-      if (c < 3) row1.appendChild(cestaEl);
-      else row2.appendChild(cestaEl);
+      // Sombra cesta
+      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R+3}" fill="rgba(0,0,0,0.06)"/>`;
+
+      // Cesta (cuerpo)
+      s += `<g data-n="${n}" data-c="${c}" class="hc-cesta" style="cursor:pointer">`;
+      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R}"
+        fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
+
+      // Barra progreso circular (arco)
+      if (pct > 0) {
+        const r2 = CESTA_R + 5;
+        const ang = (pct/100) * 2 * Math.PI - Math.PI/2;
+        const x1 = cx2 + r2 * Math.cos(-Math.PI/2);
+        const y1 = cy2 + r2 * Math.sin(-Math.PI/2);
+        const x2 = cx2 + r2 * Math.cos(ang);
+        const y2 = cy2 + r2 * Math.sin(ang);
+        const large = pct > 50 ? 1 : 0;
+        s += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r2},${r2} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)}"
+          fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>`;
+      }
+
+      // Emoji planta
+      if (plantEmoji) {
+        s += `<text x="${cx2}" y="${cy2 - CESTA_R - 4}"
+          font-size="14" text-anchor="middle">${plantEmoji}</text>`;
+      } else {
+        s += `<text x="${cx2}" y="${cy2+5}"
+          font-size="14" text-anchor="middle" fill="#d1d5db">+</text>`;
+      }
+
+      // Días badge
+      if (cestaData.variedad) {
+        s += `<text x="${cx2}" y="${cy2 + CESTA_R + 11}"
+          font-family="Inconsolata,monospace" font-size="8" font-weight="700"
+          fill="${stroke}" text-anchor="middle">${dias}d</text>`;
+      } else {
+        s += `<text x="${cx2}" y="${cy2 + CESTA_R + 11}"
+          font-family="Inconsolata,monospace" font-size="8"
+          fill="#d1d5db" text-anchor="middle">${c+1}</text>`;
+      }
+
+      // Cosecha pulsando
+      if (estado === 'cosecha') {
+        s += `<circle cx="${cx2 + CESTA_R - 2}" cy="${cy2 - CESTA_R + 2}" r="5"
+          fill="#dc2626">
+          <animate attributeName="r" from="4" to="6" dur="0.8s" repeatCount="indefinite" direction="alternate"/>
+        </circle>`;
+        s += `<text x="${cx2 + CESTA_R - 2}" y="${cy2 - CESTA_R + 6}"
+          font-size="7" text-anchor="middle" fill="white">!</text>`;
+      }
+
+      s += `</g>`;
     }
-
-    cestasGrid.appendChild(row1);
-    cestasGrid.appendChild(row2);
-
-    // Envolver en wrapper contraíble
-    const wrapper = document.createElement('div');
-    wrapper.className = 'nivel-cestas-wrapper';
-    wrapper.id = `nivel-wrapper-${n}`;
-    wrapper.style.maxHeight = nivelesColapsados.has(n) ? '0px' : 'none';
-    wrapper.appendChild(cestasGrid);
-    levelDiv.appendChild(wrapper);
-    levelsEl.appendChild(levelDiv);
   }
 
-  // Update deposito stats
-  if (state.ultimaMedicion) {
-    const m = state.ultimaMedicion;
-    document.getElementById('depositoStats').textContent =
-      `EC: ${m.ec || '—'} µS/cm · pH: ${m.ph || '—'} · Temp: ${m.temp || '—'}°C · Vol: ${m.vol || '—'}L`;
-  }
+  s += `<text x="${CX}" y="${totalH - 4}" font-family="Inconsolata,monospace"
+    font-size="9" fill="#9ca3af" text-anchor="middle">Pulsa una cesta para editar</text>`;
 
-  renderCompatGrid();
+  return `<svg width="${SVG_W}" height="${totalH}" viewBox="0 0 ${SVG_W} ${totalH}"
+    xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto">${s}</svg>`;
+}
+
+function renderTorre() {
+  // Generar SVG dinámico
+  const wrap = document.getElementById('torreSVGWrap');
+  if (!wrap) return;
+  wrap.innerHTML = generarSVGTorre();
+
+  // Event listeners en las cestas SVG (data-n, data-c)
+  wrap.querySelectorAll('.hc-cesta').forEach(el => {
+    el.addEventListener('click', function() {
+      const n = parseInt(this.getAttribute('data-n'));
+      const c = parseInt(this.getAttribute('data-c'));
+      openModal(n, c);
+    });
+  });
+
+  // Actualizar stats y rotación
+  updateTorreStats();
   calcularRotacion();
 }
+
 
 function getGrupoCultivo(variedad) {
   for (const [key, grupo] of Object.entries(GRUPOS_CULTIVO)) {
@@ -4661,7 +4721,7 @@ const NUTRIENTES_DB = [
   {
     id: 'canna', nombre: 'Canna Aqua Vega', bandera: '🇳🇱',
     partes: 2, buffer: true,
-    ecPorMl: 25, calmagNecesario: true, calmagMl: 6.7,
+    ecPorMl: 33, calmagNecesario: true, calmagMl: 13,
     detalle: 'A+B · Aguas blandas · Buffer pH integrado',
     dosis: '20ml/10L de A y B por separado',
     nota: 'La que usas tú. Constantes calibradas con datos reales.'
@@ -5761,12 +5821,36 @@ const RANGOS = {
 // CalMag: 6ml en 18L sube EC ~400 µS/cm → 1ml = ~67 µS/cm en 18L
 // pH+/pH-: ~0.1 unidades por ml en 18L (estimación estándar hidropónica)
 // Nota: el cálculo de corrección descuenta el CalMag ya disuelto (~400 µS/cm)
-const EC_POR_ML_AB      = 25;    // µS/cm por ml de A+B (1mlA+1mlB) en 18L
-const CALMAG_POR_ML     = 60;    // µS/cm por ml CalMag en 18L (calculado de etiqueta: 5.8%N, 6.8%CaO, 2.5%MgO)
-const EC_CALMAG_BASE    = 400;   // µS/cm objetivo tras CalMag (~6.7ml en 18L)
+// ── CONSTANTES CALIBRADAS CON DATOS REALES (recarga 16/03/2026) ─────────────
+// Agua destilada EC 0.0 · Canna Aqua Vega A+B · CalMag · 18L · Castelló de la Plana
+const EC_POR_ML_AB      = 33;    // µS/cm por ml de A+B (1mlA+1mlB) en 18L
+                                  // Dato real: 36ml A+B → +1200 µS sobre CalMag = 33.3 µS/ml
+const CALMAG_POR_ML     = 30;    // µS/cm por ml CalMag en 18L
+                                  // Dato real: 13ml → 400 µS/cm = 30.8 µS/ml
+const EC_CALMAG_BASE    = 400;   // µS/cm objetivo tras CalMag (13ml en 18L)
+const CALMAG_ML_OBJETIVO = 13;   // ml de CalMag para llegar a EC_CALMAG_BASE en 18L
 const PH_MINUS_POR_ML   = 0.40;  // unidades pH por ml de pH- (75-81%) en 18L
-const PH_PLUS_POR_ML    = 0.30;  // unidades pH por ml de pH+ (25-30%) en 18L
+const PH_PLUS_POR_ML    = 0.34;  // unidades pH por ml de pH+ (25-30%) en 18L
+                                  // Dato real: 8ml pH+ subieron de 3.5 a ~6.2 en 19.5L ≈ 0.34/ml
 const VOL_OBJETIVO      = 18;    // litros objetivo depósito
+
+// ── Calcular ml de A+B necesarios para llegar a EC objetivo ─────────────────
+// Descuenta el CalMag ya disuelto (EC_CALMAG_BASE)
+// EC objetivo Aqua Vega: 1400 - 400(CalMag) = 1000 µS/cm
+// ml = 1000 / EC_POR_ML_AB = 1000 / 33 ≈ 30 ml
+function calcularMlAB() {
+  const ecObjetivoAB = 1400 - EC_CALMAG_BASE; // µS/cm que debe aportar A+B
+  return Math.round(ecObjetivoAB / EC_POR_ML_AB);
+}
+
+function calcularDescAB(parte) {
+  const ml = calcularMlAB();
+  if (parte === 'A') {
+    return 'Agitar Aqua Vega A. Añadir ' + ml + ' ml — remover 2 min';
+  } else {
+    return 'Agitar Aqua Vega B. Añadir ' + ml + ' ml — remover 3 min';
+  }
+}
 
 function evalParam() {
   const ec   = parseFloat(document.getElementById('inputEC').value);
@@ -6119,19 +6203,20 @@ const CL_PASOS = [
     desc:'Llenar con 18 litros de agua (destilada/ósmosis recomendado)',
     campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
   { id:'4.2', seccion:null, paso:'4.2',
-    desc:'Añadir CalMag: ~6.7 ml agua destilada / ~6.0 ml ósmosis — remover 2 min',
+    desc:'Añadir CalMag: 13 ml agua destilada — remover 2 min',
     nota:'Objetivo EC 0.4 (400 µS/cm). Con agua del grifo de Castelló omitir CalMag.',
     campos:[
       { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder:'6.7' },
       { id:'clEcCalMag', label:'EC tras CalMag:', unit:'µS/cm', type:'number', step:'1', placeholder:'400' }
     ] },
   { id:'4.3', seccion:null, paso:'4.3', alert:true,
-    desc:'Agitar botella Aqua Vega A. Añadir 36 ml — remover 2 minutos',
-    nota:'⚠️ NUNCA mezclar A y B puros',
-    campos:[{ id:'clEcA', label:'EC tras A:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.85' }] },
+    desc: calcularDescAB('A'),
+    nota:'⚠️ NUNCA mezclar A y B puros — añade A primero, remueve bien',
+    campos:[{ id:'clEcA', label:'EC tras A:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.90' }] },
   { id:'4.4', seccion:null, paso:'4.4',
-    desc:'Agitar botella Aqua Vega B. Añadir 36 ml — remover 3 minutos',
-    campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'1.30' }] },
+    desc: calcularDescAB('B'),
+    nota:'Remueve 3 min. La EC debería estar cerca del objetivo.',
+    campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'1.40' }] },
 
   { id:'5.1', seccion:'🔌 Paso 5 — Encender sistema', paso:'5.1', alert:true,
     desc:'Encender bomba inmediatamente — PRIORIDAD MÁXIMA',
@@ -6378,33 +6463,51 @@ async function cargarHistorial() {
   document.getElementById('histRecargas').style.display = 'none';
   document.getElementById('histSinDatos').style.display = 'none';
 
+  // ── Intentar cargar de Google Sheets ────────────────────────────────────
+  let sheetsOk = false;
   try {
-    // Cargar mediciones
     const urlMed = SCRIPT_URL + '?action=mediciones';
     const resMed = await fetch(urlMed);
-    histDatos = await resMed.json();
-
-    // Cargar recargas
+    const datosSheets = await resMed.json();
+    if (datosSheets && datosSheets.length > 0) {
+      histDatos = datosSheets;
+      sheetsOk  = true;
+    }
     const urlRec = SCRIPT_URL + '?action=recargas';
     const resRec = await fetch(urlRec);
     histRecargasDatos = await resRec.json();
-
-    document.getElementById('histLoader').style.display = 'none';
-
-    if (!histDatos || histDatos.length === 0) {
-      document.getElementById('histSinDatos').style.display = 'flex';
-      return;
-    }
-
-    renderHistMediciones();
-    renderHistRecargas();
-
-    document.getElementById('histMediciones').style.display = 'block';
-
   } catch(e) {
-    document.getElementById('histLoader').innerHTML =
-      '<span>❌</span><span>Error al cargar. Verificar conexión.</span>';
+    sheetsOk = false;
   }
+
+  // ── Fallback: datos locales guardados en localStorage ────────────────────
+  if (!sheetsOk) {
+    const local = state.medicionesLocal || [];
+    if (local.length > 0) {
+      // Convertir formato local al formato esperado por renderHistMediciones
+      histDatos = local.map(m => ({
+        fecha: m.fecha, hora: m.hora,
+        ec:    m.ec   ? parseFloat(m.ec)   : null,
+        ph:    m.ph   ? parseFloat(m.ph)   : null,
+        temp:  m.temp ? parseFloat(m.temp) : null,
+        vol:   m.vol  ? parseFloat(m.vol)  : null,
+        notas: m.notas || ''
+      }));
+      if (!histRecargasDatos) histRecargasDatos = [];
+      showToast('📱 Mostrando datos locales (sin conexión a Sheets)');
+    }
+  }
+
+  document.getElementById('histLoader').style.display = 'none';
+
+  if (!histDatos || histDatos.length === 0) {
+    document.getElementById('histSinDatos').style.display = 'flex';
+    return;
+  }
+
+  renderHistMediciones();
+  renderHistRecargas();
+  document.getElementById('histMediciones').style.display = 'block';
 }
 
 function renderMiniChart(containerId, datos, min, max, color, colorBad) {
@@ -6506,14 +6609,30 @@ function renderHistMediciones() {
   // Pero Sheets puede devolver fechas como objetos ISO en cualquier columna
   // Procesamos cada fila limpiando los valores
 
-  const filas = histDatos.map(r => ({
-    fecha: formatFecha(r[0]),
-    hora:  formatHora(r[1]),
-    ec:    limpiarVal(r[2]),
-    ph:    limpiarVal(r[3]),
-    temp:  limpiarVal(r[4]),
-    vol:   limpiarVal(r[5]),
-  })).filter(f => f.ec !== null || f.ph !== null || f.temp !== null);
+  const filas = histDatos.map(r => {
+    // Detectar si es formato objeto (local) o array (Sheets)
+    if (Array.isArray(r)) {
+      return {
+        fecha: formatFecha(r[0]),
+        hora:  formatHora(r[1]),
+        ec:    limpiarVal(r[2]),
+        ph:    limpiarVal(r[3]),
+        temp:  limpiarVal(r[4]),
+        vol:   limpiarVal(r[5]),
+        notas: r[6] || '',
+      };
+    } else {
+      return {
+        fecha: r.fecha || '—',
+        hora:  r.hora  || '—',
+        ec:    r.ec    !== null && r.ec    !== undefined ? r.ec    : null,
+        ph:    r.ph    !== null && r.ph    !== undefined ? r.ph    : null,
+        temp:  r.temp  !== null && r.temp  !== undefined ? r.temp  : null,
+        vol:   r.vol   !== null && r.vol   !== undefined ? r.vol   : null,
+        notas: r.notas || '',
+      };
+    }
+  }).filter(f => f.ec !== null || f.ph !== null || f.temp !== null);
 
   if (filas.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
@@ -6853,54 +6972,127 @@ function tieneEventos(fecha) {
 }
 
 function renderCalendario() {
-  const año = calFecha.getFullYear();
-  const mes = calFecha.getMonth();
+  const hoy  = new Date();
+  const año  = calFecha.getFullYear();
+  const mes  = calFecha.getMonth();
 
-  document.getElementById('calMesLabel').textContent = `${MESES_LARGO[mes]} ${año}`;
+  document.getElementById('calMesLabel').textContent = MESES_LARGO[mes] + ' ' + año;
 
-  const grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
+  // ── Construir mapa de eventos ────────────────────────────────────────────
+  const eventos = {};
 
-  // Nombres días
-  DIAS_CAL.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'cal-dia-nombre';
-    el.textContent = d;
-    grid.appendChild(el);
+  const addEvento = (dia, tipo, color, label) => {
+    eventos[dia] = eventos[dia] || [];
+    eventos[dia].push({ tipo, color, label });
+  };
+
+  // Mediciones locales guardadas
+  (state.medicionesLocal || []).forEach(m => {
+    if (!m.fecha) return;
+    const parts = m.fecha.split('/');
+    if (parts.length < 3) return;
+    const d = parseInt(parts[0]), mo = parseInt(parts[1])-1, a = parseInt(parts[2]);
+    if (mo === mes && a === año) addEvento(d, 'medicion', '#0369a1', '📊 Medición EC:' + (m.ec||'—') + ' pH:' + (m.ph||'—'));
   });
 
-  const primero = new Date(año, mes, 1);
-  const ultimo  = new Date(año, mes + 1, 0);
-  const hoy = new Date();
-  hoy.setHours(0,0,0,0);
-
-  // Día semana del primero (0=Dom → ajustar a Lun=0)
-  let inicioSemana = (primero.getDay() + 6) % 7;
-  for (let i = 0; i < inicioSemana; i++) {
-    const el = document.createElement('div');
-    el.className = 'cal-dia vacio otro-mes';
-    const prevDia = new Date(año, mes, -inicioSemana + i + 1);
-    el.textContent = prevDia.getDate();
-    grid.appendChild(el);
+  // Recargas — cada 15 días desde última recarga
+  if (state.ultimaRecarga) {
+    let base = new Date(state.ultimaRecarga);
+    for (let i = 0; i <= 8; i++) {
+      const rec = new Date(base.getTime() + i * 15 * 86400000);
+      if (rec.getMonth() === mes && rec.getFullYear() === año)
+        addEvento(rec.getDate(), 'recarga', '#16a34a', '💧 Recarga depósito');
+    }
   }
 
-  for (let d = 1; d <= ultimo.getDate(); d++) {
-    const fecha = new Date(año, mes, d);
-    fecha.setHours(0,0,0,0);
-    const el = document.createElement('div');
-    let cls = 'cal-dia';
-    if (fecha.getTime() === hoy.getTime()) cls += ' hoy';
-    if (fecha.getTime() === calDiaSeleccionado.getTime()) cls += ' selected';
-    if (tieneEventos(fecha)) cls += ' tiene-evento';
-    el.className = cls;
-    el.textContent = d;
-    el.onclick = () => seleccionarDiaCal(fecha);
-    grid.appendChild(el);
+  // Limpieza — cada 30 días
+  if (state.ultimaRecarga) {
+    let base = new Date(state.ultimaRecarga);
+    for (let i = 1; i <= 4; i++) {
+      const lim = new Date(base.getTime() + i * 30 * 86400000);
+      if (lim.getMonth() === mes && lim.getFullYear() === año)
+        addEvento(lim.getDate(), 'limpieza', '#d97706', '🧹 Limpieza torre y cestas');
+    }
   }
 
-  // Mostrar eventos del día seleccionado
-  mostrarEventosDia(calDiaSeleccionado);
+  // Cosechas estimadas por planta
+  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  nivelesActivos.forEach(n => {
+    (state.torre[n] || []).forEach((cesta, c) => {
+      if (!cesta.variedad || !cesta.fecha) return;
+      const diasTotal = DIAS_COSECHA[cesta.variedad] || 50;
+      const siembra   = new Date(cesta.fecha);
+      const cosecha   = new Date(siembra.getTime() + diasTotal * 86400000);
+      if (cosecha.getMonth() === mes && cosecha.getFullYear() === año)
+        addEvento(cosecha.getDate(), 'cosecha', '#dc2626', '✂️ Cosecha N' + (n+1) + ' C' + (c+1) + ' (' + cesta.variedad + ')');
+    });
+  });
+
+  // ── Renderizar grid ──────────────────────────────────────────────────────
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  const diasMes   = new Date(año, mes + 1, 0).getDate();
+  const primerDia = new Date(año, mes, 1).getDay();
+  const offset    = primerDia === 0 ? 6 : primerDia - 1;
+
+  for (let i = 0; i < offset; i++) grid.innerHTML += '<div></div>';
+
+  for (let d = 1; d <= diasMes; d++) {
+    const esHoy = (d === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear());
+    const evs   = eventos[d] || [];
+    const dots  = evs.slice(0,3).map(e =>
+      '<div style="width:5px;height:5px;border-radius:50%;background:' + e.color + '"></div>'
+    ).join('');
+
+    grid.innerHTML += '<div style="' +
+      'background:' + (esHoy ? '#16a34a' : evs.length > 0 ? 'var(--bg2)' : 'var(--bg3)') + ';' +
+      'border:1.5px solid ' + (esHoy ? '#16a34a' : evs.length > 0 ? '#86efac' : 'var(--border)') + ';' +
+      'border-radius:8px;padding:4px 2px;text-align:center;min-height:42px;' +
+      'cursor:' + (evs.length > 0 ? 'pointer' : 'default') + '" ' +
+      (evs.length > 0 ? 'onclick="mostrarEventosDiaHC(' + d + ',' + mes + ',' + año + ')"' : '') + '>' +
+      '<div style="font-family:var(--font-display);font-size:12px;font-weight:700;' +
+      'color:' + (esHoy ? 'white' : 'var(--white)') + '">' + d + '</div>' +
+      '<div style="display:flex;justify-content:center;gap:2px;margin-top:3px;flex-wrap:wrap">' + dots + '</div>' +
+      '</div>';
+  }
+
+  // ── Próximos eventos ─────────────────────────────────────────────────────
+  const diaHoy = (mes === hoy.getMonth() && año === hoy.getFullYear()) ? hoy.getDate() : 1;
+  const proximos = [];
+  Object.entries(eventos).forEach(([dia, evs]) => {
+    if (parseInt(dia) >= diaHoy) {
+      evs.forEach(e => proximos.push({ dia: parseInt(dia), ...e }));
+    }
+  });
+  proximos.sort((a, b) => a.dia - b.dia);
+
+  const mesCorto = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][mes];
+  const eventosDiaEl = document.getElementById('eventosDia');
+
+  if (proximos.length === 0) {
+    eventosDiaEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:8px">No hay eventos próximos este mes</div>';
+    return;
+  }
+
+  eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
+    '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+    '<div style="width:36px;height:36px;border-radius:10px;background:' + e.color + '18;' +
+    'border:1.5px solid ' + e.color + '44;display:flex;flex-direction:column;' +
+    'align-items:center;justify-content:center;flex-shrink:0">' +
+    '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + e.color + '">' + e.dia + '</div>' +
+    '<div style="font-size:8px;color:' + e.color + ';font-weight:600">' + mesCorto + '</div>' +
+    '</div>' +
+    '<div style="font-size:13px;color:var(--white);font-weight:600">' + e.label + '</div>' +
+    '</div>'
+  ).join('');
 }
+
+function mostrarEventosDiaHC(d, mes, año) {
+  const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  showToast('📅 ' + d + ' de ' + meses[mes] + ' ' + año);
+}
+
 
 function seleccionarDiaCal(fecha) {
   calDiaSeleccionado = fecha;
@@ -7156,13 +7348,46 @@ function renderVPDChart(temps, hums) {
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   const alertas = [];
+  const m = state.ultimaMedicion;
+  const tempAgua = m?.temp ? parseFloat(m.temp) : null;
+  const ecActual = m?.ec   ? parseFloat(m.ec)   : null;
 
+  // ── 🦠 PYTHIUM — el enemigo número 1 de la hidropónica ───────────────────
+  if (tempAgua !== null && tempAgua > 25) {
+    alertas.push({ tipo:'bad', icon:'🦠', txt:`🚨 ALERTA PYTHIUM: Agua a ${tempAgua}°C — temperatura crítica. El hongo Pythium destruye raíces en horas. Enfriar el depósito urgente con agua fría o hielo.` });
+  } else if (tempAgua !== null && tempAgua > 22) {
+    alertas.push({ tipo:'warn', icon:'🦠', txt:`⚠️ Riesgo Pythium: Agua a ${tempAgua}°C — zona de peligro (>22°C). Vigilar raíces diariamente. Asegurar difusor 24h y depósito opaco.` });
+  } else if (tMax > 30) {
+    alertas.push({ tipo:'warn', icon:'🦠', txt:`⚠️ Temp ambiente ${tMax}°C — el agua del depósito puede calentarse. Verificar temperatura del agua y cubrir el depósito.` });
+  }
+
+  // ── 🌿 BOLTING (espigado) ──────────────────────────────────────────────────
+  if (tMax > 28)
+    alertas.push({ tipo:'bad', icon:'🌿', txt:`🌡️ ${tMax}°C — riesgo alto de bolting (espigado) en lechugas y rúcula. Toldo obligatorio en horas centrales.` });
+  else if (tMax > 24)
+    alertas.push({ tipo:'warn', icon:'🌿', txt:`🌡️ ${tMax}°C — vigilar espigado en variedades sensibles al calor. Considerar toldo 12-16h.` });
+
+  // ── 🐛 PLAGAS — condiciones favorables ────────────────────────────────────
+  if (hum > 85 && tMax > 20)
+    alertas.push({ tipo:'warn', icon:'🐛', txt:`💧 Humedad ${hum}% + calor — condiciones ideales para mildiu y botritis. Revisar hojas inferiores. Mejorar ventilación.` });
+  if (hum < 30 && tMax > 25)
+    alertas.push({ tipo:'warn', icon:'🐛', txt:`🌵 Humedad ${hum}% y calor — posible aparición de araña roja. Revisar el envés de las hojas.` });
+
+  // ── 💧 EC FUERA DE RANGO ──────────────────────────────────────────────────
+  if (ecActual !== null) {
+    if (ecActual > 1600)
+      alertas.push({ tipo:'bad', icon:'⚡', txt:`EC ${ecActual} µS/cm — demasiado alta. Las plantas no absorben agua (estrés osmótico). Diluir con agua destilada.` });
+    else if (ecActual < 900)
+      alertas.push({ tipo:'warn', icon:'⚡', txt:`EC ${ecActual} µS/cm — baja. Las plantas pueden mostrar clorosis (hojas amarillas). Añadir nutrientes.` });
+  }
+
+  // ── 🌊 VPD ────────────────────────────────────────────────────────────────
   if (vpd > 1.6)
     alertas.push({ tipo:'bad', icon:'🔴', txt:'Estrés hídrico severo — riego de mediodía crítico. Revisar lechugas a las 13:00h.' });
   else if (vpd > 1.2)
     alertas.push({ tipo:'warn', icon:'🟡', txt:'Transpiración alta — programa mediodía activo. Vigilar signos de lacio.' });
   else if (vpd < 0.4)
-    alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos. Asegurar buena ventilación en la torre.' });
+    alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos foliares. Asegurar buena ventilación en la torre.' });
   else
     alertas.push({ tipo:'ok', icon:'✅', txt:'Condiciones de VPD óptimas para el cultivo.' });
 
@@ -7740,6 +7965,10 @@ async function guardarMedicion() {
 
   // Guardar en estado local
   state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol };
+  // Guardar en historial local
+  if (!state.medicionesLocal) state.medicionesLocal = [];
+  state.medicionesLocal.unshift({ fecha, hora, ec, ph, temp, vol, notas });
+  if (state.medicionesLocal.length > 100) state.medicionesLocal = state.medicionesLocal.slice(0,100);
   if (esRecarga) {
     state.ultimaRecarga = new Date().toISOString().split('T')[0];
     esRecarga = false;
