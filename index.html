@@ -8156,132 +8156,93 @@ Las plantas están en condiciones ideales de crecimiento.`;
 }
 
 async function guardarMedicion() {
-  const ec   = document.getElementById('inputEC').value;
-  const ph   = document.getElementById('inputPH').value;
-  const temp = document.getElementById('inputTemp').value;
-  const vol  = document.getElementById('inputVol').value;
-  const notas = document.getElementById('inputNotas').value;
+  const ec    = document.getElementById('inputEC').value.trim();
+  const ph    = document.getElementById('inputPH').value.trim();
+  const temp  = document.getElementById('inputTemp').value.trim();
+  const vol   = document.getElementById('inputVol').value.trim();
+  const notas = document.getElementById('inputNotas').value.trim();
 
   if (!ec && !ph && !temp && !vol) {
     showToast('⚠️ Introduce al menos un valor', true);
     return;
   }
 
-  const now = new Date();
-  // Formato dd/mm/yyyy para que sea legible en Google Sheets
-  const dia = String(now.getDate()).padStart(2,'0');
-  const mes = String(now.getMonth()+1).padStart(2,'0');
-  const anyo = now.getFullYear();
-  const fecha = `${dia}/${mes}/${anyo}`;
-  const hora  = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const now   = new Date();
+  const dia   = String(now.getDate()).padStart(2,'0');
+  const mes   = String(now.getMonth()+1).padStart(2,'0');
+  const anyo  = now.getFullYear();
+  const fecha = dia + '/' + mes + '/' + anyo;
+  const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
 
-  // Calcular alertas para el registro
-  const alertas = [];
-  if (ec && (parseFloat(ec) < 1300 || parseFloat(ec) > 1400)) alertas.push(`EC ${ec} fuera de rango`);
-  if (ph && (parseFloat(ph) < 5.7  || parseFloat(ph) > 6.4))  alertas.push(`pH ${ph} fuera de rango`);
-  if (temp && (parseFloat(temp) < 18 || parseFloat(temp) > 22)) alertas.push(`Temp ${temp}°C fuera de rango`);
-  if (vol && parseFloat(vol) < 16) alertas.push(`Vol ${vol}L bajo`);
-
-  const data = {
-    action: 'medicion',
-    fecha, hora, ec, ph, temp, volumen: vol,
-    notas, alertas: alertas.join(' | ')
-  };
-
-  // Guardar en estado local
+  // ── 1. GUARDAR SIEMPRE EN LOCAL PRIMERO ───────────────────────────────────
   state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol };
-  // Guardar en historial local
   if (!state.medicionesLocal) state.medicionesLocal = [];
   state.medicionesLocal.unshift({ fecha, hora, ec, ph, temp, vol, notas });
-  if (state.medicionesLocal.length > 100) state.medicionesLocal = state.medicionesLocal.slice(0,100);
+  if (state.medicionesLocal.length > 100)
+    state.medicionesLocal = state.medicionesLocal.slice(0, 100);
+
+  // Si es una recarga marcada
   if (esRecarga) {
-    state.ultimaRecarga = new Date().toISOString().split('T')[0];
+    state.ultimaRecarga = now.toISOString().split('T')[0];
     esRecarga = false;
     document.getElementById('recargaSwitch').className = 'toggle-switch';
-    // Guardar recarga en Sheets también
+    if (!state.recargasLocal) state.recargasLocal = [];
+    state.recargasLocal.unshift({
+      fecha, hora, ecFinal: ec, phFinal: ph, tempFinal: temp, volFinal: vol,
+      calmagMl: '', vegaAMl: String(calcularMlAB()), vegaBMl: String(calcularMlAB()),
+      phMasMl: '', notas
+    });
+  }
+
+  saveState(); // Guardar en localStorage SIEMPRE
+
+  // ── 2. ACTUALIZAR UI ──────────────────────────────────────────────────────
+  document.getElementById('depositoStats').textContent =
+    'EC: ' + (ec||'—') + ' µS/cm · pH: ' + (ph||'—') + ' · Temp: ' + (temp||'—') + '°C · Vol: ' + (vol||'—') + 'L';
+
+  // Limpiar campos
+  ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  ['statusEC','statusPH','statusTemp','statusVol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'param-status'; el.innerHTML = ''; }
+  });
+  ['cardEC','cardPH','cardTemp','cardVol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'param-card';
+  });
+  ['correccionEC','correccionPH','correccionTemp','correccionVol'].forEach(id => {
+    showCorreccion(id, '');
+  });
+
+  updateDashboard();
+  updateRecargaBar();
+  showToast('✅ Medición guardada localmente');
+
+  // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
+  const alertas = [];
+  if (ec && (parseFloat(ec) < 1300 || parseFloat(ec) > 1400)) alertas.push('EC ' + ec + ' fuera de rango');
+  if (ph && (parseFloat(ph) < 5.7  || parseFloat(ph) > 6.4))  alertas.push('pH ' + ph + ' fuera de rango');
+  if (temp && (parseFloat(temp) < 18 || parseFloat(temp) > 22)) alertas.push('Temp ' + temp + '°C fuera de rango');
+  if (vol && parseFloat(vol) < 16) alertas.push('Vol ' + vol + 'L bajo');
+
+  try {
     await fetch(SCRIPT_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        action: 'recarga',
-        fecha, ecFinal: ec, phFinal: ph, tempAgua: temp,
-        calmagMl: '', vegaAMl: '', vegaBMl: '', phMasMl: '',
-        observaciones: document.getElementById('inputNotas').value
+        action: 'medicion', fecha, hora, ec, ph, temp, volumen: vol,
+        notas, alertas: alertas.join(' | ')
       })
     });
-  }
-  saveState();
-
-  // Actualizar depósito en torre
-  document.getElementById('depositoStats').textContent =
-    `EC: ${ec||'—'} µS/cm · pH: ${ph||'—'} · Temp: ${temp||'—'}°C · Vol: ${vol||'—'}L`;
-
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    showToast('✅ Medición guardada');
-
-    // Limpiar campos
-    ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    ['statusEC','statusPH','statusTemp','statusVol'].forEach(id => {
-      document.getElementById(id).className = 'param-status empty';
-    });
-    ['correccionEC','correccionPH','correccionTemp','correccionVol'].forEach(id => {
-      document.getElementById(id).classList.remove('show');
-    });
-    ['cardEC','cardPH','cardTemp','cardVol'].forEach(id => {
-      document.getElementById(id).className = 'param-card';
-    });
-    cargarUltimaMedicion();
-    updateDashboard();
-
   } catch(e) {
-    showToast('❌ Error al guardar', true);
+    // Sin conexión — no pasa nada, ya está guardado en local
+    console.log('Sheets no disponible — datos guardados localmente');
   }
 }
 
-// ══════════════════════════════════════════════════
-// GUARDAR TORRE EN GOOGLE SHEETS
-// ══════════════════════════════════════════════════
-async function guardarTorre() {
-  const plantas = [];
-  for (let n = 0; n < NUM_NIVELES; n++) {
-    for (let c = 0; c < NUM_CESTAS; c++) {
-      const d = state.torre[n][c];
-      if (d.variedad) {
-        const dias = getDias(d.fecha);
-        plantas.push({
-          nivel: n + 1,
-          cesta: c + 1,
-          variedad: d.variedad,
-          fecha: d.fecha,
-          estado: getEstado(d.variedad, dias),
-        });
-      }
-    }
-  }
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'torre', plantas })
-    });
-    showToast('✅ Torre guardada en Google Sheets');
-  } catch(e) {
-    showToast('❌ Error al guardar', true);
-  }
-}
 
-// ══════════════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════════════
 function showToast(msg, error=false) {
   let t = document.getElementById('toast');
   if (!t) {
