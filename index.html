@@ -3610,9 +3610,18 @@ body::before { display: none; }
       <div class="section-title">📈 <span class="accent">Historial</span></div>
 
       <!-- Sub-tabs -->
-      <div class="hist-tabs">
-        <div class="hist-tab active" id="htab-mediciones" onclick="histTab('mediciones')">📊 Mediciones</div>
-        <div class="hist-tab" id="htab-recargas" onclick="histTab('recargas')">🔄 Recargas</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+        <div class="hist-tabs" style="flex:1;margin-bottom:0">
+          <div class="hist-tab active" id="htab-mediciones" onclick="histTab('mediciones')">📊 Mediciones</div>
+          <div class="hist-tab" id="htab-recargas" onclick="histTab('recargas')">🔄 Recargas</div>
+        </div>
+        <button onclick="abrirChecklist(false)"
+          style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--green);
+                 background:#f0fdf4;color:#15803d;font-family:var(--font-display);
+                 font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+                 -webkit-tap-highlight-color:transparent">
+          📋 Ver checklist
+        </button>
       </div>
 
       <!-- Loader -->
@@ -3662,7 +3671,10 @@ body::before { display: none; }
 
       <!-- Historial recargas -->
       <div id="histRecargas" style="display:none">
-        <div class="hist-tabla">
+        <!-- Recargas locales (siempre disponibles) -->
+        <div id="recargasLocalSection"></div>
+        <!-- Recargas de Sheets (si hay conexión) -->
+        <div class="hist-tabla" id="sheetsRecargasSection" style="display:none">
           <div class="hist-tabla-header" style="grid-template-columns:80px 1fr 1fr 1fr 1fr">
             <span>Fecha</span><span>EC</span><span>pH</span><span>CalMag</span><span>pH+</span>
           </div>
@@ -4398,20 +4410,31 @@ function generarSVGTorre() {
   const numNiveles = NUM_NIVELES;
   const numCestas  = NUM_CESTAS;
 
-  // Dimensiones
-  const SVG_W    = 340;
-  const NIVEL_H  = 64;   // altura de cada nivel
-  const NIVEL_GAP = 10;  // espacio entre niveles
-  const CESTA_R  = 14;   // radio cesta
-  const EJE_W    = 14;   // ancho eje central
-  const MARG_T   = 50;   // margen arriba (rociador)
-  const MARG_B   = 20;
-  const CX       = SVG_W / 2;
+  // ── Dimensiones ───────────────────────────────────────────────────────────
+  const SVG_W     = 340;
+  const CX        = SVG_W / 2;
+  const NIVEL_H   = 62;
+  const NIVEL_GAP = 14;
+  const CESTA_R   = 13;
+  const EJE_W     = 12;
+  const MARG_T    = 54;   // espacio para rociador
+  const DEP_H     = 90;   // altura depósito
+  const DEP_W     = 200;
+  const DEP_GAP   = 18;   // espacio entre torre y depósito
+  const NIVEL_W   = 270;
 
-  const totalH = MARG_T + numNiveles * NIVEL_H + (numNiveles-1) * NIVEL_GAP + MARG_B;
+  const torreaH = numNiveles * NIVEL_H + (numNiveles - 1) * NIVEL_GAP;
+  const SVG_H   = MARG_T + torreaH + DEP_GAP + DEP_H + 30;
 
-  // Y del centro de cada nivel (de arriba a abajo = nivel 1 arriba)
-  const nivelY = (n) => MARG_T + n * (NIVEL_H + NIVEL_GAP) + NIVEL_H/2;
+  const nivelY = (n) => MARG_T + n * (NIVEL_H + NIVEL_GAP) + NIVEL_H / 2;
+  const DEP_Y  = MARG_T + torreaH + DEP_GAP;
+  const DEP_X  = (SVG_W - DEP_W) / 2;
+
+  // Volumen actual del depósito
+  const volActual = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : VOL_OBJETIVO * 0.8;
+  const volPct    = Math.min(1, Math.max(0, volActual / VOL_OBJETIVO));
+  const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
+  const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
 
   let s = '';
 
@@ -4419,158 +4442,226 @@ function generarSVGTorre() {
   s += `<defs>
     <linearGradient id="ejeGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#4ade80"/>
-      <stop offset="100%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#15803d"/>
     </linearGradient>
-    <linearGradient id="nivelGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#f0fdf4"/>
-      <stop offset="100%" stop-color="#dcfce7"/>
+    <linearGradient id="depAguaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.9"/>
     </linearGradient>
-    <linearGradient id="nivelInacGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#f9fafb"/>
-      <stop offset="100%" stop-color="#f3f4f6"/>
+    <linearGradient id="depBodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
     </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.10"/>
-    </filter>
-    <marker id="waterDrop" markerWidth="6" markerHeight="6" refX="3" refY="3">
-      <circle cx="3" cy="3" r="2" fill="#38bdf8" opacity="0.7"/>
-    </marker>
+    <clipPath id="depClip">
+      <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>
+    </clipPath>
   </defs>`;
 
-  // ── EJE CENTRAL (tubo) ────────────────────────────────────────────────────
-  const ejeTop = MARG_T - 30;
-  const ejeBot = MARG_T + numNiveles * NIVEL_H + (numNiveles-1) * NIVEL_GAP + 10;
-  s += `<rect x="${CX - EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot - ejeTop}"
-    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.9" filter="url(#shadow)"/>`;
+  // ── EJE CENTRAL ───────────────────────────────────────────────────────────
+  const ejeTop = MARG_T - 36;
+  const ejeBot = DEP_Y + 8;
+  s += `<rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
+    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.92"/>`;
 
-  // Agua cayendo por el eje (animación)
-  s += `<line x1="${CX}" y1="${ejeTop}" x2="${CX}" y2="${ejeBot}"
-    stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 10" stroke-linecap="round" opacity="0.5">
-    <animate attributeName="stroke-dashoffset" from="0" to="36" dur="1.2s" repeatCount="indefinite"/>
+  // Agua cayendo animada
+  s += `<line x1="${CX}" y1="${ejeTop+10}" x2="${CX}" y2="${ejeBot-4}"
+    stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 9" stroke-linecap="round" opacity="0.55">
+    <animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>
   </line>`;
 
-  // ── ROCIADOR ARRIBA ───────────────────────────────────────────────────────
-  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="22" ry="10"
-    fill="#86efac" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>`;
-  s += `<text x="${CX}" y="${ejeTop + 4}" font-size="12" text-anchor="middle">💧</text>`;
+  // ── ROCIADOR ──────────────────────────────────────────────────────────────
+  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
+    fill="#86efac" stroke="#16a34a" stroke-width="2"/>`;
+  s += `<text x="${CX}" y="${ejeTop+4}" font-size="13" text-anchor="middle">💧</text>`;
   // Gotas
-  [-18,-8,2,12,22].forEach((dx, i) => {
-    s += `<circle cx="${CX + dx}" cy="${ejeTop + 18 + i%2*4}" r="2.5"
-      fill="#93c5fd" opacity="0.7">
-      <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+28}"
-        dur="${0.8+i*0.15}s" repeatCount="indefinite"/>
+  const gotas = [-20,-10,0,10,20];
+  gotas.forEach((dx,i) => {
+    const delay = i * 0.18;
+    s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
+      <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
+        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
       <animate attributeName="opacity" from="0.8" to="0"
-        dur="${0.8+i*0.15}s" repeatCount="indefinite"/>
+        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
     </circle>`;
   });
 
-  // ── NIVELES ───────────────────────────────────────────────────────────────
-  const NIVEL_W = 280; // ancho del nivel (bandeja)
-  const NIVEL_H_REAL = NIVEL_H - 8;
-
+  // ── NIVELES Y CESTAS ──────────────────────────────────────────────────────
   for (let n = 0; n < numNiveles; n++) {
     const ny     = nivelY(n);
     const activo = nivelesActivos.includes(n);
-    const nx     = CX - NIVEL_W/2;
+    const nx     = CX - NIVEL_W / 2;
 
-    // Bandeja del nivel
-    s += `<rect x="${nx}" y="${ny - NIVEL_H_REAL/2}" width="${NIVEL_W}" height="${NIVEL_H_REAL}"
-      rx="12" fill="${activo ? 'url(#nivelGrad)' : 'url(#nivelInacGrad)'}"
+    // Bandeja
+    s += `<rect x="${nx}" y="${ny-NIVEL_H/2+4}" width="${NIVEL_W}" height="${NIVEL_H-8}"
+      rx="12" fill="${activo ? '#f0fdf4' : '#f9fafb'}"
       stroke="${activo ? '#86efac' : '#e5e7eb'}" stroke-width="${activo ? 2 : 1}"
-      opacity="${activo ? 1 : 0.4}" filter="url(#shadow)"/>`;
+      opacity="${activo ? 1 : 0.4}"/>`;
 
     // Etiqueta nivel
-    s += `<text x="${nx - 8}" y="${ny + 4}"
-      font-family="Syne,sans-serif" font-size="11" font-weight="800"
+    s += `<text x="${nx-8}" y="${ny+4}" font-family="Syne,sans-serif" font-size="11" font-weight="800"
       fill="${activo ? '#15803d' : '#9ca3af'}" text-anchor="end">N${n+1}</text>`;
 
     if (!activo) continue;
 
-    // ── CESTAS ──────────────────────────────────────────────────────────────
-    const cestaSpacing = (NIVEL_W - 20) / (numCestas + 1);
+    // Cestas
+    const spacing = (NIVEL_W - 20) / (numCestas + 1);
     for (let c = 0; c < numCestas; c++) {
-      const cx2 = nx + 10 + cestaSpacing * (c + 1);
-      const cy2 = ny;
-      const cestaData = state.torre[n] && state.torre[n][c] ? state.torre[n][c] : { variedad:'', fecha:'' };
-      const dias = cestaData.fecha ? Math.floor((Date.now() - new Date(cestaData.fecha)) / 86400000) : 0;
-      const estado = cestaData.variedad ? getEstado(cestaData.variedad, dias) : '';
-      const diasTotal = DIAS_COSECHA[cestaData.variedad] || 50;
-      const pct = cestaData.variedad ? Math.min(100, Math.round((dias/diasTotal)*100)) : 0;
+      const cx2  = nx + 10 + spacing * (c + 1);
+      const cy2  = ny;
+      const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'' };
+      const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+      const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
+      const diasT = DIAS_COSECHA[dat.variedad] || 50;
+      const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
 
-      let fill, stroke, plantEmoji;
-      if (!cestaData.variedad) {
-        fill='#f9fafb'; stroke='#d1d5db'; plantEmoji='';
-      } else if (estado === 'plantula') {
-        fill='#eff6ff'; stroke='#3b82f6'; plantEmoji='🌱';
-      } else if (estado === 'crecimiento') {
-        fill='#f0fdf4'; stroke='#16a34a'; plantEmoji=getEmoji(estado);
-      } else if (estado === 'madurez') {
-        fill='#fffbeb'; stroke='#d97706'; plantEmoji=getEmoji(estado);
-      } else {
-        fill='#fff5f5'; stroke='#dc2626'; plantEmoji='✂️';
-      }
+      let fill, stroke, emoji;
+      if (!dat.variedad)          { fill='#f9fafb'; stroke='#d1d5db'; emoji=''; }
+      else if (est==='plantula')  { fill='#eff6ff'; stroke='#3b82f6'; emoji='🌱'; }
+      else if (est==='crecimiento'){ fill='#f0fdf4'; stroke='#16a34a'; emoji=getEmoji(est); }
+      else if (est==='madurez')   { fill='#fffbeb'; stroke='#d97706'; emoji=getEmoji(est); }
+      else                        { fill='#fff5f5'; stroke='#dc2626'; emoji='✂️'; }
 
-      // Sombra cesta
-      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R+3}" fill="rgba(0,0,0,0.06)"/>`;
+      // Sombra
+      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R+3}" fill="rgba(0,0,0,0.05)"/>`;
 
-      // Cesta (cuerpo)
+      // Cesta pulsable
       s += `<g data-n="${n}" data-c="${c}" class="hc-cesta" style="cursor:pointer">`;
-      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R}"
-        fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
+      s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
 
-      // Barra progreso circular (arco)
-      if (pct > 0) {
-        const r2 = CESTA_R + 5;
-        const ang = (pct/100) * 2 * Math.PI - Math.PI/2;
-        const x1 = cx2 + r2 * Math.cos(-Math.PI/2);
-        const y1 = cy2 + r2 * Math.sin(-Math.PI/2);
-        const x2 = cx2 + r2 * Math.cos(ang);
-        const y2 = cy2 + r2 * Math.sin(ang);
-        const large = pct > 50 ? 1 : 0;
-        s += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r2},${r2} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)}"
+      // Arco de progreso
+      if (pct > 0 && pct < 100) {
+        const r2   = CESTA_R + 5;
+        const ang  = (pct / 100) * 2 * Math.PI - Math.PI / 2;
+        const x1e  = cx2 + r2 * Math.cos(-Math.PI/2);
+        const y1e  = cy2 + r2 * Math.sin(-Math.PI/2);
+        const x2e  = cx2 + r2 * Math.cos(ang);
+        const y2e  = cy2 + r2 * Math.sin(ang);
+        s += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2},${r2} 0 ${pct>50?1:0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
           fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>`;
       }
 
       // Emoji planta
-      if (plantEmoji) {
-        s += `<text x="${cx2}" y="${cy2 - CESTA_R - 4}"
-          font-size="14" text-anchor="middle">${plantEmoji}</text>`;
+      if (emoji) {
+        s += `<text x="${cx2}" y="${ny-NIVEL_H/2-2}" font-size="14" text-anchor="middle">${emoji}</text>`;
       } else {
-        s += `<text x="${cx2}" y="${cy2+5}"
-          font-size="14" text-anchor="middle" fill="#d1d5db">+</text>`;
+        s += `<text x="${cx2}" y="${cy2+5}" font-size="14" text-anchor="middle" fill="#d1d5db">+</text>`;
       }
 
-      // Días badge
-      if (cestaData.variedad) {
-        s += `<text x="${cx2}" y="${cy2 + CESTA_R + 11}"
-          font-family="Inconsolata,monospace" font-size="8" font-weight="700"
-          fill="${stroke}" text-anchor="middle">${dias}d</text>`;
+      // Días / número cesta
+      if (dat.variedad) {
+        s += `<text x="${cx2}" y="${ny+NIVEL_H/2+4}" font-family="Inconsolata,monospace"
+          font-size="8" font-weight="700" fill="${stroke}" text-anchor="middle">${dias}d</text>`;
       } else {
-        s += `<text x="${cx2}" y="${cy2 + CESTA_R + 11}"
-          font-family="Inconsolata,monospace" font-size="8"
-          fill="#d1d5db" text-anchor="middle">${c+1}</text>`;
+        s += `<text x="${cx2}" y="${ny+NIVEL_H/2+4}" font-family="Inconsolata,monospace"
+          font-size="8" fill="#d1d5db" text-anchor="middle">${c+1}</text>`;
       }
 
-      // Cosecha pulsando
-      if (estado === 'cosecha') {
-        s += `<circle cx="${cx2 + CESTA_R - 2}" cy="${cy2 - CESTA_R + 2}" r="5"
-          fill="#dc2626">
-          <animate attributeName="r" from="4" to="6" dur="0.8s" repeatCount="indefinite" direction="alternate"/>
+      // Badge cosecha
+      if (est === 'cosecha') {
+        s += `<circle cx="${cx2+CESTA_R-2}" cy="${cy2-CESTA_R+2}" r="5" fill="#dc2626">
+          <animate attributeName="r" from="4" to="6" dur="0.7s" repeatCount="indefinite" direction="alternate"/>
         </circle>`;
-        s += `<text x="${cx2 + CESTA_R - 2}" y="${cy2 - CESTA_R + 6}"
-          font-size="7" text-anchor="middle" fill="white">!</text>`;
+        s += `<text x="${cx2+CESTA_R-2}" y="${cy2-CESTA_R+6}" font-size="7" text-anchor="middle" fill="white">!</text>`;
       }
-
       s += `</g>`;
     }
   }
 
-  s += `<text x="${CX}" y="${totalH - 4}" font-family="Inconsolata,monospace"
+  // ── DEPÓSITO ──────────────────────────────────────────────────────────────
+  // Cuerpo exterior
+  s += `<rect x="${DEP_X}" y="${DEP_Y}" width="${DEP_W}" height="${DEP_H}"
+    rx="14" fill="url(#depBodyGrad)" stroke="#60a5fa" stroke-width="2.5"/>`;
+
+  // Nivel del agua
+  const aguaH   = Math.round(volPct * (DEP_H - 20));
+  const aguaY   = DEP_Y + DEP_H - 10 - aguaH;
+  const aguaCol = volPct < 0.5 ? '#ef4444' : volPct < 0.7 ? '#f59e0b' : '#3b82f6';
+  s += `<rect x="${DEP_X+3}" y="${aguaY}" width="${DEP_W-6}" height="${aguaH+7}"
+    rx="0" fill="url(#depAguaGrad)" clip-path="url(#depClip)" opacity="0.8">
+    <animate attributeName="y" from="${aguaY+2}" to="${aguaY-2}" dur="2s" repeatCount="indefinite" direction="alternate"/>
+  </rect>`;
+  // Espejo del agua (superficie)
+  s += `<ellipse cx="${CX}" cy="${aguaY}" rx="${(DEP_W-16)/2}" ry="5"
+    fill="${aguaCol}" opacity="0.3">
+    <animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
+  </ellipse>`;
+
+  // Texto volumen
+  s += `<text x="${CX}" y="${aguaY - 8}" font-family="Syne,sans-serif"
+    font-size="11" font-weight="800" fill="${aguaCol}" text-anchor="middle">${volActual}L</text>`;
+
+  // ── CALENTADOR ────────────────────────────────────────────────────────────
+  if (tieneCalentador) {
+    const hx = DEP_X + 20;
+    const hy = aguaY + aguaH / 2;
+    // Cuerpo calentador
+    s += `<rect x="${hx-5}" y="${DEP_Y+DEP_H-40}" width="10" height="30"
+      rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.5"/>`;
+    // Luz piloto
+    s += `<circle cx="${hx}" cy="${DEP_Y+DEP_H-44}" r="4" fill="#fbbf24">
+      <animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
+    </circle>`;
+    s += `<text x="${hx}" y="${DEP_Y+DEP_H-52}" font-size="9" text-anchor="middle" fill="#ea580c" font-weight="700">🌡️</text>`;
+    s += `<text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
+      font-size="8" fill="#ea580c" text-anchor="middle" font-weight="600">CAL</text>`;
+  }
+
+  // ── DIFUSOR DE AIRE ───────────────────────────────────────────────────────
+  if (tieneDifusor) {
+    const ax  = DEP_X + DEP_W - 28;
+    const ay  = DEP_Y + DEP_H - 16; // piedra en el fondo
+
+    // Tubito de aire (desde fuera hasta el fondo)
+    s += `<line x1="${ax}" y1="${DEP_Y-8}" x2="${ax}" y2="${ay-10}"
+      stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+
+    // Piedra difusora
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="12" ry="6"
+      fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>`;
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="10" ry="4" fill="#d1d5db" opacity="0.6"/>`;
+
+    // Burbujas animadas
+    const burbs = [[-8,0], [-3,0], [2,0], [7,0], [-5,0], [4,0]];
+    burbs.forEach(([dx], i) => {
+      const bx    = ax + dx + (i%3 - 1) * 3;
+      const byStart = ay - 5;
+      const byEnd   = aguaY - 10;
+      const delay   = (i * 0.28).toFixed(2);
+      const dur     = (1.2 + i * 0.15).toFixed(2);
+      s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i%2)*0.5}" fill="#93c5fd" opacity="0">
+        <animate attributeName="cy" from="${byStart}" to="${byEnd}"
+          dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
+        <animate attributeName="opacity" values="0;0.8;0.8;0"
+          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+        <animate attributeName="r" from="1.5" to="3"
+          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+      </circle>`;
+    });
+
+    s += `<text x="${ax}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
+      font-size="8" fill="#6b7280" text-anchor="middle" font-weight="600">AIR</text>`;
+  }
+
+  // ── ETIQUETA DEPÓSITO ─────────────────────────────────────────────────────
+  s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+4}" font-family="Syne,sans-serif"
+    font-size="11" font-weight="800" fill="#1d4ed8" text-anchor="middle">DEPÓSITO ${VOL_OBJETIVO}L</text>`;
+  s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
+    font-size="9" fill="#374151" text-anchor="middle">Bomba continua · recirculación</text>`;
+
+  // Conexión depósito → eje (tubito de subida)
+  s += `<line x1="${CX}" y1="${DEP_Y}" x2="${CX}" y2="${ejeBot}"
+    stroke="#3b82f6" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.4">
+    <animate attributeName="stroke-dashoffset" from="18" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/>
+  </line>`;
+
+  // ── NOTA INFERIOR ─────────────────────────────────────────────────────────
+  s += `<text x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
     font-size="9" fill="#9ca3af" text-anchor="middle">Pulsa una cesta para editar</text>`;
 
-  return `<svg width="${SVG_W}" height="${totalH}" viewBox="0 0 ${SVG_W} ${totalH}"
+  return `<svg width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}"
     xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto">${s}</svg>`;
 }
+
 
 function renderTorre() {
   // Generar SVG dinámico
@@ -6379,13 +6470,50 @@ async function finalizarChecklist() {
 
   // Actualizar estado del sistema
   state.ultimaRecarga = now.toISOString().split('T')[0];
+  const ecFinalNum = ecFinal ? Math.round(parseFloat(ecFinal) * 1000) : '';
   state.ultimaMedicion = {
     fecha, hora,
-    ec: ecFinal ? parseFloat(ecFinal) * 1000 : '',
+    ec: ecFinalNum,
     ph: phFinal,
     temp: tempAgua,
     vol: volFinal
   };
+
+  // Guardar recarga completa en historial local
+  if (!state.recargasLocal) state.recargasLocal = [];
+  const mlABCalculado = calcularMlAB();
+  const recargaData = {
+    fecha, hora,
+    // Parámetros agua
+    ecInicial:    gCL('clEcInicial')   || '0',
+    ecCalMag:     gCL('clEcCalMag')    || '',
+    calmagMl:     gCL('clCalmagMl')    || String(CALMAG_ML_OBJETIVO),
+    ecTrasA:      gCL('clEcA')         || '',
+    ecTrasAB:     gCL('clEcAB')        || '',
+    phMedido:     gCL('clPhMedido')    || '',
+    phMasMl:      gCL('clPhMas')       || '',
+    vegaAMl:      String(mlABCalculado),
+    vegaBMl:      String(mlABCalculado),
+    ecFinal:      String(ecFinalNum),
+    phFinal:      phFinal || '',
+    tempFinal:    tempAgua || '',
+    volFinal:     volFinal || '',
+    // Observaciones
+    colorAgua:    gCL('clColorAgua')    || '',
+    estadoPlantas:gCL('clEstadoPlantas')|| '',
+    minSinBomba:  gCL('clMinSinBomba')  || '',
+    notas:        'Recarga completa del depósito',
+  };
+  state.recargasLocal.unshift(recargaData);
+  if (state.recargasLocal.length > 20) state.recargasLocal = state.recargasLocal.slice(0,20);
+
+  // También guardar como medición local
+  if (!state.medicionesLocal) state.medicionesLocal = [];
+  state.medicionesLocal.unshift({
+    fecha, hora, ec: String(ecFinalNum), ph: phFinal,
+    temp: tempAgua, vol: volFinal, notas: 'Recarga completa'
+  });
+
   saveState();
 
   // Guardar recarga en Google Sheets
@@ -6400,8 +6528,8 @@ async function finalizarChecklist() {
         phFinal,
         tempAgua,
         calmagMl: gCL('clCalmagMl'),
-        vegaAMl: '36',
-        vegaBMl: '36',
+        vegaAMl: String(calcularMlAB()),
+        vegaBMl: String(calcularMlAB()),
         phMasMl: gCL('clPhMas'),
         observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}`
       })
@@ -6674,28 +6802,87 @@ function renderHistMediciones() {
 }
 
 function renderHistRecargas() {
-  const tabla = document.getElementById('histRecargasTabla');
-  if (!histRecargasDatos || histRecargasDatos.length === 0) {
-    tabla.innerHTML = '<div style="padding:14px;font-size:13px;color:var(--muted);text-align:center">Sin recargas registradas aún</div>';
+  // Mostrar recargas locales (siempre disponibles)
+  const localSection = document.getElementById('recargasLocalSection');
+  const recargas = state.recargasLocal || [];
+
+  if (recargas.length === 0 && (!histRecargasDatos || histRecargasDatos.length === 0)) {
+    if (localSection) localSection.innerHTML =
+      '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">' +
+      '🔄 Sin recargas registradas aún.<br>Completa el checklist de recarga para ver el historial.</div>';
     return;
   }
-  // Columnas: [fecha, ecFinal, phFinal, tempAgua, calmagMl, vegaAMl, vegaBMl, phMasMl, observaciones]
-  tabla.innerHTML = histRecargasDatos.slice(-10).reverse().map(r => {
-    const fecha  = formatFecha(r[0]);
-    const ec     = limpiarVal(r[1]);
-    const ph     = limpiarVal(r[2]);
-    const calmag = limpiarVal(r[4]);
-    const phmas  = limpiarVal(r[7]);
-    return `
-    <div class="hist-row" style="grid-template-columns:70px 1fr 1fr 1fr 1fr">
-      <span class="hist-fecha">${fecha}</span>
-      <span class="hist-val ${getClaseVal('ec', ec)}">${ec !== null ? ec : '—'}</span>
-      <span class="hist-val ${getClaseVal('ph', ph)}">${ph !== null ? ph : '—'}</span>
-      <span class="hist-val" style="color:var(--green);font-weight:700">${calmag !== null ? calmag+'ml' : '—'}</span>
-      <span class="hist-val" style="color:var(--muted)">${phmas !== null ? phmas+'ml' : '0ml'}</span>
-    </div>`;
-  }).join('');
+
+  // Recargas locales — tarjetas detalladas
+  if (localSection && recargas.length > 0) {
+    localSection.innerHTML = recargas.slice(0, 10).map((r, i) => `
+      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;
+                  padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+        <!-- Cabecera -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--white)">
+              🔄 Recarga #${recargas.length - i}
+            </div>
+            <div style="font-size:12px;color:var(--muted)">${r.fecha} · ${r.hora}</div>
+          </div>
+          ${r.ecFinal ? '<div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:var(--green)">' + r.ecFinal + '<span style="font-size:11px;font-weight:600"> µS</span></div>' : ''}
+        </div>
+
+        <!-- Grid parámetros -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">CalMag</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green)">${r.calmagMl || '—'}<span style="font-size:10px">ml</span></div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">A+B</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--blue)">${r.vegaAMl || '—'}<span style="font-size:10px">ml</span></div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">pH+</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--gold)">${r.phMasMl || '—'}<span style="font-size:10px">ml</span></div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">pH Final</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--blue)">${r.phFinal || '—'}</div>
+          </div>
+        </div>
+
+        <!-- Observaciones si las hay -->
+        ${r.colorAgua || r.estadoPlantas ? `
+        <div style="background:var(--bg3);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted)">
+          ${r.colorAgua ? '🎨 Agua: ' + r.colorAgua + ' · ' : ''}
+          ${r.estadoPlantas ? '🌿 Plantas: ' + r.estadoPlantas : ''}
+        </div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // Recargas de Sheets si disponibles
+  if (histRecargasDatos && histRecargasDatos.length > 0) {
+    const sheetsSection = document.getElementById('sheetsRecargasSection');
+    if (sheetsSection) {
+      sheetsSection.style.display = 'block';
+      const tabla = document.getElementById('histRecargasTabla');
+      tabla.innerHTML = histRecargasDatos.slice(-10).reverse().map(r => {
+        const fecha  = formatFecha(r[0]);
+        const ec     = limpiarVal(r[1]);
+        const ph     = limpiarVal(r[2]);
+        const calmag = limpiarVal(r[4]);
+        const phmas  = limpiarVal(r[7]);
+        return '<div class="hist-row" style="grid-template-columns:70px 1fr 1fr 1fr 1fr">' +
+          '<span class="hist-fecha">' + fecha + '</span>' +
+          '<span class="hist-val ' + getClaseVal('ec', ec) + '">' + (ec !== null ? ec : '—') + '</span>' +
+          '<span class="hist-val ' + getClaseVal('ph', ph) + '">' + (ph !== null ? ph : '—') + '</span>' +
+          '<span class="hist-val" style="color:var(--green);font-weight:700">' + (calmag !== null ? calmag+'ml' : '—') + '</span>' +
+          '<span class="hist-val" style="color:var(--muted)">' + (phmas !== null ? phmas+'ml' : '0ml') + '</span>' +
+          '</div>';
+      }).join('');
+    }
+  }
 }
+
 
 // ══════════════════════════════════════════════════
 // CONSEJOS — LÓGICA
