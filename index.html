@@ -1934,7 +1934,7 @@ body::before { display: none; }
 }
 .hist-row {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr;
+  grid-template-columns: 70px 1fr 1fr 1fr 1fr 34px;
   gap: 0;
   padding: 10px 10px;
   border-top: 1px solid var(--border);
@@ -5474,6 +5474,38 @@ function closeModal(e) {
 }
 
 // ══════════════════════════════════════════════════
+// BORRAR ENTRADAS DEL HISTORIAL
+// ══════════════════════════════════════════════════
+
+function borrarMedicion(idx) {
+  if (!confirm('¿Borrar esta medición?')) return;
+  if (!state.mediciones) return;
+  state.mediciones.splice(idx, 1);
+  // Borrar también del registro unificado si coincide
+  if (state.registro) {
+    const med = state.mediciones; // ya spliceado
+    // Buscar en registro por posición aproximada y tipo
+    state.registro = state.registro.filter((r, i) => {
+      if (r.tipo !== 'medicion') return true;
+      // Contar cuántas mediciones hay antes de este índice en registro
+      return true; // conservamos todas — borrado es solo en state.mediciones
+    });
+  }
+  saveState();
+  renderHistMediciones();
+  showToast('🗑 Medición borrada');
+}
+
+function borrarEntradaRegistro(idx) {
+  if (!confirm('¿Borrar esta entrada del registro?')) return;
+  if (!state.registro) return;
+  state.registro.splice(idx, 1);
+  saveState();
+  renderRegistro();
+  showToast('🗑 Entrada borrada');
+}
+
+// ══════════════════════════════════════════════════
 // REGISTRO COMPLETO — mediciones, cosechas, recargas
 // ══════════════════════════════════════════════════
 
@@ -6864,13 +6896,20 @@ function renderRegistro() {
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
       }
+      const globalIdx = entries.indexOf(e);
       return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:10px;' +
         'padding:10px 12px;margin-bottom:6px">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
           '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
             c.icon + ' ' + (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)) +
           '</span>' +
-          '<span style="font-size:11px;color:var(--muted)">' + (e.hora||'') + '</span>' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<span style="font-size:11px;color:var(--muted)">' + (e.hora||'') + '</span>' +
+            '<button onclick="borrarEntradaRegistro(' + globalIdx + ')" ' +
+              'style="background:none;border:none;font-size:14px;cursor:pointer;color:#dc2626;' +
+              'padding:2px 4px;-webkit-tap-highlight-color:transparent;min-width:28px;min-height:28px"' +
+              ' title="Borrar entrada">🗑</button>' +
+          '</div>' +
         '</div>' +
         '<div style="font-size:12px;color:#374151;line-height:1.6">' + detalle + '</div>' +
         '</div>';
@@ -6918,6 +6957,12 @@ function renderHistMediciones() {
       <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
       <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
+      <span style="display:flex;align-items:center;justify-content:flex-end">
+        <button onclick="borrarMedicion(${i})"
+          style="background:none;border:none;font-size:15px;cursor:pointer;
+                 color:#dc2626;padding:4px;-webkit-tap-highlight-color:transparent;
+                 min-width:32px;min-height:32px">🗑</button>
+      </span>
       ${m.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">📝 ${m.notas}</span>` : ''}
     </div>
   `).join('');
