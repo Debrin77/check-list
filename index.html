@@ -6434,6 +6434,18 @@ const CL_PASOS = [
     desc: calcularDescAB('B'),
     nota:'Remueve 3 min. La EC debería estar cerca del objetivo.',
     campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'1.40' }] },
+  { id:'4.5', seccion:null, paso:'4.5', alert:true,
+    desc:'⏳ ESPERAR 2-3 horas con difusor y calentador encendidos ANTES de medir pH',
+    nota:'⚠️ IMPORTANTE: El Aqua Vega contiene buffers de pH que necesitan tiempo para actuar. El pH inicial del agua destilada + nutrientes es muy ácido (3-4) pero subirá solo hasta 5.5-6.2 en 2-3 horas. Si mides y corriges antes de que actúen los buffers estarás añadiendo pH+ innecesario que causará subidas posteriores.' },
+  { id:'4.6', seccion:null, paso:'4.6',
+    desc:'Medir pH tras la espera — los buffers del Aqua Vega deberían haberlo llevado a 5.5-6.2',
+    nota:'Solo corregir si está por debajo de 5.5 o por encima de 6.5. En agua destilada el rango normal tras los buffers es 5.8-6.2.',
+    campos:[{ id:'clPhMedido', label:'pH tras espera:', type:'number', step:'0.1', placeholder:'6.0' }] },
+
+  { id:'4.7', seccion:null, paso:'4.7',
+    desc:'Si pH < 5.5: añadir pH+ en dosis de 2ml, esperar 15 min y volver a medir',
+    nota:'Con Aqua Vega raramente necesitarás pH+. Si el pH ya está en 5.5-6.2 salta este paso.',
+    campos:[{ id:'clPhMas', label:'ml pH+ añadidos:', type:'number', step:'0.5', placeholder:'0' }] },
 
   { id:'5.1', seccion:'🔌 Paso 5 — Encender sistema', paso:'5.1', alert:true,
     desc:'Encender bomba inmediatamente — PRIORIDAD MÁXIMA',
