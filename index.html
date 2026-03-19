@@ -6435,11 +6435,11 @@ const CL_PASOS = [
     nota:'Remueve 3 min. La EC debería estar cerca del objetivo.',
     campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:'1.40' }] },
   { id:'4.5', seccion:null, paso:'4.5', alert:true,
-    desc:'⏳ ESPERAR 2-3 horas con difusor y calentador encendidos ANTES de medir pH',
-    nota:'⚠️ IMPORTANTE: El Aqua Vega contiene buffers de pH que necesitan tiempo para actuar. El pH inicial del agua destilada + nutrientes es muy ácido (3-4) pero subirá solo hasta 5.5-6.2 en 2-3 horas. Si mides y corriges antes de que actúen los buffers estarás añadiendo pH+ innecesario que causará subidas posteriores.' },
+    desc:'✅ Encender bomba y difusor — las plantas ya reciben nutrientes. Esperar 2-3h antes de medir pH',
+    nota:'⚠️ NO apagar la bomba durante la espera — las plantas no pueden estar sin riego más de 45 min. La espera de los buffers se hace con el sistema EN MARCHA. El pH llegará solo a 5.5-6.2 mientras las plantas se riegan con la nueva solución. Solo entonces medir y corregir si hace falta.' },
   { id:'4.6', seccion:null, paso:'4.6',
-    desc:'Medir pH tras la espera — los buffers del Aqua Vega deberían haberlo llevado a 5.5-6.2',
-    nota:'Solo corregir si está por debajo de 5.5 o por encima de 6.5. En agua destilada el rango normal tras los buffers es 5.8-6.2.',
+    desc:'Tras 2-3h: parar bomba 5 min → medir EC y pH → encender bomba de nuevo',
+    nota:'Medir con la bomba parada para que el agua esté en reposo. El pH debería estar en 5.5-6.2 sin haber tocado nada. EC debería estar en 1300-1400 µS/cm. Si todo está en rango → no tocar nada.',
     campos:[{ id:'clPhMedido', label:'pH tras espera:', type:'number', step:'0.1', placeholder:'6.0' }] },
 
   { id:'4.7', seccion:null, paso:'4.7',
@@ -6447,8 +6447,8 @@ const CL_PASOS = [
     nota:'Con Aqua Vega raramente necesitarás pH+. Si el pH ya está en 5.5-6.2 salta este paso.',
     campos:[{ id:'clPhMas', label:'ml pH+ añadidos:', type:'number', step:'0.5', placeholder:'0' }] },
 
-  { id:'5.1', seccion:'🔌 Paso 5 — Encender sistema', paso:'5.1', alert:true,
-    desc:'Encender bomba inmediatamente — PRIORIDAD MÁXIMA',
+  { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
+    desc:'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
       { id:'clMinSinBomba', label:'Min sin bomba:', type:'number', placeholder:'40' }
