@@ -2626,16 +2626,15 @@ body::before { display: none; }
 
 /* Footer setup */
 .setup-footer {
-  position: fixed;
+  position: sticky;
   bottom: 0;
-  left: 0; right: 0;
-  background: linear-gradient(180deg, transparent, #f0fdf4 30%);
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 34px));
+  background: linear-gradient(180deg, transparent 0%, #f0fdf4 25%);
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 20px));
   display: flex;
   gap: 8px;
-  max-width: 430px;
-  margin: 0 auto;
+  flex-shrink: 0;
+  z-index: 10;
 }
 .setup-btn-back {
   flex: 0.4;
@@ -4344,7 +4343,21 @@ body::before { display: none; }
       </div>
     </div>
 
-  </div></div>
+  </div>
+
+  <!-- Footer con botones navegación -->
+  <div class="setup-footer">
+    <button class="setup-btn-back" id="setupBtnBack"
+      onclick="setupBack()" style="display:none"
+      aria-label="Volver al paso anterior">
+      ← Atrás
+    </button>
+    <button class="setup-btn-next" id="setupBtnNext"
+      onclick="setupNext()"
+      aria-label="Continuar al siguiente paso">
+      Siguiente →
+    </button>
+  </div>
 
 </div>
 
