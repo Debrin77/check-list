@@ -2891,6 +2891,30 @@ body::before { display: none; }
         <span id="dashUltimaMedicion">Sin mediciones aún</span>
       </div>
 
+      <!-- Info sistema activo -->
+      <div id="dashSistemaInfo" style="display:flex;align-items:center;justify-content:space-between;
+        background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;
+        padding:10px 14px;margin-bottom:10px;cursor:pointer"
+        onclick="goTab('mediciones')">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🧪</span>
+          <div>
+            <div id="dashNutrienteNombre" style="font-family:var(--font-display);font-size:12px;
+              font-weight:800;color:#111827">—</div>
+            <div id="dashNutrienteDetalle" style="font-size:10px;color:#6b7280;margin-top:1px">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="dashUbicacionBadge" style="font-size:11px;color:#6b7280"></div>
+          <button onclick="event.stopPropagation();cambiarNutriente()"
+            aria-label="Cambiar nutriente"
+            style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;
+                   padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+            Cambiar
+          </button>
+        </div>
+      </div>
+
       <!-- Tarjetas parámetros 2x2 -->
       <div class="params-grid">
         <div class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
@@ -3849,6 +3873,54 @@ body::before { display: none; }
         </div>
       </div>
 
+      <!-- Tamaño de cestas -->
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
+        color:#374151;margin-bottom:8px;margin-top:4px">
+        🧺 Tamaño de cestas
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div class="equip-card" id="cesta38" onclick="seleccionarCesta('38')" style="padding:10px 6px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">⚪</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">3.8 cm</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">Mini · Microgreens<br>Germinación</div>
+        </div>
+        <div class="equip-card" id="cesta40" onclick="seleccionarCesta('40')" style="padding:10px 6px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🌿</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">4.0 cm</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">Torre VEVOR ✅<br>Lechugas perfectas</div>
+        </div>
+        <div class="equip-card selected" id="cesta50" onclick="seleccionarCesta('50')" style="padding:10px 6px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🟢</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">5.0 cm</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">Estándar · Mayor<br>estabilidad</div>
+        </div>
+        <div class="equip-card" id="cesta75" onclick="seleccionarCesta('75')" style="padding:10px 6px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🔵</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">7.5 cm</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">Grande · Tomates<br>Frutos y hierbas</div>
+        </div>
+        <div class="equip-card" id="cesta100" onclick="seleccionarCesta('100')" style="padding:10px 6px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">⭕</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">10 cm</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">XL · Plantas grandes<br>Máxima producción</div>
+        </div>
+        <div class="equip-card" id="cestaPersonalizada" onclick="seleccionarCesta('custom')" style="padding:10px 6px;text-align:center;grid-column:span 2">
+          <div style="font-size:22px;margin-bottom:4px">✏️</div>
+          <div style="font-size:12px;font-weight:800;color:#374151">Personalizada</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:center">
+            <input type="number" id="cestaCmCustom" placeholder="ej: 6.3" step="0.1" min="1" max="20"
+              aria-label="Diámetro personalizado de cesta en centímetros"
+              style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;
+                     font-size:13px;font-weight:700;text-align:center;outline:none"
+              oninput="seleccionarCesta('custom')">
+            <span style="font-size:11px;color:#6b7280">cm</span>
+          </div>
+        </div>
+      </div>
+      <!-- Info planta según cesta -->
+      <div id="cestaInfo" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;
+        padding:8px 12px;font-size:11px;color:#15803d;margin-bottom:12px;display:none"></div>
+
       <!-- Ubicación interior/exterior -->
       <div style="margin-bottom:8px;font-family:var(--font-display);font-size:14px;font-weight:700;color:#374151">
         ¿Dónde está tu torre?
@@ -4235,30 +4307,8 @@ body::before { display: none; }
 
     <div class="form-group">
       <label class="form-label">Variedad</label>
-      <select class="form-select" id="editVariedad" onchange="showCompatInfo()">
+      <select class="form-select" id="editVariedad" onchange="showCompatInfo()" aria-label="Seleccionar variedad de planta">
         <option value="">— Vacía —</option>
-        <optgroup label="Lechugas">
-          <option value="Romana">Romana</option>
-          <option value="Trocadero">Trocadero</option>
-          <option value="Maravilla">Maravilla</option>
-          <option value="Lolo Rosso">Lolo Rosso</option>
-          <option value="Hoja Roble Rojo">Hoja Roble Rojo</option>
-          <option value="Batavia">Batavia</option>
-          <option value="Iceberg">Iceberg</option>
-          <option value="Mantecosa">Mantecosa</option>
-        </optgroup>
-        <optgroup label="Mostaza / Asiáticas">
-          <option value="Mizuna">Mizuna</option>
-          <option value="Komatsuna">Komatsuna</option>
-          <option value="Pak Choi">Pak Choi</option>
-          <option value="Tatsoi">Tatsoi</option>
-        </optgroup>
-        <optgroup label="Otros">
-          <option value="Rúcula">Rúcula</option>
-          <option value="Espinaca">Espinaca</option>
-          <option value="Albahaca">Albahaca</option>
-          <option value="Perejil">Perejil</option>
-        </optgroup>
       </select>
     </div>
 
@@ -4300,40 +4350,305 @@ const NUM_NIVELES = 5;
 const NUM_CESTAS = 5;
 
 // Días estimados a cosecha por variedad
-const DIAS_COSECHA = {
-  'Romana': 55, 'Trocadero': 50, 'Maravilla': 52, 'Lolo Rosso': 48,
-  'Hoja Roble Rojo': 50, 'Batavia': 55, 'Iceberg': 65, 'Mantecosa': 45,
-  'Mizuna': 40, 'Komatsuna': 35, 'Pak Choi': 40, 'Tatsoi': 45,
-  'Rúcula': 35, 'Espinaca': 45, 'Albahaca': 60, 'Perejil': 70,
-};
+// DIAS_COSECHA — generado desde CULTIVOS_DB + compatibilidad con entradas manuales
+const DIAS_COSECHA = Object.fromEntries(
+  CULTIVOS_DB.map(c => [c.nombre, c.dias])
+);
+// Añadir aliases comunes
+DIAS_COSECHA['Pak Choi'] = 40;
+DIAS_COSECHA['Bok Choy'] = 40;
+
 
 // Grupos de compatibilidad de cultivos
 // Plantas del mismo grupo comparten pH 5.7-6.4 y EC 1300-1400 µS/cm
+// ══════════════════════════════════════════════════
+// BASE DE DATOS COMPLETA DE CULTIVOS HIDROPÓNICOS
+// Datos EC/pH: HydroHowTo, Aero-Gro, Oklahoma State University
+// EC en µS/cm (multiplicar mS×1000), pH rango hidropónico
+// ══════════════════════════════════════════════════
+
+const CULTIVOS_DB = [
+
+  // ── LECHUGAS ────────────────────────────────────────────────────────────
+  { id:'romana',       nombre:'Romana',           grupo:'lechugas',  emoji:'🥬',
+    ecMin:800,  ecMax:1400, phMin:5.5, phMax:6.5, dias:45,
+    dificultad:'fácil', sistemaIdeal:'torre,nft,dwc',
+    nota:'La más productiva en hidroponía. Tolera bien el calor. Rebota tras corte.',
+    fructificacion: false },
+  { id:'trocadero',    nombre:'Trocadero',         grupo:'lechugas',  emoji:'🥬',
+    ecMin:800,  ecMax:1400, phMin:5.5, phMax:6.5, dias:40,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Textura mantecosa. Sensible al tipburn con baja circulación de aire.',
+    fructificacion: false },
+  { id:'maravilla',    nombre:'Maravilla',         grupo:'lechugas',  emoji:'🥬',
+    ecMin:800,  ecMax:1200, phMin:5.5, phMax:6.5, dias:50,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Tolerante al frío. Ideal otoño-invierno en Castelló.',
+    fructificacion: false },
+  { id:'lolorrosso',   nombre:'Lolo Rosso',        grupo:'lechugas',  emoji:'🟥',
+    ecMin:800,  ecMax:1400, phMin:5.5, phMax:6.5, dias:45,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Color rojizo intenso. Más resistente al calor que las verdes. Ideal verano.',
+    fructificacion: false },
+  { id:'hojaroble',    nombre:'Hoja Roble Rojo',   grupo:'lechugas',  emoji:'🍂',
+    ecMin:800,  ecMax:1400, phMin:5.5, phMax:6.5, dias:45,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Hojas tipo roble. Lenta pero sabrosa. Apta para verano.',
+    fructificacion: false },
+  { id:'batavia',      nombre:'Batavia',            grupo:'lechugas',  emoji:'🥬',
+    ecMin:800,  ecMax:1400, phMin:5.5, phMax:6.5, dias:50,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Bordes crujientes. Aguanta el calor mejor que mantecosas.',
+    fructificacion: false },
+  { id:'iceberg',      nombre:'Iceberg',            grupo:'lechugas',  emoji:'💚',
+    ecMin:1000, ecMax:1600, phMin:5.8, phMax:6.5, dias:60,
+    dificultad:'media', sistemaIdeal:'torre,nft',
+    nota:'Necesita más espacio y tiempo. Requiere cestas ≥5cm. Sensible al tipburn.',
+    fructificacion: false },
+  { id:'mantecosa',    nombre:'Mantecosa',          grupo:'lechugas',  emoji:'🧈',
+    ecMin:800,  ecMax:1200, phMin:5.5, phMax:6.5, dias:45,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Sabor suave. Ideal invierno. Muy sensible al bolting en verano.',
+    fructificacion: false },
+
+  // ── HOJAS VERDES ─────────────────────────────────────────────────────────
+  { id:'rucula',       nombre:'Rúcula',             grupo:'hojas',     emoji:'🌿',
+    ecMin:1400, ecMax:1800, phMin:6.0, phMax:7.0, dias:30,
+    dificultad:'fácil', sistemaIdeal:'torre,nft,aeroponia',
+    nota:'Crecimiento rápido. EC más alta que lechugas. Sabor picante intenso en verano.',
+    fructificacion: false },
+  { id:'espinaca',     nombre:'Espinaca',           grupo:'hojas',     emoji:'🌱',
+    ecMin:1800, ecMax:2300, phMin:6.0, phMax:7.0, dias:40,
+    dificultad:'media', sistemaIdeal:'nft,dwc',
+    nota:'EC alta — no mezclar con lechugas en mismo depósito. Prefiere frío (10-20°C).',
+    fructificacion: false },
+  { id:'acelga',       nombre:'Acelga',             grupo:'hojas',     emoji:'🍃',
+    ecMin:1800, ecMax:2300, phMin:6.0, phMax:7.0, dias:50,
+    dificultad:'fácil', sistemaIdeal:'nft,dwc',
+    nota:'Muy productiva. Tolera rango amplio de temperatura. Rebrota tras corte.',
+    fructificacion: false },
+  { id:'col_rizada',   nombre:'Kale / Col rizada', grupo:'hojas',     emoji:'🥦',
+    ecMin:1200, ecMax:1500, phMin:5.5, phMax:6.5, dias:55,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Superalimento. Compatible con lechugas en EC. Aguanta bien el frío.',
+    fructificacion: false },
+  { id:'berros',       nombre:'Berros',             grupo:'hojas',     emoji:'💧',
+    ecMin:400,  ecMax:1800, phMin:6.5, phMax:6.8, dias:30,
+    dificultad:'fácil', sistemaIdeal:'nft,agua_corriente',
+    nota:'Rango EC muy amplio. Necesita mucha agua y buena circulación.',
+    fructificacion: false },
+  { id:'lechuga_agua', nombre:'Lechuga de agua',   grupo:'hojas',     emoji:'🌊',
+    ecMin:400,  ecMax:1200, phMin:6.0, phMax:7.0, dias:35,
+    dificultad:'fácil', sistemaIdeal:'dwc,nft',
+    nota:'EC baja. Sistema DWC ideal. Crece muy rápido en verano.',
+    fructificacion: false },
+
+  // ── ASIÁTICAS / MOSTAZA ───────────────────────────────────────────────────
+  { id:'mizuna',       nombre:'Mizuna',             grupo:'asiaticas', emoji:'🌿',
+    ecMin:1200, ecMax:1400, phMin:5.5, phMax:6.5, dias:35,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'La más fácil y productiva de las asiáticas. Compatible con lechugas.',
+    fructificacion: false },
+  { id:'komatsuna',    nombre:'Komatsuna',          grupo:'asiaticas', emoji:'🍃',
+    ecMin:1200, ecMax:1400, phMin:6.0, phMax:7.0, dias:35,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Sabor suave tipo espinaca. Muy productiva. Compatible con lechugas.',
+    fructificacion: false },
+  { id:'pak_choi',     nombre:'Pak Choi / Bok Choy',grupo:'asiaticas', emoji:'🥬',
+    ecMin:1500, ecMax:2500, phMin:6.0, phMax:7.0, dias:40,
+    dificultad:'media', sistemaIdeal:'nft,dwc',
+    nota:'EC más alta — cuidado al mezclar con lechugas. Prefiere temperaturas frescas.',
+    fructificacion: false },
+  { id:'tatsoi',       nombre:'Tatsoi',             grupo:'asiaticas', emoji:'🌸',
+    ecMin:1200, ecMax:1800, phMin:5.5, phMax:6.5, dias:40,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Hojas en roseta. Muy decorativa. Tolera el frío mejor que otras asiáticas.',
+    fructificacion: false },
+  { id:'mostaza',      nombre:'Mostaza roja/verde', grupo:'asiaticas', emoji:'🔴',
+    ecMin:1200, ecMax:2400, phMin:6.0, phMax:6.5, dias:30,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'Crecimiento muy rápido. Sabor picante. Listo para microgreens en 10 días.',
+    fructificacion: false },
+
+  // ── HIERBAS AROMÁTICAS ────────────────────────────────────────────────────
+  { id:'albahaca',     nombre:'Albahaca',           grupo:'hierbas',   emoji:'🌿',
+    ecMin:1000, ecMax:1600, phMin:5.5, phMax:6.0, dias:30,
+    dificultad:'media', sistemaIdeal:'torre,nft,aeroponia',
+    nota:'Necesita 18°C mínimo. Repele pulgones. No mezclar con menta (EC diferente).',
+    fructificacion: false },
+  { id:'menta',        nombre:'Menta / Hierbabuena',grupo:'hierbas',   emoji:'🍵',
+    ecMin:2000, ecMax:2400, phMin:5.5, phMax:6.0, dias:30,
+    dificultad:'media', sistemaIdeal:'nft,dwc',
+    nota:'EC alta — no mezclar con lechugas. Invasiva, mejor en torre separada. Muy aromática.',
+    fructificacion: false },
+  { id:'perejil',      nombre:'Perejil',            grupo:'hierbas',   emoji:'🌱',
+    ecMin:800,  ecMax:1800, phMin:5.5, phMax:6.0, dias:60,
+    dificultad:'media', sistemaIdeal:'torre,nft',
+    nota:'Germinación lenta. Una vez establecido, muy productivo. Compatible con lechugas.',
+    fructificacion: false },
+  { id:'cilantro',     nombre:'Cilantro',           grupo:'hierbas',   emoji:'🌿',
+    ecMin:1200, ecMax:1800, phMin:5.8, phMax:6.4, dias:30,
+    dificultad:'media', sistemaIdeal:'torre,nft',
+    nota:'Se espiga rápido con calor. Mejor en otoño-primavera. Cosechar joven.',
+    fructificacion: false },
+  { id:'oregano',      nombre:'Orégano',            grupo:'hierbas',   emoji:'🌿',
+    ecMin:1800, ecMax:2300, phMin:6.0, phMax:7.0, dias:60,
+    dificultad:'media', sistemaIdeal:'nft',
+    nota:'EC alta. Necesita mucha luz. Mejor secado que fresco en hidropónica.',
+    fructificacion: false },
+  { id:'romero',       nombre:'Romero',             grupo:'hierbas',   emoji:'🌲',
+    ecMin:1000, ecMax:1600, phMin:5.5, phMax:6.0, dias:90,
+    dificultad:'difícil', sistemaIdeal:'aeroponía',
+    nota:'Crecimiento lento. Sensible al exceso de humedad en raíces. Aeroponía ideal.',
+    fructificacion: false },
+  { id:'tomillo',      nombre:'Tomillo',            grupo:'hierbas',   emoji:'🌿',
+    ecMin:800,  ecMax:1600, phMin:5.5, phMax:7.0, dias:60,
+    dificultad:'media', sistemaIdeal:'nft,aeroponia',
+    nota:'Rango EC amplio. Tolera periodos de sequía. Buena elección para principiantes.',
+    fructificacion: false },
+  { id:'lavanda',      nombre:'Lavanda',            grupo:'hierbas',   emoji:'💜',
+    ecMin:1000, ecMax:1400, phMin:6.4, phMax:6.8, dias:90,
+    dificultad:'difícil', sistemaIdeal:'aeroponia',
+    nota:'Prefiere pH más alto. Necesita periodos de menor riego. Difícil en torres.',
+    fructificacion: false },
+  { id:'eneldo',       nombre:'Eneldo',             grupo:'hierbas',   emoji:'🌿',
+    ecMin:1000, ecMax:1600, phMin:5.5, phMax:6.4, dias:45,
+    dificultad:'media', sistemaIdeal:'torre,nft',
+    nota:'Se espiga rápido. Cosechar antes de florecer. Sabor anisado.',
+    fructificacion: false },
+  { id:'cebollino',    nombre:'Cebollino',          grupo:'hierbas',   emoji:'🧅',
+    ecMin:1800, ecMax:2400, phMin:6.0, phMax:6.5, dias:30,
+    dificultad:'fácil', sistemaIdeal:'torre,nft',
+    nota:'EC alta — separarlos de lechugas. Se corta y rebrota varias veces.',
+    fructificacion: false },
+
+  // ── FRUTOS (REQUIEREN SISTEMA DEDICADO) ──────────────────────────────────
+  { id:'tomate',       nombre:'Tomate',             grupo:'frutos',    emoji:'🍅',
+    ecMin:1500, ecMax:3000, phMin:5.5, phMax:6.3, dias:90,
+    dificultad:'difícil', sistemaIdeal:'dwc,nft_frutos,sustrato',
+    nota:'EC aumenta según fase: veg 1500-2000, fruto 2000-3000. Necesita tutores y polinización.',
+    fructificacion: true,
+    fases: {
+      plantula:     { ec:[800,1200],  ph:[5.8,6.2], dias:14 },
+      vegetativo:   { ec:[1500,2000], ph:[5.5,6.3], dias:30 },
+      floracion:    { ec:[2000,2500], ph:[5.5,6.3], dias:20 },
+      fructificacion:{ ec:[2000,3000], ph:[5.8,6.5], dias:40 },
+    } },
+  { id:'pimiento',     nombre:'Pimiento / Capsicum',grupo:'frutos',    emoji:'🫑',
+    ecMin:1800, ecMax:2200, phMin:6.0, phMax:6.5, dias:90,
+    dificultad:'difícil', sistemaIdeal:'dwc,sustrato',
+    nota:'Necesita temperatura 20-28°C. EC más estable que tomate. Requiere polinización.',
+    fructificacion: true,
+    fases: {
+      plantula:     { ec:[800,1200],  ph:[5.8,6.2], dias:14 },
+      vegetativo:   { ec:[1500,2000], ph:[6.0,6.5], dias:40 },
+      floracion:    { ec:[2000,2500], ph:[6.0,6.5], dias:20 },
+      fructificacion:{ ec:[2000,3000], ph:[6.0,6.5], dias:40 },
+    } },
+  { id:'pimiento_picante', nombre:'Pimiento picante / Chile', grupo:'frutos', emoji:'🌶️',
+    ecMin:3000, ecMax:3500, phMin:5.0, phMax:6.5, dias:100,
+    dificultad:'difícil', sistemaIdeal:'dwc,sustrato',
+    nota:'EC muy alta. Sistema dedicado obligatorio. Más tolerante al estrés que el dulce.',
+    fructificacion: true },
+  { id:'pepino',       nombre:'Pepino',             grupo:'frutos',    emoji:'🥒',
+    ecMin:1700, ecMax:2500, phMin:5.5, phMax:6.0, dias:60,
+    dificultad:'media', sistemaIdeal:'nft_frutos,dwc',
+    nota:'pH más bajo que otros frutos. Necesita tutores. Muy productivo en verano.',
+    fructificacion: true },
+  { id:'calabacin',    nombre:'Calabacín / Zucchini',grupo:'frutos',   emoji:'🥬',
+    ecMin:1800, ecMax:2400, phMin:6.0, phMax:7.0, dias:55,
+    dificultad:'media', sistemaIdeal:'dwc,sustrato',
+    nota:'Planta grande — necesita mucho espacio. Muy productivo. Requiere polinización.',
+    fructificacion: true },
+
+  // ── FRESAS ────────────────────────────────────────────────────────────────
+  { id:'fresa',        nombre:'Fresa',              grupo:'fresas',    emoji:'🍓',
+    ecMin:1800, ecMax:2200, phMin:5.5, phMax:6.5, dias:90,
+    dificultad:'media', sistemaIdeal:'torre,nft,sustrato',
+    nota:'Ideal en torres verticales. Producción estacional. EC aumenta en fructificación.',
+    fructificacion: true,
+    fases: {
+      vegetativo:    { ec:[1200,1500], ph:[5.5,6.5], dias:30 },
+      floracion:     { ec:[1500,1800], ph:[5.5,6.5], dias:20 },
+      fructificacion:{ ec:[1800,2500], ph:[5.5,6.5], dias:40 },
+    } },
+  { id:'freson',       nombre:'Fresón / Albión',    grupo:'fresas',    emoji:'🍓',
+    ecMin:1500, ecMax:2000, phMin:5.8, phMax:6.2, dias:90,
+    dificultad:'media', sistemaIdeal:'torre,nft',
+    nota:'Variedad remontante — produce todo el año. Muy popular en hidroponía vertical.',
+    fructificacion: true },
+
+  // ── RAÍCES ────────────────────────────────────────────────────────────────
+  { id:'zanahoria',    nombre:'Zanahoria',          grupo:'raices',    emoji:'🥕',
+    ecMin:1600, ecMax:2000, phMin:6.3, phMax:6.3, dias:75,
+    dificultad:'difícil', sistemaIdeal:'aeroponia,sustrato_profundo',
+    nota:'Necesita sustrato profundo (≥20cm) o aeroponía. Difícil en torres verticales estándar.',
+    fructificacion: false },
+  { id:'rabano',       nombre:'Rábano',             grupo:'raices',    emoji:'🔴',
+    ecMin:1600, ecMax:2200, phMin:6.0, phMax:7.0, dias:25,
+    dificultad:'fácil', sistemaIdeal:'aeroponia,sustrato',
+    nota:'El cultivo más rápido. 25 días de semilla a cosecha. Necesita espacio para la raíz.',
+    fructificacion: false },
+
+  // ── MICROGREENS ──────────────────────────────────────────────────────────
+  { id:'microgreens_mezcla', nombre:'Microgreens (mezcla)', grupo:'microgreens', emoji:'🌱',
+    ecMin:800,  ecMax:1600, phMin:5.5, phMax:6.5, dias:10,
+    dificultad:'fácil', sistemaIdeal:'bandeja,nft',
+    nota:'Solo agua los primeros días, sin nutrientes hasta cotilédones. Cosecha en 7-14 días.',
+    fructificacion: false },
+  { id:'girasol_micro', nombre:'Microgreens de girasol', grupo:'microgreens', emoji:'🌻',
+    ecMin:800,  ecMax:1200, phMin:5.5, phMax:6.5, dias:10,
+    dificultad:'fácil', sistemaIdeal:'bandeja',
+    nota:'Los más nutritivos. Sabor a nuez. Necesitan oscuridad los 3 primeros días.',
+    fructificacion: false },
+];
+
+// Grupos con colores y compatibilidad
 const GRUPOS_CULTIVO = {
-  A: {
-    nombre: 'Lechugas',
-    color: '#34d399',
-    plantas: ['Romana','Trocadero','Maravilla','Lolo Rosso','Hoja Roble Rojo','Batavia','Iceberg','Mantecosa'],
-    ec: '1300-1400', ph: '5.7-6.4', nota: 'Perfectamente compatibles entre sí'
-  },
-  B: {
-    nombre: 'Asiáticas / Mostaza',
-    color: '#60a5fa',
-    plantas: ['Mizuna','Komatsuna','Pak Choi','Tatsoi'],
-    ec: '1200-1400', ph: '6.0-6.5', nota: 'Compatibles con lechugas en mismo depósito'
-  },
-  C: {
-    nombre: 'Hojas verdes',
-    color: '#a3e635',
-    plantas: ['Rúcula','Espinaca'],
-    ec: '1400-1600', ph: '6.0-7.0', nota: 'Compatibles con lechugas pero prefieren EC algo más alta'
-  },
-  D: {
-    nombre: 'Hierbas',
-    color: '#fbbf24',
-    plantas: ['Albahaca','Perejil'],
-    ec: '1000-1600', ph: '5.5-6.4', nota: 'Compatibles. La albahaca repele pulgones naturalmente'
-  },
+  lechugas:    { nombre:'Lechugas',           color:'#22c55e', ec:'800-1400',   ph:'5.5-6.5',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='lechugas').map(c=>c.nombre),
+    nota:'Perfectamente compatibles entre sí. El cultivo más fácil en hidroponía.' },
+  hojas:       { nombre:'Hojas verdes',        color:'#84cc16', ec:'1200-2300',  ph:'6.0-7.0',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='hojas').map(c=>c.nombre),
+    nota:'Rango EC variable. Espinaca y acelga necesitan EC más alta que rúcula.' },
+  asiaticas:   { nombre:'Asiáticas / Mostaza', color:'#60a5fa', ec:'1200-2500',  ph:'5.5-7.0',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='asiaticas').map(c=>c.nombre),
+    nota:'Mizuna y komatsuna compatibles con lechugas. Pak choi y menta necesitan torre separada.' },
+  hierbas:     { nombre:'Hierbas aromáticas',  color:'#f59e0b', ec:'800-2400',   ph:'5.5-7.0',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='hierbas').map(c=>c.nombre),
+    nota:'Rango EC muy variable. Menta y orégano incompatibles con lechugas. Albahaca sí.' },
+  frutos:      { nombre:'Frutos',              color:'#f97316', ec:'1500-3500',  ph:'5.5-6.5',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='frutos').map(c=>c.nombre),
+    nota:'EC incompatible con lechugas. Sistema dedicado obligatorio. Requieren polinización.' },
+  fresas:      { nombre:'Fresas',              color:'#f43f5e', ec:'1500-2500',  ph:'5.5-6.5',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='fresas').map(c=>c.nombre),
+    nota:'Compatibles con lechugas en fase vegetativa. EC aumenta en fructificación.' },
+  raices:      { nombre:'Raíces',              color:'#a78bfa', ec:'1600-2200',  ph:'6.0-7.0',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='raices').map(c=>c.nombre),
+    nota:'Necesitan sustrato profundo. Difíciles en torres verticales estándar.' },
+  microgreens: { nombre:'Microgreens',         color:'#2dd4bf', ec:'800-1600',   ph:'5.5-6.5',
+    plantas: CULTIVOS_DB.filter(c=>c.grupo==='microgreens').map(c=>c.nombre),
+    nota:'Sin nutrientes los primeros días. Cosecha muy rápida (7-14 días).' },
+};
+
+// Compatibilidad: grupos que SÍ pueden compartir depósito
+const COMPAT_MATRIZ = {
+  lechugas:   ['lechugas','asiaticas','hierbas'], // albahaca ok, menta no
+  asiaticas:  ['lechugas','asiaticas'],
+  hojas:      ['hojas'],
+  hierbas:    ['lechugas'],  // solo algunas
+  frutos:     ['frutos'],
+  fresas:     ['fresas','lechugas'],
+  raices:     ['raices'],
+  microgreens:['microgreens'],
+};
+
+// ALIAS por compatibilidad con código anterior (GRUPOS_CULTIVO keys A,B,C,D)
+const GRUPOS_CULTIVO_OLD = {
+  A: GRUPOS_CULTIVO.lechugas,
+  B: GRUPOS_CULTIVO.asiaticas,
+  C: GRUPOS_CULTIVO.hojas,
+  D: GRUPOS_CULTIVO.hierbas,
 };
 
 // Compatibilidad entre grupos (qué mezclar y qué no)
@@ -4517,6 +4832,7 @@ function initApp() {
   initTorres();
   mostrarBtnNotificaciones();
   setTimeout(programarRecordatorios, 2000);
+  actualizarBadgesNutriente();
   cargarEstadoTorre(state.torreActiva || 0);
   actualizarHeaderTorre();
 
@@ -4560,7 +4876,7 @@ function goTab(tab) {
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') cargarMeteo();
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
-  if (tab === 'torre') calcularRotacion();
+  if (tab === 'torre') { renderTorre(); renderCompatGrid(); calcularRotacion(); }
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
@@ -4897,10 +5213,26 @@ function renderTorre() {
 
 
 function getGrupoCultivo(variedad) {
-  for (const [key, grupo] of Object.entries(GRUPOS_CULTIVO)) {
+  // Buscar en CULTIVOS_DB primero
+  const cultivo = CULTIVOS_DB.find(c => c.nombre === variedad || c.id === variedad);
+  if (cultivo) {
+    const grupo = GRUPOS_CULTIVO[cultivo.grupo];
+    if (grupo) return { ...grupo, key: cultivo.grupo };
+  }
+  // Fallback a GRUPOS_CULTIVO_OLD
+  for (const [key, grupo] of Object.entries(GRUPOS_CULTIVO_OLD)) {
     if (grupo.plantas.includes(variedad)) return { ...grupo, key };
   }
   return null;
+}
+
+function getCultivoDB(variedad) {
+  return CULTIVOS_DB.find(c => c.nombre === variedad || c.id === variedad) || null;
+}
+
+function getDiasEstimados(variedad) {
+  const c = getCultivoDB(variedad);
+  return c ? c.dias : 45;
 }
 
 function checkNivelCompat(nivel) {
@@ -4926,106 +5258,125 @@ function renderCompatGrid() {
   const grid = document.getElementById('compatGrid');
   if (!grid) return;
 
-  const nut = getNutrienteTorre();
-
-  // Recoger todas las variedades en la torre activa
+  const nut     = getNutrienteTorre();
   const niveles = MODOS_CULTIVO[modoActual].niveles;
-  const variedadesEnTorre = [];
-  const gruposEnTorre = new Map(); // key → {grupo, plantas}
 
+  // Recoger todas las variedades con su grupo
+  const enTorre = [];
   niveles.forEach(n => {
-    (state.torre[n] || []).forEach(c => {
+    (state.torre[n] || []).forEach((c, ci) => {
       if (!c.variedad) return;
-      variedadesEnTorre.push(c.variedad);
       const g = getGrupoCultivo(c.variedad);
       if (!g) return;
-      if (!gruposEnTorre.has(g.key)) {
-        gruposEnTorre.set(g.key, { grupo: g, plantas: [] });
-      }
-      gruposEnTorre.get(g.key).plantas.push(c.variedad);
+      enTorre.push({ variedad: c.variedad, nivel: n+1, cesta: ci+1, grupo: g });
     });
   });
 
-  if (gruposEnTorre.size === 0) {
-    grid.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px">' +
-      '🌱 Añade plantas a las cestas para ver la guía de compatibilidad</div>';
+  // ── Sin plantas ──────────────────────────────────────────────────────────
+  if (enTorre.length === 0) {
+    grid.innerHTML =
+      '<div style="text-align:center;padding:16px 8px">' +
+        '<div style="font-size:32px;margin-bottom:8px">🌱</div>' +
+        '<div style="font-size:13px;color:var(--muted);font-weight:600">Añade plantas a las cestas</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:4px">Verás aquí si son compatibles entre sí</div>' +
+      '</div>';
     return;
   }
 
+  // Grupos únicos presentes
+  const gruposMap = new Map();
+  enTorre.forEach(p => {
+    if (!gruposMap.has(p.grupo.key)) gruposMap.set(p.grupo.key, { ...p.grupo, plantas: [] });
+    gruposMap.get(p.grupo.key).plantas.push(p.variedad);
+  });
+
   let html = '';
 
-  // ── Resumen de grupos presentes ─────────────────────────────────────────
-  html += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;' +
-    'letter-spacing:1px;margin-bottom:8px">Grupos en tu torre</div>';
+  // ── Resumen por grupo ────────────────────────────────────────────────────
+  html += '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;' +
+    'letter-spacing:1px;margin-bottom:8px">📋 Grupos en esta torre</div>';
 
-  gruposEnTorre.forEach(({ grupo, plantas }, gKey) => {
-    const unicas = [...new Set(plantas)];
-    html += '<div style="background:' + grupo.color + '18;border:1.5px solid ' + grupo.color + '55;' +
-      'border-radius:12px;padding:10px 12px;margin-bottom:8px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-        '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + grupo.color + '">' +
-          grupo.nombre +
-        '</div>' +
-        '<div style="font-size:10px;color:var(--muted)">' + unicas.length + ' variedad' + (unicas.length>1?'es':'') + '</div>' +
+  gruposMap.forEach((g, key) => {
+    const unicas = [...new Set(g.plantas)];
+    html += '<div style="background:' + g.color + '18;border:1.5px solid ' + g.color + '44;' +
+      'border-radius:12px;padding:10px 12px;margin-bottom:6px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + g.color + '">' +
+          g.nombre + '</span>' +
+        '<span style="font-size:10px;background:' + g.color + '22;border-radius:6px;padding:2px 7px;' +
+          'font-weight:700;color:' + g.color + '">' + unicas.length + ' var.</span>' +
       '</div>' +
-      '<div style="font-size:12px;color:#374151;margin-bottom:6px">' + unicas.join(', ') + '</div>' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-        '<span style="font-size:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px">⚡ EC ' + grupo.ec + '</span>' +
-        '<span style="font-size:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px">🧪 pH ' + grupo.ph + '</span>' +
+      '<div style="font-size:11px;color:#374151;margin-top:4px">' + unicas.join(', ') + '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:6px">' +
+        '<span style="font-size:10px;background:#f8fafc;border:1px solid #e5e7eb;' +
+          'border-radius:6px;padding:2px 7px">⚡ EC ' + g.ec + ' µS/cm</span>' +
+        '<span style="font-size:10px;background:#f8fafc;border:1px solid #e5e7eb;' +
+          'border-radius:6px;padding:2px 7px">🧪 pH ' + g.ph + '</span>' +
       '</div>' +
-      '<div style="font-size:11px;color:#6b7280;margin-top:6px">💡 ' + grupo.nota + '</div>' +
     '</div>';
   });
 
-  // ── Compatibilidad entre grupos ──────────────────────────────────────────
-  if (gruposEnTorre.size > 1) {
-    html += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;' +
-      'letter-spacing:1px;margin:10px 0 8px">Compatibilidad entre grupos</div>';
+  // ── Análisis compatibilidad entre grupos ─────────────────────────────────
+  if (gruposMap.size > 1) {
+    html += '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;' +
+      'letter-spacing:1px;margin:10px 0 8px">🔬 Análisis de compatibilidad</div>';
 
-    const keysArr = [...gruposEnTorre.keys()];
-    let incompatibles = false;
+    const keys = [...gruposMap.keys()];
+    let hayIncompatibles = false;
 
-    for (let i = 0; i < keysArr.length; i++) {
-      for (let j = i+1; j < keysArr.length; j++) {
-        const gA = GRUPOS_CULTIVO[keysArr[i]];
-        const gB = GRUPOS_CULTIVO[keysArr[j]];
-        if (!gA || !gB) continue;
-
+    for (let i = 0; i < keys.length; i++) {
+      for (let j = i+1; j < keys.length; j++) {
+        const gA = gruposMap.get(keys[i]);
+        const gB = gruposMap.get(keys[j]);
         const ecA = gA.ec.split('-').map(Number);
         const ecB = gB.ec.split('-').map(Number);
         const overlap = Math.min(ecA[1], ecB[1]) - Math.max(ecA[0], ecB[0]);
-        const compatible = overlap > 100;
-
-        if (!compatible) incompatibles = true;
+        const compatible = overlap >= 100;
+        if (!compatible) hayIncompatibles = true;
 
         html += '<div style="background:' + (compatible ? '#f0fdf4' : '#fff5f5') + ';' +
           'border:1.5px solid ' + (compatible ? '#86efac' : '#fca5a5') + ';' +
-          'border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px">' +
-          '<span style="font-size:16px">' + (compatible ? '✅' : '⚠️') + '</span>' +
-          '<div style="flex:1">' +
+          'border-radius:10px;padding:10px 12px;margin-bottom:6px">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:' + (compatible?'0':'6px') + '">' +
+            '<span style="font-size:18px">' + (compatible ? '✅' : '⚠️') + '</span>' +
             '<div style="font-size:12px;font-weight:700;color:' + (compatible?'#15803d':'#b91c1c') + '">' +
               gA.nombre + ' + ' + gB.nombre +
             '</div>' +
-            '<div style="font-size:11px;color:#6b7280;margin-top:2px">' +
-              (compatible
-                ? 'Compatibles — rango EC compartido: ' + Math.max(ecA[0],ecB[0]) + '-' + Math.min(ecA[1],ecB[1]) + ' µS/cm'
-                : 'EC incompatible — uno necesita ' + gA.ec + ' y otro ' + gB.ec
-              ) +
-            '</div>' +
           '</div>' +
-        '</div>';
+          (compatible
+            ? '<div style="font-size:11px;color:#6b7280">Rango EC compatible: ' +
+              Math.max(ecA[0],ecB[0]) + '–' + Math.min(ecA[1],ecB[1]) + ' µS/cm · Pueden crecer juntas</div>'
+            : '<div style="font-size:11px;color:#7f1d1d">EC incompatible — ' + gA.nombre +
+              ' necesita ' + gA.ec + ' y ' + gB.nombre + ' necesita ' + gB.ec + ' µS/cm</div>' +
+              '<div style="font-size:11px;color:#7f1d1d;margin-top:4px;font-weight:700">' +
+              '💡 Recomendación: cultiva ' + gB.nombre + ' en una torre separada con EC ' + gB.ec + '</div>'
+          ) +
+          '</div>';
       }
+    }
+
+    // Resumen final
+    if (hayIncompatibles) {
+      html += '<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;' +
+        'padding:10px 12px;margin-top:4px">' +
+        '<div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:4px">' +
+          '🌿 Solución recomendada con varias torres</div>' +
+        '<div style="font-size:11px;color:#78350f;line-height:1.7">' +
+          '• Torre 1 (EC 1300–1400): Lechugas + Asiáticas + Hierbas<br>' +
+          '• Torre 2 (EC 1400–1600): Hojas verdes + Rúcula + Espinaca<br>' +
+          '• Torre 3 (EC 1800–2500): Frutos (solo si tienes bomba potente)' +
+        '</div></div>';
     }
   }
 
-  // ── EC recomendada del nutriente activo ─────────────────────────────────
+  // ── EC del nutriente activo ──────────────────────────────────────────────
+  const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+  const ecMax = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
   html += '<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;' +
-    'padding:10px 12px;margin-top:4px">' +
-    '<div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:4px">⚡ ' + nut.nombre + '</div>' +
-    '<div style="font-size:12px;color:#1e40af">EC objetivo: ' +
-      (nut.ecObjetivo ? nut.ecObjetivo[0] + '-' + nut.ecObjetivo[1] : '900-1400') + ' µS/cm · ' +
-      'pH: ' + (nut.pHRango ? nut.pHRango[0] + '-' + nut.pHRango[1] : '5.5-6.5') +
-    '</div>' +
+    'padding:8px 12px;margin-top:6px">' +
+    '<div style="font-size:11px;font-weight:700;color:#1d4ed8">⚡ Nutriente activo: ' + nut.nombre + '</div>' +
+    '<div style="font-size:11px;color:#1e40af;margin-top:2px">Rango EC: ' + ecMin + '–' + ecMax +
+      ' µS/cm · pH: ' + (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5') + '</div>' +
   '</div>';
 
   grid.innerHTML = html;
@@ -5607,6 +5958,8 @@ function guardarSetupYContinuar() {
     ubicacion:    setupUbicacion,
     equipamiento: [...setupEquipamiento],
     nutriente:    setupNutriente,
+    tamanoCesta:  setupTamanoCesta,
+    tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
     ciudad:       setupCoordenadas.ciudad,
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0513,
@@ -5844,63 +6197,83 @@ function ejecutarRotacion() {
 // ══════════════════════════════════════════════════
 function showCompatInfo() {
   const variedad = document.getElementById('editVariedad').value;
-  const infoEl = document.getElementById('editCompatInfo');
-  if (!variedad || !editingCesta) { infoEl.style.display = 'none'; return; }
+  const infoEl   = document.getElementById('editCompatInfo');
+  if (!variedad) { infoEl.style.display = 'none'; return; }
 
-  const grupo = getGrupoCultivo(variedad);
-  if (!grupo) { infoEl.style.display = 'none'; return; }
+  const cultivo = getCultivoDB(variedad);
+  const grupo   = getGrupoCultivo(variedad);
 
-  // Check other plants in same level
-  const { nivel } = editingCesta;
-  const otrasVariedades = state.torre[nivel]
-    .filter((c, i) => i !== editingCesta.cesta && c.variedad)
-    .map(c => c.variedad);
+  if (!cultivo && !grupo) { infoEl.style.display = 'none'; return; }
 
-  let html = `<div style="color:${grupo.color};font-weight:600;margin-bottom:4px">${grupo.nombre}</div>`;
-  html += `<div style="color:var(--muted)">EC: ${grupo.ec} µS/cm · pH: ${grupo.ph}</div>`;
-  html += `<div style="color:var(--muted);margin-top:2px">${grupo.nota}</div>`;
+  infoEl.style.display = 'block';
 
-  if (otrasVariedades.length > 0) {
-    const otrosGrupos = [...new Set(otrasVariedades.map(v => {
-      for (const [k, g] of Object.entries(GRUPOS_CULTIVO)) {
-        if (g.plantas.includes(v)) return k;
-      }
-      return null;
-    }).filter(Boolean))];
+  let html = '';
 
-    const miGrupo = grupo.key;
-    let compatOk = true;
-    let compatMsg = '';
+  // Info del cultivo específico
+  if (cultivo) {
+    const ecOk  = '#15803d';
+    const dif   = { fácil:'🟢 Fácil', media:'🟡 Media', difícil:'🔴 Avanzado' };
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
+      '<span style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:2px 8px;' +
+        'font-size:11px;font-weight:700;color:#15803d">⚡ EC ' + cultivo.ecMin + '–' + cultivo.ecMax + ' µS/cm</span>' +
+      '<span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:2px 8px;' +
+        'font-size:11px;font-weight:700;color:#1d4ed8">🧪 pH ' + cultivo.phMin + '–' + cultivo.phMax + '</span>' +
+      '<span style="background:#fefce8;border:1px solid #fde047;border-radius:6px;padding:2px 8px;' +
+        'font-size:11px;font-weight:700;color:#78350f">⏱ ~' + cultivo.dias + ' días</span>' +
+      '<span style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;' +
+        'font-size:11px;color:#374151">' + (dif[cultivo.dificultad]||'') + '</span>' +
+    '</div>';
 
-    otrosGrupos.forEach(og => {
-      if (og === miGrupo) return;
-      const key1 = miGrupo + '-' + og;
-      const key2 = og + '-' + miGrupo;
-      const compat = COMPATIBILIDAD[key1] || COMPATIBILIDAD[key2];
-      if (compat) {
-        compatOk = compat.ok;
-        compatMsg = compat.texto;
-      }
-    });
+    if (cultivo.nota) {
+      html += '<div style="font-size:11px;color:#4b5563;margin-bottom:6px">💡 ' + cultivo.nota + '</div>';
+    }
 
-    if (compatMsg) {
-      const color = compatOk ? 'var(--green)' : 'var(--red)';
-      html += `<div style="color:${color};margin-top:4px;font-weight:600">${compatMsg}</div>`;
+    // Fases si tiene fructificación
+    if (cultivo.fructificacion && cultivo.fases) {
+      html += '<div style="font-size:10px;font-weight:700;color:#f97316;margin-bottom:4px">🌸 Fases de cultivo:</div>';
+      Object.entries(cultivo.fases).forEach(([fase, datos]) => {
+        const nombres = {plantula:'Plántula',vegetativo:'Vegetativo',floracion:'Floración',fructificacion:'Fructificación'};
+        html += '<div style="font-size:10px;color:#374151;margin-bottom:2px">' +
+          '<strong>' + (nombres[fase]||fase) + '</strong>: EC ' + datos.ec[0] + '–' + datos.ec[1] +
+          ' · pH ' + datos.ph[0] + '–' + datos.ph[1] + ' · ~' + datos.dias + 'd</div>';
+      });
     }
   }
 
-  infoEl.style.display = 'block';
-  infoEl.style.background = `${grupo.color}15`;
-  infoEl.style.border = `1px solid ${grupo.color}33`;
+  // Compatibilidad con otros cultivos en la misma torre
+  if (editingCesta) {
+    const { nivel } = editingCesta;
+    const otrosGrupos = new Set();
+    state.torre[nivel]?.forEach((c, i) => {
+      if (c.variedad && c.variedad !== variedad) {
+        const g = getGrupoCultivo(c.variedad);
+        if (g) otrosGrupos.add(g.key);
+      }
+    });
+
+    if (otrosGrupos.size > 0 && grupo) {
+      const compatibles = COMPAT_MATRIZ[grupo.key] || [];
+      const incomp = [...otrosGrupos].filter(g => !compatibles.includes(g));
+      if (incomp.length > 0) {
+        const nombresIncomp = incomp.map(g => GRUPOS_CULTIVO[g]?.nombre || g).join(', ');
+        html += '<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;' +
+          'padding:6px 10px;font-size:11px;color:#b91c1c;margin-top:4px">' +
+          '⚠️ Incompatible con ' + nombresIncomp + ' en esta torre — EC diferente</div>';
+      } else {
+        html += '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;' +
+          'padding:6px 10px;font-size:11px;color:#15803d;margin-top:4px">' +
+          '✅ Compatible con los cultivos actuales de esta torre</div>';
+      }
+    }
+  }
+
+  infoEl.style.background = cultivo?.fructificacion ? '#fff7ed' : '#f0fdf4';
+  infoEl.style.border      = '1.5px solid ' + (cultivo?.fructificacion ? '#fed7aa' : '#86efac');
+  infoEl.style.borderRadius = '10px';
+  infoEl.style.padding     = '10px 12px';
   infoEl.innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════
-// MODAL EDITAR CESTA
-// ══════════════════════════════════════════════════
-// ══════════════════════════════════════════════════
-// FOTOS POR CESTA
-// ══════════════════════════════════════════════════
 
 function agregarFotoCesta(event) {
   const file = event.target.files[0];
@@ -5990,6 +6363,16 @@ function verFotoCompleta(idx) {
     </button>`;
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
   document.body.appendChild(overlay);
+  // Event delegation for nutriente cards
+  overlay.querySelectorAll('[data-nut-id]').forEach(el => {
+    el.addEventListener('click', function() {
+      seleccionarNutrienteRapido(this.getAttribute('data-nut-id'));
+    });
+  });
+  const otroBtn    = document.getElementById('nutOtroBtn');
+  const cancelarBtn = document.getElementById('nutCancelarBtn');
+  if (otroBtn) otroBtn.addEventListener('click', () => seleccionarNutrienteRapido('otro'));
+  if (cancelarBtn) cancelarBtn.addEventListener('click', () => overlay.remove());
 }
 
 function borrarFotoCesta(idx) {
@@ -6000,6 +6383,42 @@ function borrarFotoCesta(idx) {
   renderFotosCesta();
 }
 
+function poblarSelectVariedades() {
+  const sel = document.getElementById('editVariedad');
+  if (!sel) return;
+  // Guardar valor actual
+  const valActual = sel.value;
+  sel.innerHTML = '<option value="">— Vacía —</option>';
+
+  // Agrupar por grupo
+  const grupos = {};
+  CULTIVOS_DB.forEach(c => {
+    if (!grupos[c.grupo]) grupos[c.grupo] = [];
+    grupos[c.grupo].push(c);
+  });
+
+  const nombreGrupos = {
+    lechugas:'🥬 Lechugas', hojas:'🌿 Hojas verdes', asiaticas:'🍃 Asiáticas / Mostaza',
+    hierbas:'🌿 Hierbas', frutos:'🍅 Frutos', fresas:'🍓 Fresas',
+    raices:'🥕 Raíces', microgreens:'🌱 Microgreens'
+  };
+
+  Object.entries(grupos).forEach(([gKey, cultivos]) => {
+    const og = document.createElement('optgroup');
+    og.label = nombreGrupos[gKey] || gKey;
+    cultivos.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.nombre;
+      opt.textContent = c.emoji + ' ' + c.nombre;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+
+  // Restaurar valor
+  if (valActual) sel.value = valActual;
+}
+
 function openModal(nivel, cesta) {
   editingCesta = { nivel, cesta };
   const data = state.torre[nivel][cesta];
@@ -6007,6 +6426,7 @@ function openModal(nivel, cesta) {
   document.getElementById('editVariedad').value = data.variedad || '';
   document.getElementById('editFecha').value = data.fecha || '';
   document.getElementById('editNotas').value = data.notas || '';
+  poblarSelectVariedades();
   document.getElementById('modalOverlay').classList.add('open');
   // Renderizar fotos si las hay
   setTimeout(renderFotosCesta, 50);
@@ -9290,6 +9710,38 @@ const setupData = {
   lon: null,
 };
 
+// Tamaño de cestas
+let setupTamanoCesta = '50'; // cm por defecto
+
+function seleccionarCesta(tam) {
+  setupTamanoCesta = tam;
+  ['38','40','50','75','100','Personalizada'].forEach(t => {
+    const key = t === 'Personalizada' ? 'cestaPersonalizada' : 'cesta' + t;
+    const el  = document.getElementById(key);
+    if (el) el.classList.remove('selected');
+  });
+  const mapId = { '38':'cesta38','40':'cesta40','50':'cesta50','75':'cesta75','100':'cesta100','custom':'cestaPersonalizada' };
+  const el = document.getElementById(mapId[tam] || 'cesta50');
+  if (el) el.classList.add('selected');
+
+  // Info según tamaño
+  const infoEl = document.getElementById('cestaInfo');
+  if (!infoEl) return;
+  const cm = tam === 'custom'
+    ? (parseFloat(document.getElementById('cestaCmCustom')?.value) || 0)
+    : parseFloat(tam);
+  const infos = {
+    3.8: '⚪ 3.8cm — Para microgreens y germinación. Esponja 2.5cm.',
+    4.0: '🌿 4.0cm — Las de la torre VEVOR. Perfectas para lechugas, mizuna y hierbas. La raíz sale hacia el agua y el tamaño de la cesta no limita el crecimiento.',
+    5.0: '🟢 5.0cm — Estándar hidropónico. Más estabilidad para lechugas grandes (romana, iceberg) y mejor para exterior con viento.',
+    7.5: '🔵 7.5cm — Para hierbas grandes, rúcula, espinaca. Más volumen de sustrato.',
+    10:  '⭕ 10cm — Para frutos pequeños, pimientos, fresas. Necesita soporte estructural.',
+  };
+  const closest = [3.8, 5.0, 7.5, 10].reduce((a,b) => Math.abs(b-cm) < Math.abs(a-cm) ? b : a);
+  infoEl.style.display = 'block';
+  infoEl.textContent = cm ? (infos[closest] || '✅ Tamaño personalizado: ' + cm + ' cm') : '';
+}
+
 function seleccionarAgua(tipo) {
   setupData.agua = tipo;
   ['Destilada','Osmosis','Grifo'].forEach(t => {
@@ -9431,6 +9883,7 @@ function cambiarTorreActiva(idx) {
   renderTorre();
   updateTorreStats();
   updateDashboard();
+  actualizarBadgesNutriente();
   showToast('🌿 ' + state.torres[idx].nombre);
 }
 
@@ -9583,6 +10036,108 @@ function borrarTorre(idx) {
   renderTorre();
   actualizarHeaderTorre();
   showToast('🗑 Torre eliminada');
+}
+
+// ══════════════════════════════════════════════════
+// BADGE NUTRIENTE — visible en dashboard y medir
+// ══════════════════════════════════════════════════
+
+function actualizarBadgesNutriente() {
+  const nut = getNutrienteTorre();
+  const cfg = state.configTorre || {};
+
+  // Dashboard
+  const dashNombre  = document.getElementById('dashNutrienteNombre');
+  const dashDetalle = document.getElementById('dashNutrienteDetalle');
+  const dashUbicacion = document.getElementById('dashUbicacionBadge');
+  if (dashNombre)  dashNombre.textContent  = nut.nombre;
+  if (dashDetalle) dashDetalle.textContent = nut.detalle;
+  if (dashUbicacion) {
+    const ub = cfg.ubicacion || 'exterior';
+    dashUbicacion.textContent = ub === 'interior' ? '🏠 Interior' : '☀️ Exterior';
+  }
+
+  // Pestaña Medir
+  const medirNombre = document.getElementById('medirNutrienteNombre');
+  const medirEC     = document.getElementById('medirNutrienteEC');
+  if (medirNombre) medirNombre.textContent = nut.nombre;
+  if (medirEC) {
+    const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+    const ecMax = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+    medirEC.textContent = 'EC objetivo: ' + ecMin + '-' + ecMax + ' µS/cm · pH ' +
+      (nut.pHRango ? nut.pHRango[0] + '-' + nut.pHRango[1] : '5.5-6.5');
+  }
+}
+
+function cambiarNutriente() {
+  // Abrir modal rápido de selección de nutriente
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;' +
+    'display:flex;align-items:flex-end;justify-content:center';
+  overlay.id = 'nutrienteQuickModal';
+
+  const nutActual = state.configTorre?.nutriente || 'canna_aqua';
+
+  overlay.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;' +
+    'width:100%;max-width:430px;padding:20px;max-height:80vh;overflow-y:auto">' +
+    '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px"></div>' +
+    '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#111827;' +
+      'margin-bottom:14px">🧪 Nutriente de esta torre</div>' +
+    NUTRIENTES_DB.filter(n => n.id !== 'otro').map(n => {
+      const activo = n.id === nutActual;
+      const bg = activo ? '#f0fdf4' : '#fff';
+      const border = activo ? '#16a34a' : '#e5e7eb';
+      const col = activo ? '#15803d' : '#111827';
+      const check = activo ? '<span style="color:#16a34a;font-size:18px">&#10003;</span>' : '';
+      return [
+        '<div data-nut-id="' + n.id + '" style="display:flex;align-items:center;gap:10px;padding:12px;',
+        'border-radius:12px;border:2px solid ' + border + ';background:' + bg + ';margin-bottom:8px;cursor:pointer">',
+        '<span style="font-size:22px">' + n.bandera + '</span>',
+        '<div style="flex:1"><div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + col + '">' + n.nombre + '</div>',
+        '<div style="font-size:10px;color:#6b7280">' + n.detalle + '</div></div>',
+        check + '</div>'
+      ].join('');
+    }).join('')
+    +
+    '<div id="nutOtroBtn" style="display:flex;align-items:center;gap:10px;padding:12px;' +
+      'border-radius:12px;border:2px solid #e5e7eb;margin-bottom:8px;cursor:pointer">' +
+      '<span style="font-size:22px">🔬</span>' +
+      '<div><div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#111827">Otra marca</div>' +
+      '<div style="font-size:10px;color:#6b7280">Configurar manualmente</div></div></div>' +
+    '<button id="nutCancelarBtn" ' +
+      'style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;' +
+      'background:#f9fafb;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+      'Cancelar</button>' +
+    '</div>';
+
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+  // Event delegation for nutriente cards
+  overlay.querySelectorAll('[data-nut-id]').forEach(el => {
+    el.addEventListener('click', function() {
+      seleccionarNutrienteRapido(this.getAttribute('data-nut-id'));
+    });
+  });
+  const otroBtn    = document.getElementById('nutOtroBtn');
+  const cancelarBtn = document.getElementById('nutCancelarBtn');
+  if (otroBtn) otroBtn.addEventListener('click', () => seleccionarNutrienteRapido('otro'));
+  if (cancelarBtn) cancelarBtn.addEventListener('click', () => overlay.remove());
+}
+
+function seleccionarNutrienteRapido(id) {
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.nutriente = id;
+  // Actualizar también en la torre activa
+  const tIdx = state.torreActiva || 0;
+  if (state.torres && state.torres[tIdx]) {
+    if (!state.torres[tIdx].config) state.torres[tIdx].config = {};
+    state.torres[tIdx].config.nutriente = id;
+  }
+  saveState();
+  document.getElementById('nutrienteQuickModal')?.remove();
+  actualizarBadgesNutriente();
+  const nut = getNutrienteTorre();
+  showToast('🧪 ' + nut.nombre + ' activado para esta torre');
 }
 
 // ══════════════════════════════════════════════════
