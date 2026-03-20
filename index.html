@@ -7083,14 +7083,14 @@ function showCompatInfo() {
 }
 
 
-function agregarFotoCesta(event) {
+async function agregarFotoCesta(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     const base64 = e.target.result;
     const img = new Image();
-    img.onload = function() {
+    img.onload = async function() {
       // Comprimir: máx 900px ancho, calidad 0.75
       const canvas = document.createElement('canvas');
       const maxW = 900;
@@ -7126,9 +7126,14 @@ function agregarFotoCesta(event) {
       const torreIdx = state.torreActiva || 0;
       const fotoKey  = 'foto_t' + torreIdx + '_n' + nivel + '_c' + cesta + '_' +
                        now.toISOString().replace(/[:.]/g,'_');
-      guardarFotoIDB(fotoKey, foto).catch(err => console.error('IDB error:', err));
+      try {
+        await guardarFotoIDB(fotoKey, foto);
+        console.log('[IDB] Foto guardada:', fotoKey);
+      } catch(err) {
+        console.error('[IDB] Error guardando foto:', err);
+      }
 
-      // En state solo guardamos la key (no el base64 — para no desbordar localStorage)
+      // En state solo guardamos la key (no el base64)
       if (!cestaData.fotoKeys) cestaData.fotoKeys = [];
       cestaData.fotoKeys.push(fotoKey);
       // Compatibilidad: mantener también en cestaData.fotos sin el data
@@ -10106,12 +10111,12 @@ async function cargarMeteo() {
   try {
     // ECMWF para temp/humedad + modelo default para UV
     const urlM = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0495' +
+      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,windspeed_10m_max' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&forecast_days=7&timezone=auto&models=ecmwf_ifs';
     const urlMUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0495' +
+      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
     const [resM, resMUV] = await Promise.all([fetch(urlM), fetch(urlMUV)]);
@@ -10421,6 +10426,16 @@ function calcularEdadAutomatica() {
   return { semanas: Math.round(edadMinSem * 10) / 10, plantas: totalPlantas };
 }
 
+
+// Obtener coordenadas de la torre activa (o Castelló por defecto)
+function getCoordsActivas() {
+  const cfg = state.configTorre || {};
+  return {
+    lat: cfg.lat || setupCoordenadas.lat || 39.9864,
+    lon: cfg.lon || setupCoordenadas.lon || -0.0495,
+  };
+}
+
 async function calcularRiego() {
   const nPlantas = parseInt(document.getElementById('riegoNPlantas').value) || 15;
 
@@ -10450,14 +10465,14 @@ async function calcularRiego() {
     const offsetHoras = idx * 24; // offset para datos horarios
 
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0495' +
+      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,precipitation_probability_max,precipitation_sum' +
       '&hourly=relative_humidity_2m,temperature_2m' +
       `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
     // Modelo default para UV (ECMWF no soporta uv_index_max)
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0495' +
+      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=uv_index_max' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
@@ -10930,7 +10945,7 @@ async function guardarMedicion() {
 
   updateDashboard();
   updateRecargaBar();
-  showToast('✅ Medición guardada localmente');
+  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'));
 
   // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
   const alertas = [];
@@ -10968,7 +10983,7 @@ function showToast(msg, error=false) {
   t.style.color = error ? 'white' : 'var(--bg)';
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 2800);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
 }
 
 // ══════════════════════════════════════════════════
@@ -11472,7 +11487,14 @@ function cambiarTorreActiva(idx) {
   updateTorreStats();
   updateDashboard();
   actualizarBadgesNutriente();
-  showToast('🌿 ' + state.torres[idx].nombre);
+  // Recargar meteo y riego con coordenadas de la nueva torre
+  const t = state.torres[idx];
+  const nombre = t ? t.nombre : 'Torre ' + (idx+1);
+  const ciudad = t?.config?.ciudad || 'Castelló de la Plana';
+  showToast('🌿 ' + nombre + ' · 📍 ' + ciudad);
+  // Si la pestaña de riego o meteo está activa, refrescar
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+  if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
 }
 
 function guardarEstadoTorreActual() {
