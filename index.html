@@ -3762,7 +3762,15 @@ body::before { display: none; }
 
   <!-- Header con progreso -->
   <div class="setup-header">
-    <div class="setup-logo">HYDRO<span>CARU</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="setup-logo">HYDRO<span>CARU</span></div>
+      <button onclick="cerrarSetup()"
+        style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e5e7eb;
+               background:#fff;font-size:18px;color:#6b7280;cursor:pointer;
+               display:flex;align-items:center;justify-content:center;
+               -webkit-tap-highlight-color:transparent"
+        aria-label="Volver al inicio">✕</button>
+    </div>
     <div class="setup-steps">
       <div class="setup-step-dot active" id="sdot0"></div>
       <div class="setup-step-dot" id="sdot1"></div>
@@ -3930,6 +3938,22 @@ body::before { display: none; }
     </button>
   </div>
 
+</div>
+
+<!-- ══ MODAL SELECTOR TORRES ══ -->
+<div class="modal-overlay" id="modalTorres" onclick="cerrarModalTorres(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌿 Mis Torres</div>
+
+    <div id="listaTorres" style="margin-bottom:14px"></div>
+
+    <button class="btn btn-primary" onclick="crearNuevaTorre()"
+      id="btnCrearTorre" style="margin-bottom:8px">
+      ➕ Añadir nueva torre
+    </button>
+    <button class="btn btn-ghost" onclick="cerrarModalTorres()">Cerrar</button>
+  </div>
 </div>
 
 <!-- ══ CHECKLIST INTEGRADO ══ -->
@@ -4324,6 +4348,11 @@ function initApp() {
   initConfigUI();
   setInterval(updateDashboard, 300000);
 
+  // Inicializar sistema multi-torre
+  initTorres();
+  cargarEstadoTorre(state.torreActiva || 0);
+  actualizarHeaderTorre();
+
   // Aplicar configuración de torre si existe
   aplicarConfigTorre();
 
@@ -4352,6 +4381,9 @@ function updateClock() {
 // NAVEGACIÓN
 // ══════════════════════════════════════════════════
 function goTab(tab) {
+  // Guardar estado torre antes de navegar
+  guardarEstadoTorreActual();
+  saveState();
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
@@ -4727,11 +4759,13 @@ function renderCompatGrid() {
 
   // Obtener grupos presentes en la torre
   const gruposPresentes = new Set();
+  const variedadesPresentes = [];
   MODOS_CULTIVO[modoActual].niveles.forEach(n => {
     state.torre[n].forEach(c => {
       if (c.variedad) {
         const g = getGrupoCultivo(c.variedad);
         if (g) gruposPresentes.add(g.key);
+        variedadesPresentes.push(c.variedad);
       }
     });
   });
@@ -4741,39 +4775,55 @@ function renderCompatGrid() {
     return;
   }
 
+  // Mostrar compatibilidad entre lo que hay en la torre
+  const grupos = [...gruposPresentes];
   let html = '';
-  GRUPOS_CULTIVO_COMPATIBLES.forEach(rec => {
-    const presente = [...gruposPresentes].some(g =>
-      GRUPOS_CULTIVO[g] && GRUPOS_CULTIVO[g].plantas.some(p =>
-        rec.plantas.includes(p)
-      )
+
+  // Card por cada grupo presente
+  grupos.forEach(gKey => {
+    const grupo = GRUPOS_CULTIVO[gKey];
+    if (!grupo) return;
+    const plantasEnTorre = variedadesPresentes.filter(v =>
+      grupo.plantas && grupo.plantas.includes(v)
     );
-    if (presente) {
-      html += `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
-        <span style="font-size:16px">${rec.icono}</span>
-        <div>
-          <div style="font-size:12px;font-weight:600;color:var(--white)">${rec.titulo}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${rec.texto}</div>
+    if (plantasEnTorre.length === 0) return;
+
+    html += `<div style="background:${grupo.color}15;border:1.5px solid ${grupo.color}44;
+      border-radius:12px;padding:12px;cursor:pointer"
+      onclick="mostrarCompatDetalle('${gKey}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:${grupo.color}">
+          ${grupo.nombre}
         </div>
-      </div>`;
-    }
+        <span style="font-size:11px;color:var(--muted)">Ver detalles →</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">
+        En tu torre: ${plantasEnTorre.join(', ')}
+      </div>
+    </div>`;
   });
 
-  if (!html) {
-    html = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Cultivos actuales son compatibles ✅</div>';
+  // Aviso si hay grupos incompatibles mezclados
+  if (gruposPresentes.has('frutos') && (gruposPresentes.has('lechugas') || gruposPresentes.has('asiaticas'))) {
+    html += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:12px;margin-top:4px">
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#dc2626">
+        ⚠️ Incompatibilidad detectada
+      </div>
+      <div style="font-size:12px;color:#7f1d1d;margin-top:4px">
+        Frutos y lechugas en el mismo depósito — EC incompatible. Los frutos necesitan EC 2x mayor.
+      </div>
+    </div>`;
   }
-  grid.innerHTML = html;
+
+  grid.innerHTML = html || '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Sin datos de compatibilidad</div>';
 }
 
-// Recomendaciones de compatibilidad para mostrar en la app
-const GRUPOS_CULTIVO_COMPATIBLES = [
-  { icono: '✅', titulo: 'Lechugas entre sí', texto: 'Todas las variedades de lechuga son perfectamente compatibles. Mismo EC y pH.', plantas: ['Romana','Trocadero','Maravilla','Lolo Rosso','Hoja Roble Rojo','Batavia','Iceberg','Mantecosa'] },
-  { icono: '✅', titulo: 'Lechugas + Asiáticas', texto: 'Mizuna, Komatsuna, Pak Choi y Tatsoi son compatibles con lechugas. EC 1300-1400 µS/cm.', plantas: ['Mizuna','Komatsuna','Pak Choi','Tatsoi'] },
-  { icono: '✅', titulo: 'Albahaca repele plagas', texto: 'La albahaca repele pulgones y mosca blanca naturalmente. Buena compañera de lechugas.', plantas: ['Albahaca'] },
-  { icono: '⚠️', titulo: 'Rúcula — ajustar EC', texto: 'La rúcula prefiere EC algo más alta (1400-1600). Monitorizar más frecuentemente si se mezcla.', plantas: ['Rúcula'] },
-  { icono: '⚠️', titulo: 'Espinaca — pH diferente', texto: 'La espinaca tolera pH hasta 7.0. Con lechugas puede necesitar ajuste más frecuente de pH.', plantas: ['Espinaca'] },
-  { icono: '❌', titulo: 'No mezclar con frutales', texto: 'Tomates, pepinos o pimientos necesitan EC 1800-2500 y nutrientes distintos. Depósito separado obligatorio.', plantas: [] },
-];
+function mostrarCompatDetalle(gKey) {
+  const grupo = GRUPOS_CULTIVO[gKey];
+  if (!grupo) return;
+  showToast(grupo.nombre + ' · EC: ' + (grupo.ecMin||1200) + '-' + (grupo.ecMax||1600) + ' µS/cm · pH: 5.5-6.5');
+}
+
 
 function getDias(fecha) {
   if (!fecha) return 0;
@@ -5520,7 +5570,13 @@ function addRegistro(tipo, datos) {
   const mes  = String(now.getMonth()+1).padStart(2,'0');
   const fecha = dia + '/' + mes + '/' + now.getFullYear();
   const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-  state.registro.unshift({ tipo, fecha, hora, ...datos });
+  const tActiva = getTorreActiva();
+  state.registro.unshift({
+    tipo, fecha, hora,
+    torreNombre: tActiva.nombre || 'Torre 1',
+    torreEmoji:  tActiva.emoji  || '🌿',
+    ...datos
+  });
   if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
   saveState();
 }
@@ -6744,24 +6800,78 @@ function histTab(tab) {
   }
 }
 
+let filtroTorreActivo = null; // null = todas las torres
+
 function cargarHistorial() {
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').style.display = 'none';
   document.getElementById('histMediciones').style.display = 'none';
   document.getElementById('histRecargas').style.display = 'none';
 
-  const mediciones = state.mediciones || [];
+  // Recopilar mediciones de TODAS las torres
+  let todasMediciones = [];
+  if (state.torres && state.torres.length > 1) {
+    // Guardar estado actual primero
+    guardarEstadoTorreActual();
+    state.torres.forEach(t => {
+      (t.mediciones || []).forEach(m => {
+        todasMediciones.push({
+          ...m,
+          torreId:     m.torreId     || t.id,
+          torreNombre: m.torreNombre || t.nombre,
+          torreEmoji:  m.torreEmoji  || t.emoji || '🌿',
+        });
+      });
+    });
+    // Ordenar por fecha+hora más reciente
+    todasMediciones.sort((a, b) => {
+      const da = a.fecha.split('/').reverse().join('') + a.hora;
+      const db = b.fecha.split('/').reverse().join('') + b.hora;
+      return db.localeCompare(da);
+    });
 
-  if (mediciones.length === 0) {
+    // Mostrar filtro por torre
+    renderFiltroTorres();
+  } else {
+    todasMediciones = state.mediciones || [];
+    const fw = document.getElementById('filtroTorreWrap');
+    if (fw) fw.style.display = 'none';
+  }
+
+  if (todasMediciones.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
     return;
   }
 
-  // Usar directamente state.mediciones — sin transformaciones ni Sheets
-  histDatos = mediciones;
+  histDatos = todasMediciones;
   renderHistMediciones();
   renderHistRecargas();
   document.getElementById('histMediciones').style.display = 'block';
+}
+
+function renderFiltroTorres() {
+  const wrap = document.getElementById('filtroTorreWrap');
+  const btns = document.getElementById('filtroTorreBtns');
+  if (!wrap || !btns || !state.torres || state.torres.length <= 1) {
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+  const todas = [{ id: null, nombre: 'Todas', emoji: '📊' }, ...state.torres];
+  btns.innerHTML = todas.map(t =>
+    '<button onclick="setFiltroTorre(' + JSON.stringify(t.id) + ')" ' +
+    'style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;' +
+    'border:1.5px solid ' + (filtroTorreActivo === t.id ? '#16a34a' : '#e5e7eb') + ';' +
+    'background:' + (filtroTorreActivo === t.id ? '#f0fdf4' : '#fff') + ';' +
+    'color:' + (filtroTorreActivo === t.id ? '#15803d' : '#374151') + '">' +
+    (t.emoji||'🌿') + ' ' + t.nombre + '</button>'
+  ).join('');
+}
+
+function setFiltroTorre(id) {
+  filtroTorreActivo = id;
+  renderFiltroTorres();
+  renderHistMediciones();
 }
 
 
@@ -6912,9 +7022,14 @@ function renderRegistro() {
       return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:10px;' +
         'padding:10px 12px;margin-bottom:6px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-          '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
-            c.icon + ' ' + (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)) +
-          '</span>' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
+            '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
+              c.icon + ' ' + (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)) +
+            '</span>' +
+            (e.torreNombre ? '<span style="font-size:9px;font-weight:700;color:#15803d;background:#f0fdf4;' +
+              'border:1px solid #86efac;border-radius:6px;padding:1px 5px">' +
+              (e.torreEmoji||'🌿') + ' ' + e.torreNombre + '</span>' : '') +
+          '</div>' +
           '<div style="display:flex;align-items:center;gap:8px">' +
             '<span style="font-size:11px;color:var(--muted)">' + (e.hora||'') + '</span>' +
             '<button onclick="borrarEntradaRegistro(' + globalIdx + ')" ' +
@@ -6937,7 +7052,12 @@ function renderRegistro() {
 
 
 function renderHistMediciones() {
-  const mediciones = (state.mediciones || []).slice(0, 20);
+  // Aplicar filtro por torre si está activo
+  let mediciones = histDatos || state.mediciones || [];
+  if (filtroTorreActivo !== null) {
+    mediciones = mediciones.filter(m => m.torreId === filtroTorreActivo);
+  }
+  mediciones = mediciones.slice(0, 20);
   if (mediciones.length === 0) {
     document.getElementById('histSinDatos').style.display = 'flex';
     return;
@@ -6964,6 +7084,9 @@ function renderHistMediciones() {
     <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
       <span class="hist-fecha">${m.fecha}<br>
         <span style="font-size:10px;color:var(--muted)">${m.hora}</span>
+        ${m.torreNombre ? `<span style="display:inline-block;margin-top:2px;font-size:9px;
+          font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;
+          border-radius:6px;padding:1px 5px">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
       </span>
       <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
       <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
@@ -8419,6 +8542,204 @@ function showToast(msg, error=false) {
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 2800);
+}
+
+// ══════════════════════════════════════════════════
+// SISTEMA MULTI-TORRE
+// ══════════════════════════════════════════════════
+
+const MAX_TORRES = 10;
+
+// Inicializar sistema de torres si no existe
+function initTorres() {
+  if (!state.torres) {
+    // Migrar configuración actual como Torre 1
+    state.torres = [{
+      id: 1,
+      nombre: 'Torre 1',
+      emoji: '🌿',
+      config: state.configTorre || null,
+      torre: state.torre || [],
+      modoActual: modoActual || 'lechugas',
+      mediciones: state.mediciones || [],
+      registro: state.registro || [],
+    }];
+    state.torreActiva = 0; // índice en el array
+    saveState();
+  }
+}
+
+function getTorreActiva() {
+  initTorres();
+  const idx = state.torreActiva || 0;
+  return state.torres[idx] || state.torres[0];
+}
+
+function cambiarTorreActiva(idx) {
+  // Guardar estado actual en la torre activa
+  guardarEstadoTorreActual();
+
+  // Cambiar a la nueva torre
+  state.torreActiva = idx;
+  cargarEstadoTorre(idx);
+  saveState();
+  cerrarModalTorres();
+  actualizarHeaderTorre();
+  renderTorre();
+  updateTorreStats();
+  updateDashboard();
+  showToast('🌿 ' + state.torres[idx].nombre);
+}
+
+function guardarEstadoTorreActual() {
+  if (!state.torres) return;
+  const idx = state.torreActiva || 0;
+  if (!state.torres[idx]) return;
+  state.torres[idx].torre      = JSON.parse(JSON.stringify(state.torre));
+  state.torres[idx].modoActual = modoActual;
+  state.torres[idx].mediciones = state.mediciones || [];
+  state.torres[idx].registro   = state.registro   || [];
+  state.torres[idx].config     = state.configTorre || null;
+}
+
+function cargarEstadoTorre(idx) {
+  const t = state.torres[idx];
+  if (!t) return;
+  // Restaurar datos de esta torre
+  state.torre       = t.torre || [];
+  state.mediciones  = t.mediciones || [];
+  state.registro    = t.registro   || [];
+  state.configTorre = t.config     || null;
+  modoActual        = t.modoActual || 'lechugas';
+  // Asegurar estructura correcta de la torre
+  if (!state.torre || state.torre.length === 0) {
+    state.torre = [];
+    for (let n = 0; n < NUM_NIVELES; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < NUM_CESTAS; c++) {
+        state.torre[n].push({ variedad:'', fecha:'', notas:'' });
+      }
+    }
+  }
+}
+
+function actualizarHeaderTorre() {
+  const t = getTorreActiva();
+  const btn = document.getElementById('torreActivaNombre');
+  if (btn) btn.textContent = (t.emoji || '🌿') + ' ' + (t.nombre || 'Torre 1');
+  // Mostrar/ocultar botón añadir según límite
+  const btnCrear = document.getElementById('btnCrearTorre');
+  if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
+}
+
+function abrirSelectorTorres() {
+  initTorres();
+  renderListaTorres();
+  document.getElementById('modalTorres').classList.add('open');
+}
+
+function cerrarModalTorres(e) {
+  if (!e || e.target === document.getElementById('modalTorres')) {
+    document.getElementById('modalTorres').classList.remove('open');
+  }
+}
+
+function renderListaTorres() {
+  const lista = document.getElementById('listaTorres');
+  const activa = state.torreActiva || 0;
+  const EMOJIS = ['🌿','🌱','🥬','🌿','🍃','🌾','🪴','🌻','🫛','🎍'];
+
+  lista.innerHTML = state.torres.map((t, i) => {
+    const isActiva = i === activa;
+    const plantasCount = (t.torre || []).reduce((sum, nivel) =>
+      sum + (nivel || []).filter(c => c && c.variedad).length, 0);
+
+    return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
+      border-radius:14px;border:2px solid ${isActiva ? '#16a34a' : '#e5e7eb'};
+      background:${isActiva ? '#f0fdf4' : '#fff'};margin-bottom:8px;cursor:pointer"
+      onclick="cambiarTorreActiva(${i})">
+      <!-- Emoji editable -->
+      <div style="font-size:28px">${t.emoji || '🌿'}</div>
+      <div style="flex:1">
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:800;
+          color:${isActiva ? '#15803d' : '#111827'}">${t.nombre}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">
+          ${plantasCount} plantas · ${t.config ? (t.config.numNiveles||5)+'N × '+(t.config.numCestas||5)+'C' : '5N × 5C'}
+          ${isActiva ? ' · <strong style="color:#15803d">Activa</strong>' : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="event.stopPropagation();editarNombreTorre(${i})"
+          style="background:none;border:1.5px solid #e5e7eb;border-radius:8px;
+                 padding:6px 8px;font-size:12px;cursor:pointer;color:#374151">✏️</button>
+        ${state.torres.length > 1 && !isActiva ? `
+        <button onclick="event.stopPropagation();borrarTorre(${i})"
+          style="background:none;border:1.5px solid #fca5a5;border-radius:8px;
+                 padding:6px 8px;font-size:12px;cursor:pointer;color:#dc2626">🗑</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  actualizarHeaderTorre();
+}
+
+function crearNuevaTorre() {
+  if (state.torres.length >= MAX_TORRES) {
+    showToast('Máximo ' + MAX_TORRES + ' torres', true); return;
+  }
+  const n = state.torres.length + 1;
+  const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
+  const nuevaTorre = {
+    id: Date.now(),
+    nombre: 'Torre ' + n,
+    emoji: EMOJIS[(n-1) % EMOJIS.length],
+    config: null,
+    torre: [],
+    modoActual: 'lechugas',
+    mediciones: [],
+    registro: [],
+  };
+  // Inicializar estructura vacía
+  for (let nv = 0; nv < NUM_NIVELES; nv++) {
+    nuevaTorre.torre.push([]);
+    for (let c = 0; c < NUM_CESTAS; c++) {
+      nuevaTorre.torre[nv].push({ variedad:'', fecha:'', notas:'' });
+    }
+  }
+  guardarEstadoTorreActual();
+  state.torres.push(nuevaTorre);
+  const newIdx = state.torres.length - 1;
+  saveState();
+  // Cambiar a la nueva torre y abrir setup
+  cambiarTorreActiva(newIdx);
+  cerrarModalTorres();
+  setTimeout(() => abrirSetup(), 300);
+}
+
+function editarNombreTorre(idx) {
+  const t = state.torres[idx];
+  const nuevoNombre = prompt('Nombre de la torre:', t.nombre);
+  if (nuevoNombre && nuevoNombre.trim()) {
+    state.torres[idx].nombre = nuevoNombre.trim().slice(0, 20);
+    saveState();
+    renderListaTorres();
+    actualizarHeaderTorre();
+  }
+}
+
+function borrarTorre(idx) {
+  if (state.torres.length <= 1) return;
+  if (!confirm('¿Borrar ' + state.torres[idx].nombre + '? Se perderán todos sus datos.')) return;
+  state.torres.splice(idx, 1);
+  if (state.torreActiva >= state.torres.length) {
+    state.torreActiva = state.torres.length - 1;
+  }
+  cargarEstadoTorre(state.torreActiva);
+  saveState();
+  renderListaTorres();
+  renderTorre();
+  actualizarHeaderTorre();
+  showToast('🗑 Torre eliminada');
 }
 
 // ══════════════════════════════════════════════════
