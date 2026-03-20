@@ -3418,9 +3418,8 @@ body::before { display: none; }
       </button>
 
       <!-- Añadir nueva torre -->
-      <button onclick="crearNuevaTorre()"
+      <button onclick="abrirSetupNuevaTorre()"
         aria-label="Añadir nueva torre de cultivo"
-        onclick="abrirSetupNuevaTorre()"
         style="width:100%;padding:14px;border-radius:14px;
                border:2px dashed #86efac;background:#f0fdf4;
                font-family:var(--font-display);font-size:14px;font-weight:700;
@@ -7160,12 +7159,12 @@ function renderDiarioSelector() {
       'border-radius:14px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;' +
       'transition:border-color 0.15s" ' +
 
-      // Última foto o placeholder
-      (tieneFotos
-        ? '<img src="' + ultimaFoto.data + '" style="width:56px;height:56px;object-fit:cover;' +
-          'border-radius:10px;flex-shrink:0" alt="' + p.variedad + '">'
-        : '<div style="width:56px;height:56px;background:#f3f4f6;border-radius:10px;flex-shrink:0;' +
-          'display:flex;align-items:center;justify-content:center;font-size:24px">🌱</div>') +
+      // Miniatura: placeholder siempre, imagen se inserta con JS (evita truncamiento base64)
+      '<div class="diario-thumb-slot" data-n="' + p.n + '" data-c="' + p.c + '" ' +
+        'style="width:56px;height:56px;background:#f3f4f6;border-radius:10px;flex-shrink:0;' +
+        'display:flex;align-items:center;justify-content:center;font-size:' +
+        (tieneFotos ? '10' : '24') + 'px;color:#9ca3af">' +
+        (tieneFotos ? '📸' : '🌱') + '</div>' +
       '<div style="flex:1;min-width:0">' +
         '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#111827;' +
           'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.variedad + '</div>' +
@@ -7196,6 +7195,21 @@ function renderDiarioSelector() {
     el.addEventListener('mouseleave', function() {
       this.style.borderColor = '#e5e7eb';
     });
+  });
+
+  // Insertar miniaturas reales con createElement (evita truncamiento de base64 en innerHTML)
+  sel.querySelectorAll('.diario-thumb-slot').forEach(slot => {
+    const n = parseInt(slot.getAttribute('data-n'));
+    const c = parseInt(slot.getAttribute('data-c'));
+    const cestaData = (state.torre[n] || [])[c];
+    if (!cestaData || !cestaData.fotos || cestaData.fotos.length === 0) return;
+    const ultimaFoto = cestaData.fotos[cestaData.fotos.length - 1];
+    if (!ultimaFoto || !ultimaFoto.data) return;
+    const img = document.createElement('img');
+    img.src = ultimaFoto.data;
+    img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
+    img.alt = cestaData.variedad || '';
+    slot.replaceWith(img);
   });
 }
 
@@ -8961,6 +8975,7 @@ function histTab(tab) {
     document.getElementById('histRegistroPanel').style.display = 'block';
     renderRegistro();
   } else if (tab === 'diario') {
+    guardarEstadoTorreActual(); // asegurar que state.torre tiene las fotos recientes
     document.getElementById('histDiarioPanel').style.display = 'block';
     renderDiarioSelector();
   }
