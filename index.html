@@ -5129,8 +5129,9 @@ function initApp() {
     // Tiene config pero no datos — abrir checklist
     setTimeout(() => abrirChecklist(true), 600);
   }
+  // Migrar fotos antiguas de localStorage a IndexedDB (solo la primera vez)
+  abrirFotoDB().then(() => migrarFotosAIDB()).catch(e => console.warn('Migración IDB:', e));
 }
-
 function updateClock() {
   const now = new Date();
   document.getElementById('headerTime').textContent =
@@ -7066,7 +7067,18 @@ function agregarFotoCesta(event) {
         notas:    '',  // se puede editar después
       };
 
-      cestaData.fotos.push(foto);
+      // Guardar foto en IndexedDB (sin límite, no ocupa localStorage)
+      const torreIdx = state.torreActiva || 0;
+      const fotoKey  = 'foto_t' + torreIdx + '_n' + nivel + '_c' + cesta + '_' +
+                       now.toISOString().replace(/[:.]/g,'_');
+      guardarFotoIDB(fotoKey, foto).catch(err => console.error('IDB error:', err));
+
+      // En state solo guardamos la key (no el base64 — para no desbordar localStorage)
+      if (!cestaData.fotoKeys) cestaData.fotoKeys = [];
+      cestaData.fotoKeys.push(fotoKey);
+      // Compatibilidad: mantener también en cestaData.fotos sin el data
+      if (!cestaData.fotos) cestaData.fotos = [];
+      cestaData.fotos.push({ ...foto, data: null, key: fotoKey });
 
       // También guardar en el registro de la torre para el diario
       addRegistro('foto', {
@@ -7122,7 +7134,7 @@ function renderFotosCesta() {
 // DIARIO FOTOGRÁFICO — seguimiento visual por planta
 // ══════════════════════════════════════════════════
 
-function renderDiarioSelector() {
+async function renderDiarioSelector() {
   const sel = document.getElementById('diarioPlantaSelector');
   const contenido = document.getElementById('diarioContenido');
   if (!sel) return;
@@ -7197,23 +7209,35 @@ function renderDiarioSelector() {
     });
   });
 
-  // Insertar miniaturas reales con createElement (evita truncamiento de base64 en innerHTML)
-  sel.querySelectorAll('.diario-thumb-slot').forEach(slot => {
+  // Cargar miniaturas desde IndexedDB (donde se guardan los datos reales)
+  const thumbSlots = sel.querySelectorAll('.diario-thumb-slot');
+  for (const slot of thumbSlots) {
     const n = parseInt(slot.getAttribute('data-n'));
     const c = parseInt(slot.getAttribute('data-c'));
     const cestaData = (state.torre[n] || [])[c];
-    if (!cestaData || !cestaData.fotos || cestaData.fotos.length === 0) return;
-    const ultimaFoto = cestaData.fotos[cestaData.fotos.length - 1];
-    if (!ultimaFoto || !ultimaFoto.data) return;
-    const img = document.createElement('img');
-    img.src = ultimaFoto.data;
-    img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
-    img.alt = cestaData.variedad || '';
-    slot.replaceWith(img);
-  });
+    if (!cestaData) continue;
+    // Intentar obtener key de la última foto
+    let fotoKey = null;
+    if (cestaData.fotoKeys && cestaData.fotoKeys.length > 0) {
+      fotoKey = cestaData.fotoKeys[cestaData.fotoKeys.length - 1];
+    } else if (cestaData.fotos && cestaData.fotos.length > 0) {
+      const uf = cestaData.fotos[cestaData.fotos.length - 1];
+      fotoKey = uf.key || null;
+    }
+    if (!fotoKey) continue;
+    try {
+      const fotoObj = await leerFotoIDB(fotoKey);
+      if (!fotoObj || !fotoObj.data) continue;
+      const img = document.createElement('img');
+      img.src = fotoObj.data;
+      img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
+      img.alt = cestaData.variedad || '';
+      slot.replaceWith(img);
+    } catch(e) { console.warn('IDB thumb error:', e); }
+  }
 }
 
-function renderDiarioPlanta(nivel, cesta) {
+async function renderDiarioPlanta(nivel, cesta) {
   try {
   const contenido = document.getElementById('diarioContenido');
   const sel = document.getElementById('diarioPlantaSelector');
@@ -7222,7 +7246,20 @@ function renderDiarioPlanta(nivel, cesta) {
   const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
   if (!cestaData) return;
 
-  const fotos = cestaData.fotos || [];
+  // Cargar fotos reales desde IndexedDB
+  let fotos = [];
+  const fotosMeta = cestaData.fotos || [];
+  const fotoKeys  = cestaData.fotoKeys || fotosMeta.map(f => f.key).filter(Boolean);
+  for (const key of fotoKeys) {
+    try {
+      const f = await leerFotoIDB(key);
+      if (f) fotos.push(f);
+    } catch(e) { console.warn('IDB read error', key, e); }
+  }
+  // Fallback: si hay fotos en state con data (versión antigua), usarlas
+  if (fotos.length === 0 && fotosMeta.some(f => f.data)) {
+    fotos = fotosMeta.filter(f => f.data);
+  }
   const variedad = cestaData.variedad || 'Planta';
   const diasDesde = cestaData.fecha
     ? Math.floor((new Date() - new Date(cestaData.fecha)) / 86400000)
@@ -11915,6 +11952,98 @@ window.onload = () => {
   } catch(e) {}
   // Sin auth válida — mostrar PIN (ya visible por defecto)
 };
+
+// ══════════════════════════════════════════════════
+// FOTODB — IndexedDB para fotos (sin límite de tamaño)
+// ══════════════════════════════════════════════════
+const FOTO_DB_NAME    = 'cultivaFotos';
+const FOTO_DB_VERSION = 1;
+const FOTO_STORE      = 'fotos';
+let fotoDB = null;
+
+function abrirFotoDB() {
+  return new Promise((resolve, reject) => {
+    if (fotoDB) { resolve(fotoDB); return; }
+    const req = indexedDB.open(FOTO_DB_NAME, FOTO_DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(FOTO_STORE)) {
+        db.createObjectStore(FOTO_STORE, { keyPath: 'key' });
+      }
+    };
+    req.onsuccess  = e => { fotoDB = e.target.result; resolve(fotoDB); };
+    req.onerror    = e => reject(e.target.error);
+  });
+}
+
+async function guardarFotoIDB(key, fotoObj) {
+  const db = await abrirFotoDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FOTO_STORE, 'readwrite');
+    tx.objectStore(FOTO_STORE).put({ key, ...fotoObj });
+    tx.oncomplete = () => resolve(key);
+    tx.onerror    = e => reject(e.target.error);
+  });
+}
+
+async function leerFotoIDB(key) {
+  const db = await abrirFotoDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(FOTO_STORE, 'readonly');
+    const req = tx.objectStore(FOTO_STORE).get(key);
+    req.onsuccess = e => resolve(e.target.result || null);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function leerFotosPorPrefijo(prefix) {
+  const db = await abrirFotoDB();
+  return new Promise((resolve, reject) => {
+    const tx    = db.transaction(FOTO_STORE, 'readonly');
+    const store = tx.objectStore(FOTO_STORE);
+    const rango = IDBKeyRange.bound(prefix, prefix + '\uFFFF');
+    const req   = store.getAll(rango);
+    req.onsuccess = e => resolve(e.target.result || []);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function borrarFotoIDB(key) {
+  const db = await abrirFotoDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(FOTO_STORE, 'readwrite');
+    tx.objectStore(FOTO_STORE).delete(key);
+    tx.oncomplete = resolve;
+  });
+}
+
+// Migrar fotos antiguas que estaban en state.torre a IndexedDB
+async function migrarFotosAIDB() {
+  let migradas = 0;
+  for (let n = 0; n < (state.torre || []).length; n++) {
+    for (let c = 0; c < (state.torre[n] || []).length; c++) {
+      const cesta = state.torre[n][c];
+      if (!cesta || !cesta.fotos || cesta.fotos.length === 0) continue;
+      for (let i = 0; i < cesta.fotos.length; i++) {
+        const foto = cesta.fotos[i];
+        if (!foto.data) continue; // ya migrada o sin data
+        const key = 'foto_t0_n' + n + '_c' + c + '_' + (foto.isoDate || Date.now() + i).replace(/[:.]/g,'_');
+        await guardarFotoIDB(key, foto);
+        if (!cesta.fotoKeys) cesta.fotoKeys = [];
+        cesta.fotoKeys.push(key);
+        migradas++;
+      }
+      // Eliminar datos base64 del state (solo guardar keys)
+      delete cesta.fotos;
+    }
+  }
+  if (migradas > 0) {
+    saveState();
+    console.log('[CULTIVA] Migradas', migradas, 'fotos a IndexedDB');
+  }
+  return migradas;
+}
+
 </script>
 </body>
 </html>
