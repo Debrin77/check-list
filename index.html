@@ -3781,6 +3781,21 @@ body::before { display: none; }
         <p>Registra mediciones diarias para<br>ver la evolución de los parámetros</p>
       </div>
 
+      <!-- Panel registro -->
+      <div id="histRegistroPanel" style="display:none">
+        <div id="registroLista"></div>
+      </div>
+
+      <!-- Panel diario fotográfico -->
+      <div id="histDiarioPanel" style="display:none">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);
+          text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">
+          Selecciona una planta para ver su diario de seguimiento
+        </div>
+        <div id="diarioPlantaSelector" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="diarioContenido"></div>
+      </div>
+
     </div>
     <!-- FIN TAB HISTORIAL -->
 
@@ -3879,7 +3894,7 @@ body::before { display: none; }
       <div class="welcome-card vevor" onclick="elegirTipoTorre('vevor')">
         <div class="welcome-card-icon">🏭</div>
         <div class="welcome-card-title">Torre VEVOR</div>
-        <div class="welcome-card-desc">Torre vertical VEVOR de 5 niveles × 5 cestas con depósito de 20L. Configuración precalibrada y optimizada.</div>
+        <div class="welcome-card-desc">Torre vertical VEVOR de 6 niveles × 5 cestas con depósito de 20L. Configuración precalibrada y optimizada.</div>
         <div class="welcome-card-badge">✅ Configuración lista</div>
       </div>
 
@@ -5154,9 +5169,11 @@ function setModo(modo) {
 }
 
 function generarSVGTorre() {
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
-  const numNiveles = NUM_NIVELES;
-  const numCestas  = NUM_CESTAS;
+  // Usar configuración REAL de la torre activa
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || window.NUM_CESTAS_ACTIVO  || NUM_CESTAS;
+  const nivelesActivos = Array.from({length: numNiveles}, (_, i) => i);
 
   // ── Dimensiones ───────────────────────────────────────────────────────────
   const SVG_W     = 340;
@@ -5968,7 +5985,7 @@ let setupTipoTorre = 'custom'; // 'vevor' o 'custom'
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna';
-let setupCoordenadas = { lat: 39.9860, lon: -0.0377, ciudad: 'Castelló de la Plana' };
+let setupCoordenadas = { lat: 39.9864, lon: -0.0495, ciudad: 'Castelló de la Plana' };
 
 const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
@@ -5988,7 +6005,7 @@ function elegirTipoTorre(tipo) {
   setupTipoTorre = tipo;
   if (tipo === 'vevor') {
     // Precargar valores VEVOR
-    document.getElementById('sliderNiveles').value = 5;
+    document.getElementById('sliderNiveles').value = 6;
     document.getElementById('sliderCestas').value = 5;
     document.getElementById('sliderVol').value = 20;
     setupEquipamiento = new Set(['difusor', 'calentador', 'bomba', 'timer', 'medidorEC', 'toldo']);
@@ -6160,6 +6177,38 @@ function renderNutrientesGrid() {
 // ══════════════════════════════════════════════════
 // CÁLCULO DINÁMICO SETUP — volumen + cultivo + nutriente
 // ══════════════════════════════════════════════════
+
+// EC óptima según cultivos plantados en la torre ACTIVA (no setup)
+function getECOptimaTorre() {
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const rangos = [];
+
+  for (let n = 0; n < numNiveles; n++) {
+    (state.torre[n] || []).forEach(c => {
+      if (!c || !c.variedad) return;
+      const cultivo = getCultivoDB(c.variedad);
+      if (cultivo) rangos.push({ min: cultivo.ecMin, max: cultivo.ecMax });
+    });
+  }
+
+  // Sin plantas → usar rango del nutriente
+  if (rangos.length === 0) {
+    const nut = getNutrienteTorre();
+    return { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
+  }
+
+  // Con plantas → intersección de rangos
+  const ecMin = Math.max(...rangos.map(r => r.min));
+  const ecMax = Math.min(...rangos.map(r => r.max));
+  if (ecMax >= ecMin + 100) return { min: ecMin, max: ecMax };
+
+  // Sin intersección → promedio
+  return {
+    min: Math.round(rangos.reduce((s,r) => s+r.min, 0) / rangos.length),
+    max: Math.round(rangos.reduce((s,r) => s+r.max, 0) / rangos.length)
+  };
+}
 
 function getSetupVolumen() {
   return parseInt(document.getElementById('sliderVol')?.value || 20);
@@ -6381,8 +6430,8 @@ function guardarSetupYContinuar() {
     alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
     bombaCalculada: window.setupBombaCalculada || null,
     ciudad:       setupCoordenadas.ciudad,
-    lat:          setupCoordenadas.lat  || 39.9860,
-    lon:          setupCoordenadas.lon  || -0.0377,
+    lat:          setupCoordenadas.lat  || 39.9864,
+    lon:          setupCoordenadas.lon  || -0.0495,
   };
 
   // Aplicar constantes del nutriente seleccionado
@@ -6480,15 +6529,29 @@ function preguntarIniciarChecklist() {
       '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px"></div>' +
 
       // Cabecera
-      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
         '<div style="font-size:40px">🌿</div>' +
         '<div>' +
           '<div style="font-family:var(--font-display);font-size:17px;font-weight:900;color:#111827">' +
             '¡' + nombreTorre + ' lista!' +
           '</div>' +
           '<div style="font-size:12px;color:#6b7280;margin-top:3px">' +
-            nut.nombre + ' · ' + vol + 'L · EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
+            vol + 'L · EC objetivo ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
           '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Badge nutriente destacado
+      '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;' +
+        'border:1.5px solid #86efac;border-radius:12px;padding:10px 14px;margin-bottom:12px">' +
+        '<span style="font-size:24px">' + (nut.bandera||'🧪') + '</span>' +
+        '<div>' +
+          '<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;' +
+            'letter-spacing:1px">Nutriente configurado</div>' +
+          '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+            nut.nombre + '</div>' +
+          '<div style="font-size:10px;color:#4b5563;margin-top:1px">' +
+            nut.detalle + '</div>' +
         '</div>' +
       '</div>' +
 
@@ -6995,7 +7058,7 @@ function renderDiarioSelector() {
   sel.innerHTML = plantas.map(p => {
     const tieneFotos = p.fotos.length > 0;
     const ultimaFoto = tieneFotos ? p.fotos[p.fotos.length-1] : null;
-    return '<div onclick="renderDiarioPlanta(' + p.n + ',' + p.c + ')" ' +
+    return '<div class="diario-planta-item" data-n="' + p.n + '" data-c="' + p.c + '" ' +
       'style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e5e7eb;' +
       'border-radius:14px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;' +
       'transition:border-color 0.15s" ' +
@@ -7022,6 +7085,21 @@ function renderDiarioSelector() {
       '<div style="font-size:20px;color:#d1d5db">›</div>' +
     '</div>';
   }).join('');
+
+  // Event delegation para abrir el diario de cada planta
+  sel.querySelectorAll('.diario-planta-item').forEach(el => {
+    el.addEventListener('click', function() {
+      const n = parseInt(this.getAttribute('data-n'));
+      const c = parseInt(this.getAttribute('data-c'));
+      renderDiarioPlanta(n, c);
+    });
+    el.addEventListener('mouseenter', function() {
+      this.style.borderColor = '#86efac';
+    });
+    el.addEventListener('mouseleave', function() {
+      this.style.borderColor = '#e5e7eb';
+    });
+  });
 }
 
 function renderDiarioPlanta(nivel, cesta) {
@@ -9761,12 +9839,12 @@ async function cargarMeteo() {
   try {
     // ECMWF para temp/humedad + modelo default para UV
     const urlM = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9860&longitude=-0.0377' +
+      'latitude=39.9864&longitude=-0.0495' +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,windspeed_10m_max' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&forecast_days=7&timezone=auto&models=ecmwf_ifs';
     const urlMUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9860&longitude=-0.0377' +
+      'latitude=39.9864&longitude=-0.0495' +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
     const [resM, resMUV] = await Promise.all([fetch(urlM), fetch(urlMUV)]);
@@ -10105,14 +10183,14 @@ async function calcularRiego() {
     const offsetHoras = idx * 24; // offset para datos horarios
 
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9860&longitude=-0.0377' +
+      'latitude=39.9864&longitude=-0.0495' +
       '&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,precipitation_probability_max,precipitation_sum' +
       '&hourly=relative_humidity_2m,temperature_2m' +
       `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
     // Modelo default para UV (ECMWF no soporta uv_index_max)
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9860&longitude=-0.0377' +
+      'latitude=39.9864&longitude=-0.0495' +
       '&daily=uv_index_max' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
@@ -10454,7 +10532,7 @@ async function fetchMeteoAlert() {
   const textEl    = document.getElementById('meteoAlertText');
 
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.9860&longitude=-0.0377' +
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.9864&longitude=-0.0495' +
       '&current=temperature_2m,relative_humidity_2m,windspeed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto&models=ecmwf_ifs';
 
@@ -11135,16 +11213,20 @@ function cargarEstadoTorre(idx) {
   state.registro    = t.registro   || [];
   state.configTorre = t.config     || null;
   modoActual        = t.modoActual || 'lechugas';
-  // Asegurar estructura correcta de la torre
+  // Asegurar estructura correcta de la torre con sus dimensiones reales
+  const nivR = state.configTorre?.numNiveles || NUM_NIVELES;
+  const cesR = state.configTorre?.numCestas  || NUM_CESTAS;
   if (!state.torre || state.torre.length === 0) {
     state.torre = [];
-    for (let n = 0; n < NUM_NIVELES; n++) {
+    for (let n = 0; n < nivR; n++) {
       state.torre.push([]);
-      for (let c = 0; c < NUM_CESTAS; c++) {
+      for (let c = 0; c < cesR; c++) {
         state.torre[n].push({ variedad:'', fecha:'', notas:'' });
       }
     }
   }
+  // Aplicar constantes de la config de esta torre
+  aplicarConfigTorre();
 }
 
 function actualizarHeaderTorre() {
