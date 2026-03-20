@@ -5715,11 +5715,10 @@ const NUTRIENTES_DB = [
     ecObjetivo: [900, 1400], // mS/cm según fabricante (0.9-1.4 con agua EC 0)
     calmagNecesario: true,
     calmagMl: 13,            // calibrado: 13ml→400µS en 18L agua destilada
-    orden: ['Aqua Vega A', 'Aqua Vega B'],
     pHBuffer: true,
     pHRango: [5.2, 6.2],     // rango oficial Canna
     pHIntervenir: [5.0, 6.4],// solo intervenir fuera de este rango
-    orden: ['CalMag', 'Aqua Vega A', 'Aqua Vega B'],
+    orden: ['Aqua Vega A', 'Aqua Vega B'],
     dosis: { min: 0.5, max: 2.0, unidad: 'ml/L', recomendado: 2.0 }, // 20ml/10L = 2ml/L
     protocolo: [
       '1. Llenar con agua destilada/ósmosis',
@@ -5951,7 +5950,7 @@ const NUTRIENTES_DB = [
     id: 'otro',
     nombre: 'Otra marca',
     bandera: '🔬',
-    partes: 0,
+    partes: 2,
     buffer: false,
     sistema: 'todos',
     ecPorMl: 25,
@@ -6458,18 +6457,21 @@ function guardarSetupYContinuar() {
   }
 
   saveState();
-  cerrarSetup();
   aplicarConfigTorre();
   actualizarBadgesNutriente();
   renderTorre();
   updateTorreStats();
   updateDashboard();
 
-  // Siempre preguntar si iniciar el checklist de esta torre
-  setTimeout(() => preguntarIniciarChecklist(), 400);
+  // Cerrar setup y mostrar panel checklist inmediatamente después
+  // (no con setTimeout — llamada directa para evitar que el overlay tape el panel)
+  cerrarSetup();
+  // Forzar reflow antes de mostrar el panel
+  requestAnimationFrame(() => requestAnimationFrame(() => preguntarIniciarChecklist()));
 }
 
 function preguntarIniciarChecklist() {
+  try {
   const nut        = getNutrienteTorre();
   const cfg        = state.configTorre || {};
   const torre      = state.torres?.[state.torreActiva || 0];
@@ -6517,7 +6519,7 @@ function preguntarIniciarChecklist() {
 
   const overlay = document.createElement('div');
   overlay.id = 'checklistPreguntaOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9500;' +
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;' +
     'display:flex;align-items:flex-end;justify-content:center;' +
     'padding-bottom:env(safe-area-inset-bottom,0px)';
 
@@ -6633,6 +6635,10 @@ function preguntarIniciarChecklist() {
     showToast('✅ ' + nombreTorre + ' lista · Checklist en pestaña Historial cuando quieras');
     goTab('inicio');
   });
+  } catch(e) {
+    console.error('preguntarIniciarChecklist error:', e);
+    showToast('⚠️ Error al mostrar panel checklist: ' + e.message, true);
+  }
 }
 
 function seleccionarTipoChecklist(el, tipo) {
