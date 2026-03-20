@@ -3864,8 +3864,10 @@ body::before { display: none; }
       <div class="setup-step-dot" id="sdot3"></div>
       <div class="setup-step-dot" id="sdot4"></div>
       <div class="setup-step-dot" id="sdot5"></div>
+      <div class="setup-step-dot" id="sdot6"></div>
+      <div class="setup-step-dot" id="sdot7"></div>
     </div>
-    <div class="setup-steps-label" id="setupStepLabel">Paso 1 de 6</div>
+    <div class="setup-steps-label" id="setupStepLabel">Paso 1 de 8</div>
   </div>
 
   <div class="setup-content">
@@ -4188,11 +4190,7 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 6: RESUMEN FINAL (era parte de spage3) -->
-    <div class="setup-page" >
-    </div>
-
-        <div class="setup-page" id="spage4">
+    <div class="setup-page" id="spage4">
       <div class="setup-title">🧪 Nutrientes y ubicación</div>
       <div class="setup-subtitle">¿Qué nutrientes usas? Usaremos sus constantes reales para los cálculos.</div>
 
@@ -4229,6 +4227,55 @@ body::before { display: none; }
     <button class="setup-btn-next" id="setupBtnNext" onclick="setupNext()">
       Empezar →
     </button>
+    <!-- PÁGINA 6: PLANTAS INICIALES -->
+    <div class="setup-page" id="spage6">
+      <div class="setup-title">🌱 ¿Qué vas a cultivar?</div>
+      <div class="setup-subtitle">Selecciona los cultivos principales de esta torre. Podrás cambiarlos después cesta a cesta.</div>
+
+      <div id="setupPlantasGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <!-- Generado por JS -->
+      </div>
+
+      <div id="setupPlantasSeleccionadas" style="background:#f0fdf4;border:1.5px solid #86efac;
+        border-radius:12px;padding:10px 14px;font-size:12px;color:#15803d;display:none">
+        <strong>Seleccionadas:</strong> <span id="setupPlantasTexto">—</span>
+      </div>
+    </div>
+
+    <!-- PÁGINA 7: MÚLTIPLES TORRES -->
+    <div class="setup-page" id="spage7">
+      <div class="setup-title">🌿 ¿Más de una torre?</div>
+      <div class="setup-subtitle">Cultiva puede gestionar hasta 10 torres independientes, cada una con su propio nutriente, plantas e historial.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div class="equip-card selected" id="torreSolo" onclick="seleccionarNumTorres('una')" style="padding:14px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🌿</div>
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Una torre</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:4px">Empezar sencillo.<br>Siempre puedes añadir más.</div>
+        </div>
+        <div class="equip-card" id="torreVarias" onclick="seleccionarNumTorres('varias')" style="padding:14px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🌿🌿</div>
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Varias torres</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:4px">Cultivos diferentes.<br>EC independiente por torre.</div>
+        </div>
+      </div>
+
+      <div id="infoVarTorres" style="display:none;background:#fffbeb;border:1.5px solid #fcd34d;
+        border-radius:12px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.7">
+        💡 Podrás añadir y configurar cada torre adicional desde la pestaña <strong>Torre</strong>
+        usando el botón <strong>➕ Añadir nueva torre</strong>. Cada torre tendrá su propio
+        nutriente, historial de mediciones y plantas.
+      </div>
+
+      <!-- Resumen final -->
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;
+        padding:14px;margin-top:14px" id="setupResumen">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;
+          color:#15803d;margin-bottom:10px">✅ Resumen de tu configuración</div>
+        <div id="setupResumenContent" style="font-size:12px;color:#374151;line-height:2"></div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -4387,16 +4434,27 @@ body::before { display: none; }
         <span style="font-size:10px;color:var(--muted);font-weight:400">(opcional)</span>
       </label>
       <div id="fotosPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:10px"></div>
-      <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;
-        background:#f0fdf4;border:2px dashed #86efac;border-radius:12px;cursor:pointer;
-        font-family:var(--font-display);font-size:13px;font-weight:700;color:#15803d"
-        aria-label="Añadir foto de la planta">
-        <span style="font-size:20px">📷</span>
-        <span>Añadir foto</span>
-        <input type="file" accept="image/*" capture="environment"
-          id="inputFotoCesta" style="display:none"
-          onchange="agregarFotoCesta(event)">
-      </label>
+      <!-- Botones foto: cámara O galería -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;justify-content:center;gap:6px;
+          padding:10px;background:#f0fdf4;border:2px dashed #86efac;border-radius:12px;
+          cursor:pointer;font-family:var(--font-display);font-size:12px;font-weight:700;
+          color:#15803d;text-align:center" aria-label="Hacer foto con la cámara">
+          <span style="font-size:18px">📷</span>
+          <span>Cámara</span>
+          <input type="file" accept="image/*" capture="environment"
+            style="display:none" onchange="agregarFotoCesta(event)">
+        </label>
+        <label style="display:flex;align-items:center;justify-content:center;gap:6px;
+          padding:10px;background:#eff6ff;border:2px dashed #93c5fd;border-radius:12px;
+          cursor:pointer;font-family:var(--font-display);font-size:12px;font-weight:700;
+          color:#1d4ed8;text-align:center" aria-label="Seleccionar foto de la galería">
+          <span style="font-size:18px">🖼</span>
+          <span>Galería</span>
+          <input type="file" accept="image/*"
+            style="display:none" onchange="agregarFotoCesta(event)">
+        </label>
+      </div>
     </div>
 
     <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar</button>
@@ -5855,6 +5913,12 @@ function elegirTipoTorre(tipo) {
 }
 
 function renderSetupPage() {
+  if (setupPagina === 6) {
+    setTimeout(renderSetupPlantasGrid, 50);
+  }
+  if (setupPagina === 7) {
+    setTimeout(actualizarResumenSetup, 50);
+  }
   // Ocultar todas las páginas (incluyendo las numeradas)
   document.querySelectorAll('.setup-page').forEach(p => p.classList.remove('active'));
   // Mostrar página actual
@@ -6083,22 +6147,92 @@ function guardarSetupYContinuar() {
     }
   }
 
+  // Guardar cultivos seleccionados en el setup
+  state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];
+  state.configTorre.multiplesT = setupNumTorres;
+
+  // Sincronizar con la torre activa en el array de torres
+  const tIdx = state.torreActiva || 0;
+  if (state.torres && state.torres[tIdx]) {
+    state.torres[tIdx].config = { ...state.configTorre };
+  }
+
   saveState();
   cerrarSetup();
-
-  // Actualizar constantes globales
   aplicarConfigTorre();
+  actualizarBadgesNutriente();
+  renderTorre();
+  updateTorreStats();
+  updateDashboard();
 
-  // Si es primera vez, abrir checklist
-  const esPrimeraVez = !state.ultimaRecarga && !state.ultimaMedicion;
-  if (esPrimeraVez) {
-    setTimeout(() => abrirChecklist(true), 500);
-  } else {
-    renderTorre();
-    updateTorreStats();
-    updateDashboard();
-    showToast('✅ Torre configurada correctamente');
-  }
+  // Siempre preguntar si iniciar el checklist de esta torre
+  setTimeout(() => preguntarIniciarChecklist(), 400);
+}
+
+function preguntarIniciarChecklist() {
+  const nut  = getNutrienteTorre();
+  const cfg  = state.configTorre || {};
+  const torre = state.torres?.[state.torreActiva || 0];
+  const nombreTorre = torre?.nombre || 'esta torre';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9500;' +
+    'display:flex;align-items:flex-end;justify-content:center;' +
+    'padding-bottom:env(safe-area-inset-bottom,20px)';
+
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px">' +
+      '<div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>' +
+
+      // Icono y título
+      '<div style="text-align:center;margin-bottom:16px">' +
+        '<div style="font-size:48px;margin-bottom:8px">🌿</div>' +
+        '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#111827">' +
+          '¡Torre lista!' +
+        '</div>' +
+        '<div style="font-size:13px;color:#6b7280;margin-top:6px">' +
+          '<strong>' + nombreTorre + '</strong> configurada con ' +
+          '<strong>' + nut.nombre + '</strong>' +
+        '</div>' +
+      '</div>' +
+
+      // Info del checklist
+      '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;' +
+        'padding:12px 14px;margin-bottom:16px">' +
+        '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;' +
+          'color:#15803d;margin-bottom:6px">📋 Checklist de primera recarga</div>' +
+        '<div style="font-size:12px;color:#374151;line-height:1.7">' +
+          '✓ Protocolo paso a paso para ' + nut.nombre + '<br>' +
+          '✓ Dosis de CalMag: <strong>' + (nut.calmagNecesario ? calcularMlCalMag() + ' ml' : 'No necesario') + '</strong><br>' +
+          '✓ Dosis A+B: <strong>' + calcularMlAB() + ' ml de cada parte</strong><br>' +
+          '✓ Protocolo pH adaptado a ' + (nut.pHBuffer ? 'buffers integrados' : 'ajuste manual') +
+        '</div>' +
+      '</div>' +
+
+      // Botones
+      '<button id="btnSiChecklist" ' +
+        'style="width:100%;padding:14px;background:#16a34a;color:white;border:none;border-radius:14px;' +
+        'font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
+        '📋 Iniciar checklist ahora' +
+      '</button>' +
+      '<button id="btnNoChecklist" ' +
+        'style="width:100%;padding:12px;background:#f9fafb;color:#374151;border:1.5px solid #e5e7eb;' +
+        'border-radius:14px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+        'Más tarde — ir a la app' +
+      '</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('btnSiChecklist').addEventListener('click', () => {
+    overlay.remove();
+    abrirChecklist(true);
+  });
+  document.getElementById('btnNoChecklist').addEventListener('click', () => {
+    overlay.remove();
+    showToast('✅ ' + nombreTorre + ' configurada · Checklist disponible cuando quieras');
+    goTab('inicio');
+  });
 }
 
 function aplicarConfigTorre() {
@@ -9846,6 +9980,103 @@ const setupData = {
   lon: null,
 };
 
+// ══ Setup páginas 6 y 7 ══════════════════════════
+let setupPlantasSeleccionadas = new Set();
+let setupNumTorres = 'una';
+
+function renderSetupPlantasGrid() {
+  const grid = document.getElementById('setupPlantasGrid');
+  if (!grid) return;
+
+  // Grupos principales aptos para inicio
+  const grupos = [
+    { key:'lechugas',  emoji:'🥬', label:'Lechugas',      desc:'Fácil · 40-60 días' },
+    { key:'asiaticas', emoji:'🍃', label:'Asiáticas',      desc:'Fácil · 35-40 días' },
+    { key:'hojas',     emoji:'🌿', label:'Hojas verdes',   desc:'Fácil · 30-55 días' },
+    { key:'hierbas',   emoji:'🌿', label:'Hierbas',        desc:'Media · 30-90 días' },
+    { key:'fresas',    emoji:'🍓', label:'Fresas',         desc:'Media · 90 días' },
+    { key:'frutos',    emoji:'🍅', label:'Frutos',         desc:'Avanzado · Torre dedicada' },
+  ];
+
+  grid.innerHTML = grupos.map(g => {
+    const sel = setupPlantasSeleccionadas.has(g.key);
+    return '<div class="spc" data-gkey="' + g.key + '" ' +
+      'style="background:' + (sel ? '#f0fdf4' : '#fff') + ';border:2px solid ' +
+      (sel ? '#16a34a' : '#e5e7eb') + ';border-radius:14px;padding:14px 10px;' +
+      'text-align:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent">' +
+      '<div style="font-size:28px;margin-bottom:6px">' + g.emoji + '</div>' +
+      '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' +
+        (sel ? '#15803d' : '#374151') + '">' + g.label + '</div>' +
+      '<div style="font-size:10px;color:#6b7280;margin-top:3px">' + g.desc + '</div>' +
+      (sel ? '<div style="font-size:16px;margin-top:4px">✅</div>' : '') +
+      '</div>';
+  }).join('');
+
+  // Event delegation for plant group cards
+  grid.querySelectorAll('.spc').forEach(el => {
+    el.addEventListener('click', function() {
+      toggleSetupPlanta(this.getAttribute('data-gkey'));
+    });
+  });
+
+  // Actualizar resumen
+  const info = document.getElementById('setupPlantasSeleccionadas');
+  const texto = document.getElementById('setupPlantasTexto');
+  if (setupPlantasSeleccionadas.size > 0) {
+    info.style.display = 'block';
+    texto.textContent = [...setupPlantasSeleccionadas].map(k =>
+      grupos.find(g => g.key === k)?.label || k
+    ).join(', ');
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function toggleSetupPlanta(key) {
+  if (setupPlantasSeleccionadas.has(key)) {
+    setupPlantasSeleccionadas.delete(key);
+  } else {
+    setupPlantasSeleccionadas.add(key);
+  }
+  renderSetupPlantasGrid();
+}
+
+function seleccionarNumTorres(tipo) {
+  setupNumTorres = tipo;
+  ['torreSolo','torreVarias'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('selected');
+  });
+  const map = { una:'torreSolo', varias:'torreVarias' };
+  document.getElementById(map[tipo])?.classList.add('selected');
+  const info = document.getElementById('infoVarTorres');
+  if (info) info.style.display = tipo === 'varias' ? 'block' : 'none';
+  actualizarResumenSetup();
+}
+
+function actualizarResumenSetup() {
+  const el = document.getElementById('setupResumenContent');
+  if (!el) return;
+  const niveles = document.getElementById('sliderNiveles')?.value || 5;
+  const cestas  = document.getElementById('sliderCestas')?.value  || 5;
+  const vol     = document.getElementById('sliderVol')?.value     || 20;
+  const nut     = NUTRIENTES_DB.find(n => n.id === (window.setupNutriente || 'canna_aqua'));
+  const ubic    = window.setupUbicacion || 'exterior';
+  const grupos  = ['lechugas','asiaticas','hojas','hierbas','fresas','frutos'];
+  const plantasNombres = {
+    lechugas:'Lechugas', asiaticas:'Asiáticas', hojas:'Hojas verdes',
+    hierbas:'Hierbas', fresas:'Fresas', frutos:'Frutos'
+  };
+  const plantasSel = [...setupPlantasSeleccionadas].map(k => plantasNombres[k]||k).join(', ') || 'Sin seleccionar';
+
+  el.innerHTML =
+    '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>' +
+    '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
+    (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong><br>' +
+    '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
+    '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Torre)' : 'Una torre') + '</strong>';
+}
+
 // Tamaño de cestas
 let setupTamanoCesta = '50'; // cm por defecto
 
@@ -10227,7 +10458,8 @@ function abrirSetupNuevaTorre() {
     overlay.remove();
     const newIdx = state.torres.length - 1;
     cambiarTorreActiva(newIdx);
-    showToast('🌿 ' + nombre + ' creada con ' + nutriente);
+    // Preguntar si iniciar checklist para la nueva torre
+    setTimeout(() => preguntarIniciarChecklist(), 400);
   });
 
   document.getElementById('ntCancelar').addEventListener('click', () => overlay.remove());
