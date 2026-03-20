@@ -3284,7 +3284,7 @@ body::before { display: none; }
     <div class="tab-panel" id="tab-torre">
 
       <div class="section-title">
-        🌿 Torre <span class="accent">VEVOR</span>
+        🌿 Torre <span class="accent" id="torreTabTitle">—</span>
       </div>
 
       <!-- Stats rápidas -->
@@ -3328,17 +3328,58 @@ body::before { display: none; }
 
       <!-- Torre visual SVG -->
       <div class="torre-container">
+        <!-- Badge nutriente activo junto al SVG -->
+        <div id="torreSVGNutrienteBadge"
+          style="display:flex;align-items:center;justify-content:space-between;
+                 background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;
+                 padding:8px 12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px" id="torreBadgeBandera">🧪</span>
+            <div>
+              <div id="torreBadgeNombre"
+                style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#15803d">—</div>
+              <div id="torreBadgeEC"
+                style="font-size:10px;color:#4b5563">EC · pH —</div>
+            </div>
+          </div>
+          <button onclick="cambiarNutriente()"
+            aria-label="Cambiar nutriente de esta torre"
+            style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
+                   padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+            Cambiar
+          </button>
+        </div>
+
         <!-- SVG generado dinámicamente -->
         <div id="torreSVGWrap" style="width:100%;overflow-x:auto" role="img" aria-label="Diagrama interactivo de la torre hidropónica. Pulsa cada cesta para ver o editar la planta.">
           <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">Cargando torre...</div>
         </div>
 
-        <!-- Depósito -->
-        <div class="torre-deposito">
-          <div class="deposito-icon">🪣</div>
-          <div class="deposito-info">
-            <div class="deposito-title">DEPÓSITO VEVOR — 20L (uso: 18L)</div>
-            <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
+        <!-- Depósito + Nutriente -->
+        <div class="torre-deposito" style="flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px;width:100%">
+            <div class="deposito-icon">🪣</div>
+            <div class="deposito-info" style="flex:1">
+              <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
+              <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
+            </div>
+          </div>
+          <!-- Nutriente activo de esta torre -->
+          <div id="torreBadgeNutriente"
+            style="display:flex;align-items:center;gap:8px;background:#f0fdf4;
+              border:1.5px solid #86efac;border-radius:10px;padding:8px 12px;
+              cursor:pointer" onclick="cambiarNutriente()">
+            <span id="torreBadgeFlag" style="font-size:18px">🧪</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:10px;font-weight:700;color:#6b7280;
+                text-transform:uppercase;letter-spacing:0.5px">Nutriente activo</div>
+              <div id="torreBadgeNombre"
+                style="font-family:var(--font-display);font-size:13px;font-weight:800;
+                  color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                —</div>
+            </div>
+            <span style="font-size:11px;color:#15803d;font-weight:700;
+              white-space:nowrap">Cambiar ›</span>
           </div>
         </div>
 
@@ -5196,8 +5237,10 @@ function generarSVGTorre() {
   const DEP_X  = (SVG_W - DEP_W) / 2;
 
   // Volumen actual del depósito
-  const volActual = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : VOL_OBJETIVO * 0.8;
-  const volPct    = Math.min(1, Math.max(0, volActual / VOL_OBJETIVO));
+  const volConfig  = cfg.volDeposito || VOL_OBJETIVO;
+  const volActual  = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.8;
+  const volPct     = Math.min(1, Math.max(0, volActual / volConfig));
+  const nut        = getNutrienteTorre();
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
   const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
 
@@ -5420,6 +5463,17 @@ function generarSVGTorre() {
   </line>`;
 
   // ── NOTA INFERIOR ─────────────────────────────────────────────────────────
+  // Etiqueta depósito configurado
+  s += `<text x="${DEP_X+10}" y="${DEP_Y+14}" font-family="Syne,sans-serif"
+    font-size="9" font-weight="700" fill="#6b7280" text-anchor="start">
+    🪣 ${volConfig}L configurados</text>`;
+
+  // Etiqueta nutriente activo junto al depósito
+  const nutLabel = (nut.nombre || 'Nutriente').slice(0,22);
+  s += `<text x="${DEP_X+10}" y="${DEP_Y+26}" font-family="Syne,sans-serif"
+    font-size="8" font-weight="700" fill="#15803d" text-anchor="start">
+    🧪 ${nutLabel}</text>`;
+
   s += `<text x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
     font-size="9" fill="#9ca3af" text-anchor="middle">Pulsa una cesta para editar</text>`;
 
@@ -5517,6 +5571,7 @@ function toggleCompatPanel() {
 function renderCompatGrid() {
   const grid = document.getElementById('compatGrid');
   if (!grid) return;
+  try {
 
   const nut = getNutrienteTorre();
 
@@ -5648,7 +5703,11 @@ function renderCompatGrid() {
       '</div>' +
     '</div>';
 
-  grid.innerHTML = html;
+    grid.innerHTML = html;
+  } catch(e) {
+    console.error('renderCompatGrid error:', e);
+    if (grid) grid.innerHTML = '<div style="padding:10px;font-size:12px;color:#dc2626">Error: ' + e.message + '</div>';
+  }
 }
 
 
@@ -5698,6 +5757,27 @@ function updateTorreStats() {
   document.getElementById('statPlantas').textContent = totalPlantas;
   document.getElementById('statDiasMedia').textContent = totalPlantas > 0 ? Math.round(totalDias / totalPlantas) : '—';
   document.getElementById('statCosechas').textContent = cosechas;
+
+  // Actualizar depósito y nutriente dinámicamente
+  const cfg = state.configTorre || {};
+  const nut = getNutrienteTorre();
+  const torreNombre = state.torres?.[state.torreActiva||0]?.nombre || 'Torre';
+  const vol  = cfg.volDeposito || 20;
+  const tipo = cfg.tipoTorre === 'vevor' ? 'VEVOR' : (torreNombre);
+
+  // Título torre
+  const ttEl = document.getElementById('torreTabTitle');
+  if (ttEl) ttEl.textContent = torreNombre;
+
+  // Info depósito
+  const depEl = document.getElementById('depositoTitulo');
+  if (depEl) depEl.textContent = tipo + ' — ' + vol + 'L';
+
+  // Badge nutriente
+  const flagEl = document.getElementById('torreBadgeFlag');
+  const nomEl  = document.getElementById('torreBadgeNombre');
+  if (flagEl) flagEl.textContent = nut.bandera || '🧪';
+  if (nomEl)  nomEl.textContent  = nut.nombre  || '—';
 }
 
 // ══════════════════════════════════════════════════
@@ -6177,6 +6257,17 @@ function renderNutrientesGrid() {
 // CÁLCULO DINÁMICO SETUP — volumen + cultivo + nutriente
 // ══════════════════════════════════════════════════
 
+// ── Nutriente de la torre activa ─────────────────────────────────────────
+function getNutrienteTorre() {
+  const cfg = state.configTorre || {};
+  const tIdx = state.torreActiva || 0;
+  // Leer nutriente de la torre activa primero, luego configTorre
+  const id = (state.torres && state.torres[tIdx] && state.torres[tIdx].config)
+    ? (state.torres[tIdx].config.nutriente || cfg.nutriente || 'canna_aqua')
+    : (cfg.nutriente || 'canna_aqua');
+  return NUTRIENTES_DB.find(n => n.id === id) || NUTRIENTES_DB[0];
+}
+
 // EC óptima según cultivos plantados en la torre ACTIVA (no setup)
 function getECOptimaTorre() {
   const cfg = state.configTorre || {};
@@ -6463,11 +6554,11 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
-  // Cerrar setup y mostrar panel checklist inmediatamente después
-  // (no con setTimeout — llamada directa para evitar que el overlay tape el panel)
-  cerrarSetup();
-  // Forzar reflow antes de mostrar el panel
-  requestAnimationFrame(() => requestAnimationFrame(() => preguntarIniciarChecklist()));
+  // Mostrar panel checklist PRIMERO, luego cerrar setup
+  // Esto evita cualquier problema de z-index o timing
+  preguntarIniciarChecklist();
+  // Cerrar el setup overlay después de que el panel esté en el DOM
+  setTimeout(() => cerrarSetup(), 50);
 }
 
 function preguntarIniciarChecklist() {
@@ -7109,6 +7200,7 @@ function renderDiarioSelector() {
 }
 
 function renderDiarioPlanta(nivel, cesta) {
+  try {
   const contenido = document.getElementById('diarioContenido');
   const sel = document.getElementById('diarioPlantaSelector');
   if (!contenido) return;
@@ -7234,11 +7326,12 @@ function renderDiarioPlanta(nivel, cesta) {
                 'padding:1px 6px;font-size:10px">Día ' + f.diasCultivo + '</span>'
               : '') +
           '</div>' +
-          // Foto
-          '<img src="' + f.data + '" alt="' + variedad + ' día ' + (f.diasCultivo||i) + '" ' +
-            'class="diario-foto-img" data-variedad="' + variedad.replace(/"/g,"'") + '" data-fecha="' + f.fecha + '" ' +
-            'style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;' +
-            'border:1.5px solid #e5e7eb;cursor:pointer;display:block">' +
+          // Foto — placeholder, la imagen real se inserta con JS después
+          '<div class="diario-foto-slot" data-foto-idx="' + i + '" ' +
+            'data-variedad="' + variedad.replace(/"/g,"'") + '" data-fecha="' + f.fecha + '" ' +
+            'style="width:100%;max-height:260px;min-height:120px;background:#f3f4f6;' +
+            'border-radius:12px;border:1.5px solid #e5e7eb;display:flex;align-items:center;' +
+            'justify-content:center;font-size:32px">📸</div>' +
           // Notas de la foto si las tiene
           (f.notas
             ? '<div style="font-size:11px;color:#6b7280;margin-top:6px;font-style:italic">💬 ' + f.notas + '</div>'
@@ -7257,15 +7350,17 @@ function renderDiarioPlanta(nivel, cesta) {
           '🔍 Comparativa inicio/ahora</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
           '<div>' +
-            '<img src="' + primera.data + '" alt="Inicio" ' +
-              'style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">' +
+            '<div class="compat-foto-slot" data-src="' + (primera.data||'') + '" ' +
+              'data-alt="Inicio" style="width:100%;aspect-ratio:1;background:#f3f4f6;' +
+              'border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">📸</div>' +
             '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
               '📅 ' + primera.fecha + (primera.diasCultivo !== null && primera.diasCultivo !== undefined ? ' · Día ' + primera.diasCultivo : '') +
             '</div>' +
           '</div>' +
           '<div>' +
-            '<img src="' + ultima.data + '" alt="Ahora" ' +
-              'style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">' +
+            '<div class="compat-foto-slot" data-src="' + (ultima.data||'') + '" ' +
+              'data-alt="Ahora" style="width:100%;aspect-ratio:1;background:#f3f4f6;' +
+              'border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">📸</div>' +
             '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
               '📅 ' + ultima.fecha + (ultima.diasCultivo !== null && ultima.diasCultivo !== undefined ? ' · Día ' + ultima.diasCultivo : '') +
             '</div>' +
@@ -7277,17 +7372,40 @@ function renderDiarioPlanta(nivel, cesta) {
 
   contenido.innerHTML = html;
 
-  // Event delegation for foto clicks
-  contenido.querySelectorAll('.diario-foto-img').forEach(img => {
+  // Insertar imágenes reales en los placeholders (evita truncamiento de base64 en innerHTML)
+  const fotasParaInsertar = [...fotos].sort((a,b) => new Date(a.isoDate||a.fecha) - new Date(b.isoDate||b.fecha));
+  contenido.querySelectorAll('.diario-foto-slot').forEach(slot => {
+    const idx = parseInt(slot.getAttribute('data-foto-idx'));
+    const foto = fotasParaInsertar[idx];
+    if (!foto || !foto.data) return;
+    const img = document.createElement('img');
+    img.src = foto.data;
+    img.alt = variedad + ' día ' + (foto.diasCultivo || idx);
+    img.className = 'diario-foto-img';
+    img.setAttribute('data-variedad', foto.variedad || variedad);
+    img.setAttribute('data-fecha', foto.fecha || '');
+    img.style.cssText = 'width:100%;max-height:260px;object-fit:cover;border-radius:12px;' +
+      'border:1.5px solid #e5e7eb;cursor:pointer;display:block';
     img.addEventListener('click', function() {
-      verFotoCompletaDiario(this.src,
-        this.getAttribute('data-variedad') || variedad,
-        this.getAttribute('data-fecha') || '');
+      verFotoCompletaDiario(this.src, this.getAttribute('data-variedad'), this.getAttribute('data-fecha'));
     });
+    slot.replaceWith(img);
+  });
+
+  // También insertar imágenes en la comparativa inicio/ahora
+  contenido.querySelectorAll('.compat-foto-slot').forEach(slot => {
+    const src = slot.getAttribute('data-src');
+    if (!src) return;
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = slot.getAttribute('data-alt') || '';
+    img.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px';
+    slot.replaceWith(img);
   });
 
   // Scroll al principio
   contenido.scrollIntoView({ behavior:'smooth', block:'start' });
+  } catch(e) { console.error('renderDiarioPlanta error:', e); if(contenido) contenido.innerHTML = '<div style="padding:16px;color:#dc2626">Error cargando diario: ' + e.message + '</div>'; }
 }
 
 function volverDiarioSelector() {
@@ -8289,48 +8407,58 @@ function evalVol(vol, ec, ph) {
     setCard('cardVol','ok');
     showCorreccion('correccionVol','');
   } else {
-    const litrosAnadir = Math.ceil((VOL_OBJETIVO - vol) * 10) / 10;
-    const calmagMl = Math.ceil(litrosAnadir * 0.33 * 10) / 10;
-    const vegaMl = Math.ceil(litrosAnadir * 2);
+    const nut = getNutrienteTorre();
+    const cfg = state.configTorre || {};
+    const volObj = cfg.volDeposito || VOL_OBJETIVO;
+    const litrosAnadir = Math.ceil((volObj - vol) * 10) / 10;
+    // Calcular nutrientes proporcionales al volumen a reponer
+    const EC_CALMAG = 400;
+    const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / volObj);
+    const ecNec = Math.max(0, 1150 - EC_CALMAG); // EC meta - CalMag
+    const mlABPorLitro = Math.max(0.5, (ecNec / ecPorMlAdj) / volObj);
+    const calmagMl = nut.calmagNecesario ? Math.round(nut.calmagMl * (litrosAnadir / 18) * 10) / 10 : 0;
+    const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B'];
 
-    // Si la EC también está baja, solo añadir agua con nutrientes
-    // Si la EC está ok o alta, solo añadir agua destilada
     const ecActual = isNaN(ec) ? 1350 : ec;
-    const anadirNutrientes = ecActual < 1300;
+    const anadirNutrientes = ecActual < (nut.ecObjetivo?.[0] || 900);
 
     const nivel = vol < 12 ? 'bad' : 'warn';
     setStatus('statusVol', nivel, vol < 12 ? '🔴' : '🟡',
-      vol < 12 ? `Volumen crítico — reponer urgente` : `Volumen bajo — reponer depósito`);
+      vol < 12 ? 'Volumen crítico — reponer urgente' : 'Volumen bajo — reponer depósito');
     setCard('cardVol', vol < 12 ? 'alert' : 'warn');
 
-    let correccionHtml = `
-      <div class="correccion-title">💧 Reposición de agua — +${litrosAnadir} litros</div>
-      <div class="correccion-item">
-        <span>Agua destilada</span>
-        <span class="correccion-valor">+${litrosAnadir} L</span>
-      </div>`;
+    let correccionHtml =
+      '<div class="correccion-title">💧 Reposición +' + litrosAnadir + 'L para ' + nut.nombre + '</div>' +
+      '<div class="correccion-item"><span>Agua destilada</span>' +
+        '<span class="correccion-valor">+' + litrosAnadir + ' L</span></div>';
 
     if (anadirNutrientes) {
-      correccionHtml += `
-      <div class="correccion-item">
-        <span>CalMag Agent</span>
-        <span class="correccion-valor">+${calmagMl} ml</span>
-      </div>
-      <div class="correccion-item">
-        <span>Aqua Vega A</span>
-        <span class="correccion-valor">+${vegaMl} ml</span>
-      </div>
-      <div class="correccion-item">
-        <span>Aqua Vega B</span>
-        <span class="correccion-valor">+${vegaMl} ml</span>
-      </div>`;
+      if (calmagMl > 0) {
+        correccionHtml += '<div class="correccion-item"><span>CalMag</span>' +
+          '<span class="correccion-valor">+' + calmagMl + ' ml</span></div>';
+      }
+      const mlAB = Math.max(1, Math.round(mlABPorLitro * litrosAnadir * 10)/10);
+      if (nut.partes === 1) {
+        correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span>' +
+          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+      } else if (nut.partes === 2) {
+        correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span>' +
+          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+        correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span>' +
+          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+      } else {
+        nut.orden.slice(0, nut.partes).forEach(p => {
+          correccionHtml += '<div class="correccion-item"><span>' + p + '</span>' +
+            '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+        });
+      }
     } else {
-      correccionHtml += `<div style="font-size:11px;color:var(--muted);margin-top:4px">EC correcta — añadir solo agua destilada sin nutrientes.</div>`;
+      correccionHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">' +
+        'EC correcta — añadir solo agua destilada sin nutrientes.</div>';
     }
 
-    correccionHtml += `<div style="font-size:11px;color:var(--muted);margin-top:6px">
-      Medir EC y pH tras añadir y ajustar si es necesario.
-    </div>`;
+    correccionHtml += '<div style="font-size:11px;color:var(--muted);margin-top:6px">' +
+      '⚠️ Medir EC y pH tras añadir y ajustar si es necesario.</div>';
 
     showCorreccion('correccionVol', correccionHtml);
   }
@@ -11112,10 +11240,25 @@ function onBuscarCiudadSetup(val) {
       if (!data.results || data.results.length === 0) { res.style.display='none'; return; }
       res.style.display = 'block';
       res.innerHTML = data.results.map(c =>
-        '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827" onclick="selCiudadSetup2(' + JSON.stringify(c.name) + ',' + c.latitude + ',' + c.longitude + ')">' +
+        '<div class="crs-item" ' +
+        'data-lat="' + c.latitude + '" data-lon="' + c.longitude + '" ' +
+        'data-nombre="' + (c.name + (c.admin1?', '+c.admin1:'') + ', '+c.country).replace(/"/g,"'") + '" ' +
+        'style="padding:12px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;' +
+        'font-size:13px;color:#111827;-webkit-tap-highlight-color:transparent">' +
         c.name + (c.admin1 ? ', ' + c.admin1 : '') + ', ' + c.country +
         '</div>'
       ).join('');
+      res.querySelectorAll('.crs-item').forEach(el => {
+        el.addEventListener('click', function() {
+          selCiudadSetup(
+            this.getAttribute('data-nombre'),
+            parseFloat(this.getAttribute('data-lat')),
+            parseFloat(this.getAttribute('data-lon'))
+          );
+        });
+        el.addEventListener('touchstart', function(){ this.style.background='#f0fdf4'; }, {passive:true});
+        el.addEventListener('touchend',   function(){ this.style.background=''; }, {passive:true});
+      });
     }).catch(() => {});
 }
 
@@ -11502,6 +11645,19 @@ function actualizarBadgesNutriente() {
   if (dashUbicacion) {
     const ub = cfg.ubicacion || 'exterior';
     dashUbicacion.textContent = ub === 'interior' ? '🏠 Interior' : '☀️ Exterior';
+  }
+
+  // Pestaña Torre — badge junto al SVG
+  const torreBandera = document.getElementById('torreBadgeBandera');
+  const torreNombre  = document.getElementById('torreBadgeNombre');
+  const torreEC      = document.getElementById('torreBadgeEC');
+  if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
+  if (torreNombre)  torreNombre.textContent  = nut.nombre;
+  if (torreEC) {
+    const ecMinT = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+    const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+    torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' +
+      (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5');
   }
 
   // Pestaña Medir
