@@ -5968,7 +5968,7 @@ let setupTipoTorre = 'custom'; // 'vevor' o 'custom'
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna';
-let setupCoordenadas = { lat: 39.9864, lon: -0.0513, ciudad: 'Castelló de la Plana' };
+let setupCoordenadas = { lat: 39.9860, lon: -0.0377, ciudad: 'Castelló de la Plana' };
 
 const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
@@ -6381,8 +6381,8 @@ function guardarSetupYContinuar() {
     alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
     bombaCalculada: window.setupBombaCalculada || null,
     ciudad:       setupCoordenadas.ciudad,
-    lat:          setupCoordenadas.lat  || 39.9864,
-    lon:          setupCoordenadas.lon  || -0.0513,
+    lat:          setupCoordenadas.lat  || 39.9860,
+    lon:          setupCoordenadas.lon  || -0.0377,
   };
 
   // Aplicar constantes del nutriente seleccionado
@@ -9761,12 +9761,12 @@ async function cargarMeteo() {
   try {
     // ECMWF para temp/humedad + modelo default para UV
     const urlM = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0513' +
+      'latitude=39.9860&longitude=-0.0377' +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,windspeed_10m_max' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&forecast_days=7&timezone=auto&models=ecmwf_ifs';
     const urlMUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0513' +
+      'latitude=39.9860&longitude=-0.0377' +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
     const [resM, resMUV] = await Promise.all([fetch(urlM), fetch(urlMUV)]);
@@ -10105,14 +10105,14 @@ async function calcularRiego() {
     const offsetHoras = idx * 24; // offset para datos horarios
 
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0513' +
+      'latitude=39.9860&longitude=-0.0377' +
       '&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,precipitation_probability_max,precipitation_sum' +
       '&hourly=relative_humidity_2m,temperature_2m' +
       `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
     // Modelo default para UV (ECMWF no soporta uv_index_max)
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=39.9864&longitude=-0.0513' +
+      'latitude=39.9860&longitude=-0.0377' +
       '&daily=uv_index_max' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
@@ -10454,7 +10454,7 @@ async function fetchMeteoAlert() {
   const textEl    = document.getElementById('meteoAlertText');
 
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.9864&longitude=-0.0513' +
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.9860&longitude=-0.0377' +
       '&current=temperature_2m,relative_humidity_2m,windspeed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto&models=ecmwf_ifs';
 
