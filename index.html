@@ -3701,6 +3701,7 @@ body::before { display: none; }
           <div class="hist-tab active" id="htab-mediciones" onclick="histTab('mediciones')">📊 Mediciones</div>
           <div class="hist-tab" id="htab-recargas" onclick="histTab('recargas')">🔄 Recargas</div>
           <div class="hist-tab" id="htab-registro" onclick="histTab('registro')">📋 Registro</div>
+          <div class="hist-tab" id="htab-diario" onclick="histTab('diario')">📸 Diario</div>
         </div>
         <button onclick="abrirChecklist(false)"
           style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--green);
@@ -3872,7 +3873,6 @@ body::before { display: none; }
 
   <div class="setup-content">
 
-    <!-- PÁGINA 0: BIENVENIDA — VEVOR o personalizar -->
     <div class="setup-page active" id="spage0">
       <div class="setup-title">👋 Bienvenido</div>
       <div class="setup-subtitle">¿Tienes una torre VEVOR vertical de 5 niveles o quieres configurar tu propio sistema?</div>
@@ -3892,7 +3892,6 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 1: TORRE FÍSICA -->
     <div class="setup-page" id="spage1">
       <div class="setup-title">🌿 Tu torre</div>
       <div class="setup-subtitle">Configura las dimensiones de tu sistema hidropónico</div>
@@ -4096,7 +4095,6 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 2: EQUIPAMIENTO -->
     <div class="setup-page" id="spage2">
       <div class="setup-title">🔌 Equipamiento</div>
       <div class="setup-subtitle">Selecciona los dispositivos que tienes en tu sistema</div>
@@ -4135,8 +4133,6 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 3: NUTRIENTES + UBICACIÓN -->
-    <!-- PÁGINA 3 NUEVA: AGUA Y SUSTRATO -->
     <div class="setup-page" id="spage3">
       <div class="setup-title">💧 Agua y sustrato</div>
       <div class="setup-subtitle">¿Qué tipo de agua usas y cómo fijas las plantas?</div>
@@ -4197,11 +4193,23 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 4 NUEVA: NUTRIENTES (era spage3) -->
-    <div class="setup-page" id="spage4_nutrientes_placeholder">
+    <div class="setup-page" id="spage4">
+      <div class="setup-title">🧪 Nutriente</div>
+      <div class="setup-subtitle">¿Qué marca de nutrientes usarás? Adaptaremos todos los cálculos y el checklist a tu elección.</div>
+
+      <div class="nutrientes-grid" id="nutrientesGrid">
+        <!-- Generado por JS -->
+      </div>
+
+      <!-- Botón para ver protocolo del nutriente seleccionado -->
+      <div id="nutProtocoloPreview" style="display:none;margin-top:10px;background:#f0fdf4;
+        border:1.5px solid #86efac;border-radius:12px;padding:12px 14px">
+        <div style="font-family:var(--font-display);font-size:12px;font-weight:800;
+          color:#15803d;margin-bottom:6px">📋 Protocolo de recarga</div>
+        <div id="nutProtocoloTexto" style="font-size:11px;color:#374151;line-height:1.8"></div>
+      </div>
     </div>
 
-    <!-- PÁGINA 5 NUEVA: UBICACIÓN E ILUMINACIÓN -->
     <div class="setup-page" id="spage5">
       <div class="setup-title">🌍 Ubicación e iluminación</div>
       <div class="setup-subtitle">Esto afecta al cálculo de riego, alertas de temperatura y necesidades de luz.</div>
@@ -4289,44 +4297,6 @@ body::before { display: none; }
       </div>
     </div>
 
-    <div class="setup-page" id="spage4">
-      <div class="setup-title">🧪 Nutrientes y ubicación</div>
-      <div class="setup-subtitle">¿Qué nutrientes usas? Usaremos sus constantes reales para los cálculos.</div>
-
-      <div class="nutrientes-grid" id="nutrientesGrid">
-        <!-- Generado por JS -->
-      </div>
-
-      <!-- Ubicación meteorológica -->
-      <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:#374151;margin-bottom:8px;margin-top:4px">
-        📍 ¿En qué ciudad está tu torre?
-      </div>
-      <input type="text" id="setupCiudad" placeholder="Busca tu ciudad..."
-        style="width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:12px;
-               color:#111827;font-size:16px;padding:12px 14px;outline:none;margin-bottom:6px;
-               font-family:var(--font-mono);box-sizing:border-box;transition:border-color 0.2s"
-        oninput="buscarCiudadSetup(this.value)">
-      <div id="setupCiudadResults" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:8px"></div>
-      <div id="setupCiudadSeleccionada" style="display:none;padding:10px 12px;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;font-size:13px;color:#14532d;font-weight:600;margin-bottom:8px"></div>
-      <button onclick="detectarCiudadSetup()"
-        style="width:100%;padding:11px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;
-               font-family:var(--font-display);font-size:13px;font-weight:700;color:#1d4ed8;
-               cursor:pointer;-webkit-tap-highlight-color:transparent">
-        📍 Detectar mi ciudad automáticamente
-      </button>
-    </div>
-
-  </div>
-
-  <!-- Footer navegación -->
-  <div class="setup-footer">
-    <button class="setup-btn-back" id="setupBtnBack" onclick="setupBack()" style="display:none">
-      ← Atrás
-    </button>
-    <button class="setup-btn-next" id="setupBtnNext" onclick="setupNext()">
-      Empezar →
-    </button>
-    <!-- PÁGINA 6: PLANTAS INICIALES -->
     <div class="setup-page" id="spage6">
       <div class="setup-title">🌱 ¿Qué vas a cultivar?</div>
       <div class="setup-subtitle">Selecciona los cultivos principales de esta torre. Podrás cambiarlos después cesta a cesta.</div>
@@ -4341,7 +4311,6 @@ body::before { display: none; }
       </div>
     </div>
 
-    <!-- PÁGINA 7: MÚLTIPLES TORRES -->
     <div class="setup-page" id="spage7">
       <div class="setup-title">🌿 ¿Más de una torre?</div>
       <div class="setup-subtitle">Cultiva puede gestionar hasta 10 torres independientes, cada una con su propio nutriente, plantas e historial.</div>
@@ -4375,7 +4344,7 @@ body::before { display: none; }
       </div>
     </div>
 
-  </div>
+  </div></div>
 
 </div>
 
@@ -5979,7 +5948,7 @@ let setupUbicacion = 'exterior';
 let setupNutriente = 'canna';
 let setupCoordenadas = { lat: 39.9864, lon: -0.0513, ciudad: 'Castelló de la Plana' };
 
-const SETUP_TOTAL_PAGES = 4; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
+const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
 function abrirSetup() {
   setupPagina = 0;
@@ -6012,39 +5981,51 @@ function elegirTipoTorre(tipo) {
 }
 
 function renderSetupPage() {
-  if (setupPagina === 6) {
-    setTimeout(renderSetupPlantasGrid, 50);
-  }
-  if (setupPagina === 7) {
-    setTimeout(actualizarResumenSetup, 50);
-  }
-  // Ocultar todas las páginas (incluyendo las numeradas)
+  // Ocultar todas las páginas
   document.querySelectorAll('.setup-page').forEach(p => p.classList.remove('active'));
+
   // Mostrar página actual
   const curr = document.getElementById('spage' + setupPagina);
   if (curr) curr.classList.add('active');
 
-  // Actualizar dots
+  // Acciones específicas por página
+  if (setupPagina === 1) updateTorreBuilder();
+  if (setupPagina === 4) renderNutrientesGrid();
+  if (setupPagina === 6) setTimeout(renderSetupPlantasGrid, 50);
+  if (setupPagina === 7) setTimeout(actualizarResumenSetup, 50);
+
+  // Dots de progreso
   for (let i = 0; i < SETUP_TOTAL_PAGES; i++) {
     const dot = document.getElementById('sdot' + i);
     if (!dot) continue;
     dot.className = 'setup-step-dot';
-    if (i < setupPagina) dot.classList.add('done');
+    if (i < setupPagina)      dot.classList.add('done');
     else if (i === setupPagina) dot.classList.add('active');
   }
 
-  // Label
-  const labels = ['Bienvenida', 'Tu torre', 'Equipamiento', 'Nutrientes'];
-  document.getElementById('setupStepLabel').textContent =
-    'Paso ' + (setupPagina + 1) + ' de ' + SETUP_TOTAL_PAGES + ' — ' + labels[setupPagina];
+  // Labels de cada paso
+  const labels = [
+    'Bienvenida',        // 0
+    'Tu torre',          // 1
+    'Equipamiento',      // 2
+    'Agua y sustrato',   // 3
+    'Nutrientes',        // 4
+    'Ubicación',         // 5
+    'Cultivos',          // 6
+    'Resumen',           // 7
+  ];
+  const labelEl = document.getElementById('setupStepLabel');
+  if (labelEl) {
+    labelEl.textContent = setupPagina === 0
+      ? 'Bienvenido'
+      : 'Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-1) + ' — ' + (labels[setupPagina] || '');
+  }
 
-  // Botones
+  // Botones navegación
   const back = document.getElementById('setupBtnBack');
   const next = document.getElementById('setupBtnNext');
-  back.style.display = setupPagina > 0 ? 'block' : 'none';
-  next.textContent = setupPagina === SETUP_TOTAL_PAGES - 1 ? '✅ Comenzar' : 'Siguiente →';
-
-  updateTorreBuilder();
+  if (back) back.style.display = setupPagina > 0 ? 'block' : 'none';
+  if (next) next.textContent   = setupPagina === SETUP_TOTAL_PAGES - 1 ? '✅ Guardar y empezar' : 'Siguiente →';
 }
 
 function setupNext() {
@@ -6158,6 +6139,15 @@ function selNutriente(id) {
   setupNutriente = id;
   document.querySelectorAll('.nutriente-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('nut-' + id)?.classList.add('selected');
+
+  // Mostrar protocolo del nutriente
+  const nut = NUTRIENTES_DB.find(n => n.id === id);
+  const preview = document.getElementById('nutProtocoloPreview');
+  const texto   = document.getElementById('nutProtocoloTexto');
+  if (preview && texto && nut && nut.protocolo) {
+    preview.style.display = 'block';
+    texto.innerHTML = nut.protocolo.map(p => '• ' + p).join('<br>');
+  }
 }
 
 function buscarCiudadSetup(query) {
@@ -6623,35 +6613,60 @@ function agregarFotoCesta(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const base64 = e.target.result;
-    // Comprimir antes de guardar (máx 800px, calidad 0.7)
     const img = new Image();
     img.onload = function() {
+      // Comprimir: máx 900px ancho, calidad 0.75
       const canvas = document.createElement('canvas');
-      const maxW = 800;
+      const maxW = 900;
       const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
       canvas.width  = Math.round(img.width  * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const compressed = canvas.toDataURL('image/jpeg', 0.7);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
 
-      // Guardar en la cesta actual
       if (!editingCesta) return;
       const { nivel, cesta } = editingCesta;
-      if (!state.torre[nivel][cesta].fotos) state.torre[nivel][cesta].fotos = [];
+      const cestaData = state.torre[nivel][cesta];
+      if (!cestaData.fotos) cestaData.fotos = [];
+
+      const now = new Date();
+      const diasDesdeTrasplante = cestaData.fecha
+        ? Math.floor((now - new Date(cestaData.fecha)) / 86400000)
+        : null;
+
       const foto = {
-        data: compressed,
-        fecha: new Date().toLocaleDateString('es-ES'),
-        hora:  new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}),
+        data:     compressed,
+        fecha:    now.toLocaleDateString('es-ES'),
+        hora:     now.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}),
+        isoDate:  now.toISOString(),
+        variedad: cestaData.variedad || '',
+        nivel:    nivel + 1,
+        cesta:    cesta + 1,
+        diasCultivo: diasDesdeTrasplante,
+        notas:    '',  // se puede editar después
       };
-      state.torre[nivel][cesta].fotos.push(foto);
+
+      cestaData.fotos.push(foto);
+
+      // También guardar en el registro de la torre para el diario
+      addRegistro('foto', {
+        variedad:    cestaData.variedad || 'Planta',
+        nivel:       nivel + 1,
+        cesta:       cesta + 1,
+        diasCultivo: diasDesdeTrasplante,
+        fotoData:    compressed,
+        fotoFecha:   foto.fecha,
+        icono:       '📸'
+      });
+
       saveState();
       renderFotosCesta();
-      showToast('📸 Foto guardada');
+      showToast('📸 Foto guardada en el diario · Día ' + (diasDesdeTrasplante || 0));
     };
     img.src = base64;
   };
   reader.readAsDataURL(file);
-  event.target.value = ''; // reset input
+  event.target.value = '';
 }
 
 function renderFotosCesta() {
@@ -6682,6 +6697,288 @@ function renderFotosCesta() {
     </div>
   `).join('');
 }
+
+// ══════════════════════════════════════════════════
+// DIARIO FOTOGRÁFICO — seguimiento visual por planta
+// ══════════════════════════════════════════════════
+
+function renderDiarioSelector() {
+  const sel = document.getElementById('diarioPlantaSelector');
+  const contenido = document.getElementById('diarioContenido');
+  if (!sel) return;
+
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || NUM_CESTAS;
+  const plantas = [];
+
+  for (let n = 0; n < numNiveles; n++) {
+    for (let c = 0; c < (state.torre[n] || []).length; c++) {
+      const cesta = state.torre[n][c];
+      if (!cesta || !cesta.variedad) continue;
+      const fotos = cesta.fotos || [];
+      const diasDesde = cesta.fecha
+        ? Math.floor((new Date() - new Date(cesta.fecha)) / 86400000)
+        : null;
+      plantas.push({ n, c, variedad: cesta.variedad, fotos, diasDesde, notas: cesta.notas });
+    }
+  }
+
+  if (plantas.length === 0) {
+    sel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
+      '🌱 No hay plantas registradas aún.<br>Añade plantas a las cestas desde la pestaña <strong>Torre</strong>.</div>';
+    if (contenido) contenido.innerHTML = '';
+    return;
+  }
+
+  sel.innerHTML = plantas.map(p => {
+    const tieneFotos = p.fotos.length > 0;
+    const ultimaFoto = tieneFotos ? p.fotos[p.fotos.length-1] : null;
+    return '<div onclick="renderDiarioPlanta(' + p.n + ',' + p.c + ')" ' +
+      'style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e5e7eb;' +
+      'border-radius:14px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;' +
+      'transition:border-color 0.15s" ' +
+
+      // Última foto o placeholder
+      (tieneFotos
+        ? '<img src="' + ultimaFoto.data + '" style="width:56px;height:56px;object-fit:cover;' +
+          'border-radius:10px;flex-shrink:0" alt="' + p.variedad + '">'
+        : '<div style="width:56px;height:56px;background:#f3f4f6;border-radius:10px;flex-shrink:0;' +
+          'display:flex;align-items:center;justify-content:center;font-size:24px">🌱</div>') +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#111827;' +
+          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.variedad + '</div>' +
+        '<div style="font-size:11px;color:#6b7280;margin-top:2px">' +
+          'Nivel ' + (p.n+1) + ' · Cesta ' + (p.c+1) +
+          (p.diasDesde !== null ? ' · <strong style="color:#15803d">Día ' + p.diasDesde + '</strong>' : '') +
+        '</div>' +
+        '<div style="font-size:11px;color:#6b7280;margin-top:2px">' +
+          (tieneFotos
+            ? '📸 ' + p.fotos.length + ' foto' + (p.fotos.length>1?'s':'') + ' · última: ' + ultimaFoto.fecha
+            : '📷 Sin fotos aún — toca para añadir') +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:20px;color:#d1d5db">›</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderDiarioPlanta(nivel, cesta) {
+  const contenido = document.getElementById('diarioContenido');
+  const sel = document.getElementById('diarioPlantaSelector');
+  if (!contenido) return;
+
+  const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
+  if (!cestaData) return;
+
+  const fotos = cestaData.fotos || [];
+  const variedad = cestaData.variedad || 'Planta';
+  const diasDesde = cestaData.fecha
+    ? Math.floor((new Date() - new Date(cestaData.fecha)) / 86400000)
+    : null;
+  const cultivo = getCultivoDB(variedad);
+
+  // Ocultar selector, mostrar diario
+  if (sel) sel.style.display = 'none';
+
+  let html = '';
+
+  // ── Cabecera ────────────────────────────────────────────────────────────
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+    '<button onclick="volverDiarioSelector()" aria-label="Volver al selector" ' +
+      'style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e5e7eb;' +
+      'background:#fff;font-size:18px;color:#6b7280;cursor:pointer;flex-shrink:0">‹</button>' +
+    '<div style="flex:1">' +
+      '<div style="font-family:var(--font-display);font-size:16px;font-weight:900;color:#111827">' +
+        variedad + '</div>' +
+      '<div style="font-size:11px;color:#6b7280">' +
+        'Nivel ' + (nivel+1) + ' · Cesta ' + (cesta+1) +
+        (diasDesde !== null ? ' · <strong style="color:#15803d">Día ' + diasDesde + ' de cultivo</strong>' : '') +
+      '</div>' +
+    '</div>' +
+    // Botón añadir foto rápido
+    '<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f0fdf4;' +
+      'border:1.5px solid #86efac;border-radius:10px;cursor:pointer;font-family:var(--font-display);' +
+      'font-size:12px;font-weight:700;color:#15803d" aria-label="Añadir foto">' +
+      '📷 <span>Foto</span>' +
+      '<input type="file" accept="image/*" capture="environment" style="display:none" ' +
+        'onchange="agregarFotoDesdeDiario(event,' + nivel + ',' + cesta + ')">' +
+    '</label>' +
+  '</div>';
+
+  // ── Barra de progreso del cultivo ────────────────────────────────────────
+  if (cultivo && diasDesde !== null) {
+    const progreso = Math.min(100, Math.round((diasDesde / cultivo.dias) * 100));
+    const color = progreso >= 100 ? '#16a34a' : progreso >= 70 ? '#f59e0b' : '#3b82f6';
+    html += '<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;' +
+      'padding:10px 14px;margin-bottom:14px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;' +
+        'color:#374151;margin-bottom:6px">' +
+        '<span>🌱 Progreso de cultivo</span>' +
+        '<span style="color:' + color + '">' + progreso + '% — día ' + diasDesde + '/' + cultivo.dias + '</span>' +
+      '</div>' +
+      '<div style="background:#e5e7eb;border-radius:6px;height:8px;overflow:hidden">' +
+        '<div style="height:100%;background:' + color + ';border-radius:6px;width:' + progreso + '%;' +
+          'transition:width 0.5s"></div>' +
+      '</div>' +
+      (progreso >= 100
+        ? '<div style="font-size:11px;color:#15803d;font-weight:700;margin-top:6px">✅ ¡Lista para cosechar!</div>'
+        : '<div style="font-size:11px;color:#6b7280;margin-top:6px">~' + (cultivo.dias - diasDesde) + ' días hasta cosecha estimada</div>'
+      ) +
+    '</div>';
+  }
+
+  // ── Stats rápidos ────────────────────────────────────────────────────────
+  if (cultivo) {
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">' +
+      '<div style="background:#f0fdf4;border-radius:10px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">EC óptima</div>' +
+        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#15803d">' +
+          cultivo.ecMin + '–' + cultivo.ecMax + '</div>' +
+      '</div>' +
+      '<div style="background:#eff6ff;border-radius:10px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">pH óptimo</div>' +
+        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#1d4ed8">' +
+          cultivo.phMin + '–' + cultivo.phMax + '</div>' +
+      '</div>' +
+      '<div style="background:#fefce8;border-radius:10px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">Fotos</div>' +
+        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#92400e">' +
+          fotos.length + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Línea de tiempo fotográfica ──────────────────────────────────────────
+  if (fotos.length === 0) {
+    html += '<div style="text-align:center;padding:32px 16px;background:#f8fafc;' +
+      'border:2px dashed #e5e7eb;border-radius:14px">' +
+      '<div style="font-size:48px;margin-bottom:12px">📷</div>' +
+      '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#374151">' +
+        'Sin fotos aún</div>' +
+      '<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.6">' +
+        'Añade la primera foto para empezar el seguimiento visual.<br>' +
+        'Ideal hacerlo en el día de trasplante y cada 3-5 días.' +
+      '</div>' +
+    '</div>';
+  } else {
+    html += '<div style="font-family:var(--font-display);font-size:11px;font-weight:700;' +
+      'color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">' +
+      '📅 Línea de tiempo</div>';
+
+    // Ordenar fotos por fecha
+    const fotasOrdenadas = [...fotos].sort((a,b) => new Date(a.isoDate||a.fecha) - new Date(b.isoDate||b.fecha));
+
+    fotasOrdenadas.forEach((f, i) => {
+      html += '<div style="display:flex;gap:12px;margin-bottom:16px">' +
+        // Columna izquierda: línea + punto
+        '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:24px">' +
+          '<div style="width:12px;height:12px;border-radius:50%;background:#16a34a;flex-shrink:0;' +
+            'border:2px solid #fff;box-shadow:0 0 0 2px #86efac;margin-top:4px"></div>' +
+          (i < fotasOrdenadas.length-1
+            ? '<div style="width:2px;flex:1;background:#e5e7eb;margin-top:4px"></div>'
+            : '') +
+        '</div>' +
+        // Contenido
+        '<div style="flex:1;padding-bottom:8px">' +
+          // Fecha y día
+          '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">' +
+            f.fecha + (f.hora ? ' · ' + f.hora : '') +
+            (f.diasCultivo !== null && f.diasCultivo !== undefined
+              ? ' <span style="background:#f0fdf4;color:#15803d;border-radius:6px;' +
+                'padding:1px 6px;font-size:10px">Día ' + f.diasCultivo + '</span>'
+              : '') +
+          '</div>' +
+          // Foto
+          '<img src="' + f.data + '" alt="' + variedad + ' día ' + (f.diasCultivo||i) + '" ' +
+            'class="diario-foto-img" data-variedad="' + variedad.replace(/"/g,"'") + '" data-fecha="' + f.fecha + '" ' +
+            'style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;' +
+            'border:1.5px solid #e5e7eb;cursor:pointer;display:block">' +
+          // Notas de la foto si las tiene
+          (f.notas
+            ? '<div style="font-size:11px;color:#6b7280;margin-top:6px;font-style:italic">💬 ' + f.notas + '</div>'
+            : '') +
+        '</div>' +
+      '</div>';
+    });
+
+    // Comparador antes/después si hay ≥2 fotos
+    if (fotos.length >= 2) {
+      const primera = fotasOrdenadas[0];
+      const ultima  = fotasOrdenadas[fotasOrdenadas.length-1];
+      html += '<div style="margin-top:8px">' +
+        '<div style="font-family:var(--font-display);font-size:11px;font-weight:700;' +
+          'color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">' +
+          '🔍 Comparativa inicio/ahora</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+          '<div>' +
+            '<img src="' + primera.data + '" alt="Inicio" ' +
+              'style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">' +
+            '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
+              '📅 ' + primera.fecha + (primera.diasCultivo !== null && primera.diasCultivo !== undefined ? ' · Día ' + primera.diasCultivo : '') +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<img src="' + ultima.data + '" alt="Ahora" ' +
+              'style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">' +
+            '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
+              '📅 ' + ultima.fecha + (ultima.diasCultivo !== null && ultima.diasCultivo !== undefined ? ' · Día ' + ultima.diasCultivo : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+  }
+
+  contenido.innerHTML = html;
+
+  // Event delegation for foto clicks
+  contenido.querySelectorAll('.diario-foto-img').forEach(img => {
+    img.addEventListener('click', function() {
+      verFotoCompletaDiario(this.src,
+        this.getAttribute('data-variedad') || variedad,
+        this.getAttribute('data-fecha') || '');
+    });
+  });
+
+  // Scroll al principio
+  contenido.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function volverDiarioSelector() {
+  const sel = document.getElementById('diarioPlantaSelector');
+  const contenido = document.getElementById('diarioContenido');
+  if (sel) sel.style.display = 'flex';
+  if (contenido) contenido.innerHTML = '';
+  if (sel) sel.style.flexDirection = 'column';
+}
+
+function agregarFotoDesdeDiario(event, nivel, cesta) {
+  // Cambiar editingCesta temporalmente para reutilizar agregarFotoCesta
+  const prevEditing = editingCesta;
+  editingCesta = { nivel, cesta };
+  agregarFotoCesta(event);
+  editingCesta = prevEditing;
+  // Refrescar el diario
+  setTimeout(() => renderDiarioPlanta(nivel, cesta), 300);
+}
+
+function verFotoCompletaDiario(dataUrl, variedad, fecha) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML =
+    '<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:#fff;' +
+      'margin-bottom:12px;text-align:center">' + variedad + ' · ' + fecha + '</div>' +
+    '<img src="' + dataUrl + '" alt="' + variedad + '" ' +
+      'style="max-width:100%;max-height:75vh;object-fit:contain;border-radius:12px">' +
+    '<button style="margin-top:16px;padding:12px 32px;background:#fff;border:none;border-radius:14px;' +
+      'font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer" ' +
+      'onclick="this.parentElement.remove()">Cerrar</button>';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
 
 function verFotoCompleta(idx) {
   if (!editingCesta) return;
@@ -8177,21 +8474,22 @@ function histTab(tab) {
   const btn = document.getElementById('htab-' + tab);
   if (btn) btn.classList.add('active');
 
-  const show = id => { const el = document.getElementById(id); if(el) el.style.display = 'block'; };
-  const hide = id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; };
-
-  hide('histMediciones');
-  hide('histRecargas');
-  const regEl = document.getElementById('histRegistroPanel');
-  if (regEl) regEl.style.display = 'none';
+  // Ocultar todos los paneles
+  ['histMediciones','histRecargas','histRegistroPanel','histDiarioPanel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 
   if (tab === 'mediciones') {
-    show('histMediciones');
+    document.getElementById('histMediciones').style.display = 'block';
   } else if (tab === 'recargas') {
-    show('histRecargas');
+    document.getElementById('histRecargas').style.display = 'block';
   } else if (tab === 'registro') {
-    if (regEl) regEl.style.display = 'block';
+    document.getElementById('histRegistroPanel').style.display = 'block';
     renderRegistro();
+  } else if (tab === 'diario') {
+    document.getElementById('histDiarioPanel').style.display = 'block';
+    renderDiarioSelector();
   }
 }
 
