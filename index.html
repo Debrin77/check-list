@@ -4351,14 +4351,6 @@ const NUM_CESTAS = 5;
 
 // Días estimados a cosecha por variedad
 // DIAS_COSECHA — generado desde CULTIVOS_DB + compatibilidad con entradas manuales
-const DIAS_COSECHA = Object.fromEntries(
-  CULTIVOS_DB.map(c => [c.nombre, c.dias])
-);
-// Añadir aliases comunes
-DIAS_COSECHA['Pak Choi'] = 40;
-DIAS_COSECHA['Bok Choy'] = 40;
-
-
 // Grupos de compatibilidad de cultivos
 // Plantas del mismo grupo comparten pH 5.7-6.4 y EC 1300-1400 µS/cm
 // ══════════════════════════════════════════════════
@@ -4650,6 +4642,13 @@ const GRUPOS_CULTIVO_OLD = {
   C: GRUPOS_CULTIVO.hojas,
   D: GRUPOS_CULTIVO.hierbas,
 };
+
+// DIAS_COSECHA — definido después de CULTIVOS_DB
+const DIAS_COSECHA = Object.fromEntries(
+  CULTIVOS_DB.map(c => [c.nombre, c.dias])
+);
+DIAS_COSECHA['Pak Choi'] = 40;
+DIAS_COSECHA['Bok Choy'] = 40;
 
 // Compatibilidad entre grupos (qué mezclar y qué no)
 const COMPATIBILIDAD = {
