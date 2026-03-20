@@ -4829,14 +4829,15 @@ function initApp() {
 
   // Inicializar sistema multi-torre
   initTorres();
-  mostrarBtnNotificaciones();
-  setTimeout(programarRecordatorios, 2000);
-  actualizarBadgesNutriente();
   cargarEstadoTorre(state.torreActiva || 0);
   actualizarHeaderTorre();
 
   // Aplicar configuración de torre si existe
   aplicarConfigTorre();
+  mostrarBtnNotificaciones();
+  setTimeout(programarRecordatorios, 2000);
+  // Badges DESPUÉS de cargar config y torre
+  setTimeout(actualizarBadgesNutriente, 100);
 
   // Detectar primera vez — si no tiene configuración de torre ni datos
   const hayConfig = !!state.configTorre;
