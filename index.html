@@ -3167,11 +3167,36 @@ body::before { display: none; }
         <div id="ultimaMedicionInfo" style="font-size:12px;color:var(--muted);line-height:1.8"></div>
       </div>
 
+      <!-- Nutriente activo — selector visible en Medir -->
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;
+                  padding:12px 14px;margin-bottom:4px;display:flex;align-items:center;
+                  justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">🧪</span>
+          <div>
+            <div id="medirNutrienteNombre"
+                 style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#15803d">
+              Cargando...
+            </div>
+            <div id="medirNutrienteEC"
+                 style="font-size:10px;color:#4b5563;margin-top:2px">—</div>
+          </div>
+        </div>
+        <button onclick="cambiarNutriente()"
+          aria-label="Cambiar nutriente activo"
+          style="background:#fff;border:1.5px solid #86efac;border-radius:10px;
+                 padding:6px 12px;font-family:var(--font-display);font-size:12px;
+                 font-weight:700;color:#15803d;cursor:pointer;
+                 -webkit-tap-highlight-color:transparent">
+          Cambiar
+        </button>
+      </div>
+
       <!-- EC -->
       <div class="param-card" id="cardEC">
         <div class="param-header">
           <div class="param-label">⚡ EC — Conductividad eléctrica</div>
-          <div class="param-range">1300 – 1400 µS/cm</div>
+          <div class="param-range" id="paramRangeEC">1300 – 1400 µS/cm</div>
         </div>
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputEC" placeholder="1350" aria-label="EC en microsiemens por centímetro"
@@ -3355,6 +3380,7 @@ body::before { display: none; }
       <!-- Añadir nueva torre -->
       <button onclick="crearNuevaTorre()"
         aria-label="Añadir nueva torre de cultivo"
+        onclick="abrirSetupNuevaTorre()"
         style="width:100%;padding:14px;border-radius:14px;
                border:2px dashed #86efac;background:#f0fdf4;
                font-family:var(--font-display);font-size:14px;font-weight:700;
@@ -7176,14 +7202,20 @@ function evalEC(ec, vol) {
   const volActual  = isNaN(vol) ? (state.configTorre?.volDeposito || VOL_OBJETIVO) : vol;
   const volBase    = state.configTorre?.volDeposito || VOL_OBJETIVO;
   const factorVol  = volActual / volBase;
-  const ecMin      = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
-  const ecMax      = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+  // EC óptima según cultivos presentes (si no hay plantas, usa el nutriente)
+  const ecOptima   = getECOptimaTorre();
+  const ecMin      = ecOptima.min;
+  const ecMax      = ecOptima.max;
   const ecIdeal    = Math.round((ecMin + ecMax) / 2);
   const ecCritica  = Math.round(ecMin * 0.7);
   const ecAlta     = Math.round(ecMax * 1.15);
 
   if (ec >= ecMin && ec <= ecMax) {
-    setStatus('statusEC','ok','✅','EC correcta para ' + nut.nombre);
+    const ecOptima2 = getECOptimaTorre();
+    const msgOk = ecOptima2.advertencia
+      ? 'EC en rango promedio — cultivos con EC diferente, considera torres separadas'
+      : 'EC correcta para ' + nut.nombre;
+    setStatus('statusEC','ok','✅', msgOk);
     setCard('cardEC','ok');
     showCorreccion('correccionEC','');
 
@@ -7228,86 +7260,111 @@ function evalEC(ec, vol) {
 
 
 function evalPH(ph, vol) {
-  if (isNaN(ph)) { setStatus('statusPH','empty','',''); setCard('cardPH',''); showCorreccion('correccionPH',''); return; }
-  const volActual = isNaN(vol) ? VOL_OBJETIVO : vol;
-  const factor = volActual / VOL_OBJETIVO;
+  if (isNaN(ph)) {
+    setStatus('statusPH','empty','','');
+    setCard('cardPH','');
+    showCorreccion('correccionPH','');
+    return;
+  }
 
-  // NOTA: Aqua Vega tiene estabilizadores de pH — normalmente no requiere ajuste.
-  // Con CalMag en agua destilada el tampón funciona bien en rango 5.5-6.5.
-  // Solo se actúa si está fuera de 5.5-6.5 (rango de trabajo real con Aqua Vega).
-  // Corrector pH+/pH- al 25-30%: ~0.05-0.08 unidades por ml en 18L.
-  // Se usan décimas de ml — nunca ml enteros de golpe.
+  const nut       = getNutrienteTorre();
+  const volActual = isNaN(vol) ? (state.configTorre?.volDeposito || VOL_OBJETIVO) : vol;
+  const factor    = volActual / VOL_OBJETIVO;
 
-  if (ph >= 5.7 && ph <= 6.4) {
-    setStatus('statusPH','ok','✅','pH óptimo — Aqua Vega estabilizando correctamente');
+  // Rangos del nutriente activo
+  const phMin     = nut.pHRango    ? nut.pHRango[0]     : 5.5;
+  const phMax     = nut.pHRango    ? nut.pHRango[1]     : 6.5;
+  const phActMin  = nut.pHIntervenir ? nut.pHIntervenir[0] : 5.2;
+  const phActMax  = nut.pHIntervenir ? nut.pHIntervenir[1] : 6.8;
+  const tieneBuffer = nut.pHBuffer || false;
+
+  // Actualizar rango en la card header
+  const rangeEl = document.getElementById('paramRangePH');
+  if (rangeEl) rangeEl.textContent = phMin + ' – ' + phMax;
+
+  // Constantes de corrección (reales calibradas)
+  const PH_PLUS_ML  = PH_PLUS_POR_ML  || 0.34; // unidades/ml
+  const PH_MINUS_ML = PH_MINUS_POR_ML || 0.40;
+
+  // ── pH EN RANGO ÓPTIMO ──────────────────────────────────────────────────
+  if (ph >= phMin && ph <= phMax) {
+    setStatus('statusPH','ok','✅','pH óptimo para ' + nut.nombre);
     setCard('cardPH','ok');
     showCorreccion('correccionPH','');
-  } else if (ph >= 5.5 && ph < 5.7) {
-    setStatus('statusPH','warn','🟡','pH ligeramente bajo — vigilar, Aqua Vega debería estabilizarlo');
-    setCard('cardPH','warn');
-    showCorreccion('correccionPH', `
-      <div class="correccion-title">⏳ Acción recomendada</div>
-      <div style="font-size:12px;line-height:1.6;color:var(--muted)">
-        El Aqua Vega con CalMag suele estabilizar el pH sin intervención.<br>
-        <strong style="color:var(--white)">Esperar 2-4 horas</strong> con difusor en marcha y volver a medir.<br>
-        Si persiste por debajo de 5.5, añadir pH+ en cantidades muy pequeñas.
-      </div>
-    `);
-  } else if (ph >= 6.4 && ph <= 6.6) {
-    setStatus('statusPH','warn','🟡','pH ligeramente alto — vigilar, normal en fase vegetativa');
-    setCard('cardPH','warn');
-    showCorreccion('correccionPH', `
-      <div class="correccion-title">⏳ Acción recomendada</div>
-      <div style="font-size:12px;line-height:1.6;color:var(--muted)">
-        En fase vegetativa las plantas tienden a subir el pH — es normal.<br>
-        <strong style="color:var(--white)">Esperar y volver a medir mañana.</strong><br>
-        Aqua Vega se autorregula en el rango 5.2-6.2. Solo actuar si supera 6.6.
-      </div>
-    `);
-  } else if (ph < 5.5) {
-    // pH realmente bajo — acción necesaria
-    const deficit = 5.9 - ph;
-    // pH+ al 25-30%: ~0.30 unidades por ml en 18L
-    const mlPlus = Math.round(deficit / PH_PLUS_POR_ML * factor * 10) / 10;
-    const nivel = ph < 5.0 ? 'bad' : 'warn';
-    setStatus('statusPH', nivel, ph < 5.0 ? '🔴' : '🟡',
-      ph < 5.0 ? 'pH crítico — riesgo toxicidad por hierro y manganeso' : 'pH bajo — corrección necesaria');
-    setCard('cardPH', ph < 5.0 ? 'alert' : 'warn');
-    showCorreccion('correccionPH', `
-      <div class="correccion-title">⬆️ Corrección pH bajo</div>
-      <div class="correccion-item">
-        <span>pH+ estimado</span>
-        <span class="correccion-valor">~${mlPlus} ml</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">
-        ⚠️ Añadir en <strong>gotas</strong>, no en ml de golpe.<br>
-        Remover bien y esperar 5-10 min entre cada adición.<br>
-        El CalMag ayuda a estabilizar — puede necesitar menos de lo calculado.
-      </div>
-    `);
-  } else {
-    // pH > 6.6 — acción necesaria
-    const exceso = ph - 6.0;
-    // pH- al 75-81%: ~0.40 unidades por ml en 18L — muy concentrado, gotas
-    const mlMinus = Math.round(exceso / PH_MINUS_POR_ML * factor * 10) / 10;
-    const nivel = ph > 7.0 ? 'bad' : 'warn';
-    setStatus('statusPH', nivel, ph > 7.0 ? '🔴' : '🟡',
-      ph > 7.0 ? 'pH crítico — deficiencia de hierro inminente' : 'pH alto — corrección necesaria');
-    setCard('cardPH', ph > 7.0 ? 'alert' : 'warn');
-    showCorreccion('correccionPH', `
-      <div class="correccion-title">⬇️ Corrección pH alto</div>
-      <div class="correccion-item">
-        <span>pH- estimado</span>
-        <span class="correccion-valor">~${mlMinus} ml</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">
-        ⚠️ pH- baja muy rápido — añadir en <strong>gotas</strong>.<br>
-        Remover y esperar 5 min antes de medir de nuevo.<br>
-        Nota: añadir pH- puede subir ligeramente la EC.
-      </div>
-    `);
+    return;
   }
+
+  // ── pH EN RANGO DE NO INTERVENCIÓN (buffer actuando) ─────────────────────
+  if (tieneBuffer && ph >= phActMin && ph <= phActMax && !(ph >= phMin && ph <= phMax)) {
+    setStatus('statusPH','warn','⏳','pH fuera de óptimo — buffers de ' + nut.nombre + ' actuando');
+    setCard('cardPH','warn');
+    showCorreccion('correccionPH',
+      '<div class="correccion-title">⏳ No intervenir todavía</div>' +
+      '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' +
+        nut.nombre + ' tiene buffers de pH que necesitan tiempo.<br>' +
+        '<strong style="color:var(--white)">Esperar 2-4h con difusor</strong> y volver a medir.<br>' +
+        'Solo actuar si sale del rango ' + phActMin + '–' + phActMax + '.' +
+      '</div>'
+    );
+    return;
+  }
+
+  // ── pH BAJO — necesita pH+ ────────────────────────────────────────────────
+  if (ph < phActMin) {
+    const subida  = parseFloat((phMin - ph).toFixed(1));
+    const mlPlus  = Math.max(0.5, Math.round((subida / PH_PLUS_ML) * factor * 10) / 10);
+    const nivel   = ph < 5.0 ? 'bad' : 'warn';
+    setStatus('statusPH', nivel, ph < 5.0 ? '🔴' : '🟡',
+      ph < 5.0 ? 'pH crítico bajo — raíces en riesgo' : 'pH bajo — añadir pH+');
+    setCard('cardPH', nivel === 'bad' ? 'alert' : 'warn');
+    showCorreccion('correccionPH',
+      '<div class="correccion-title">💊 Corrección pH bajo</div>' +
+      '<div class="correccion-item"><span>pH+ (25-30%)</span>' +
+        '<span class="correccion-valor">+' + mlPlus + ' ml</span></div>' +
+      '<div class="correccion-item"><span>pH actual → objetivo</span>' +
+        '<span class="correccion-valor">' + ph + ' → ' + phMin + '</span></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+        '⚠️ Añadir de <strong>2ml en 2ml</strong>, esperar 2 min entre dosis y volver a medir.' +
+      '</div>'
+    );
+    return;
+  }
+
+  // ── pH ALTO — necesita pH- ────────────────────────────────────────────────
+  if (ph > phActMax) {
+    const bajada  = parseFloat((ph - phMax).toFixed(1));
+    const mlMinus = Math.max(0.5, Math.round((bajada / PH_MINUS_ML) * factor * 10) / 10);
+    const nivel   = ph > 7.5 ? 'bad' : 'warn';
+    setStatus('statusPH', nivel, ph > 7.5 ? '🔴' : '🟡',
+      ph > 7.5 ? 'pH crítico alto — bloqueo de nutrientes' : 'pH alto — añadir pH-');
+    setCard('cardPH', nivel === 'bad' ? 'alert' : 'warn');
+
+    const notaBuffer = tieneBuffer
+      ? '<div style="font-size:11px;color:#92400e;margin-top:6px;line-height:1.6">' +
+          '⚠️ Cada corrección con pH- <strong>debilita los buffers</strong> de ' + nut.nombre +
+          '. Usa la mínima cantidad posible.' +
+        '</div>'
+      : '';
+
+    showCorreccion('correccionPH',
+      '<div class="correccion-title">💊 Corrección pH alto</div>' +
+      '<div class="correccion-item"><span>pH- (75-81%)</span>' +
+        '<span class="correccion-valor">-' + mlMinus + ' ml</span></div>' +
+      '<div class="correccion-item"><span>pH actual → objetivo</span>' +
+        '<span class="correccion-valor">' + ph + ' → ' + phMax + '</span></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+        '⚠️ Añadir de <strong>1ml en 1ml</strong>, esperar 2 min y volver a medir.' +
+      '</div>' + notaBuffer
+    );
+    return;
+  }
+
+  // pH ligeramente fuera pero dentro de intervención
+  setStatus('statusPH','warn','🟡','pH ligeramente fuera — vigilar');
+  setCard('cardPH','warn');
+  showCorreccion('correccionPH','');
 }
+
 
 function evalTemp(temp) {
   if (isNaN(temp)) { setStatus('statusTemp','empty','',''); setCard('cardTemp',''); showCorreccion('correccionTemp',''); return; }
@@ -10058,6 +10115,124 @@ function renderListaTorres() {
   actualizarHeaderTorre();
 }
 
+function abrirSetupNuevaTorre() {
+  // Configurador rápido para nueva torre — modal dedicado
+  const overlay = document.createElement('div');
+  overlay.id = 'nuevaTorreModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;' +
+    'display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom)';
+
+  const nutOpciones = NUTRIENTES_DB.filter(n => n.id !== 'otro').map(n =>
+    '<option value="' + n.id + '">' + n.bandera + ' ' + n.nombre + '</option>'
+  ).join('');
+
+  overlay.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;' +
+    'max-width:430px;padding:24px 20px;max-height:90vh;overflow-y:auto">' +
+    '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#111827;margin-bottom:4px">' +
+      '🌿 Nueva torre</div>' +
+    '<div style="font-size:12px;color:#6b7280;margin-bottom:20px">Configura los datos básicos. Podrás ajustar más detalles después.</div>' +
+
+    // Nombre
+    '<div style="margin-bottom:14px">' +
+      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">Nombre</label>' +
+      '<input id="ntNombre" type="text" placeholder="Torre 2" maxlength="20" ' +
+        'style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;' +
+        'font-size:15px;outline:none;box-sizing:border-box;font-family:var(--font-display);font-weight:700">' +
+    '</div>' +
+
+    // Niveles × Cestas
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+      '<div>' +
+        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
+          'Niveles <span id="ntNivelesVal" style="color:#15803d">5</span></label>' +
+        '<input type="range" id="ntNiveles" min="1" max="10" value="5" ' +
+          'data-target="ntNivelesVal" ' +
+          'style="width:100%;accent-color:#16a34a">' +
+      '</div>' +
+      '<div>' +
+        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
+          'Cestas/nivel <span id="ntCestasVal" style="color:#15803d">5</span></label>' +
+        '<input type="range" id="ntCestas" min="1" max="8" value="5" ' +
+          'data-target="ntCestasVal" ' +
+          'style="width:100%;accent-color:#16a34a">' +
+      '</div>' +
+    '</div>' +
+
+    // Volumen
+    '<div style="margin-bottom:14px">' +
+      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
+        'Volumen depósito: <span id="ntVolVal" style="color:#15803d">20</span>L</label>' +
+      '<input type="range" id="ntVol" min="5" max="100" value="20" step="5" ' +
+        'data-target="ntVolVal" ' +
+        'style="width:100%;accent-color:#16a34a">' +
+    '</div>' +
+
+    // Nutriente
+    '<div style="margin-bottom:20px">' +
+      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
+        '🧪 Nutriente</label>' +
+      '<select id="ntNutriente" ' +
+        'style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;' +
+        'font-size:14px;outline:none;background:#fff;box-sizing:border-box">' +
+        nutOpciones +
+      '</select>' +
+    '</div>' +
+
+    // Botones
+    '<button id="ntGuardar" ' +
+      'style="width:100%;padding:14px;background:#16a34a;color:white;border:none;border-radius:14px;' +
+      'font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
+      '✅ Crear torre</button>' +
+    '<button id="ntCancelar" ' +
+      'style="width:100%;padding:12px;background:#f9fafb;color:#374151;border:1.5px solid #e5e7eb;' +
+      'border-radius:14px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+      'Cancelar</button>' +
+  '</div>';
+
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+
+  // Event listeners for sliders
+  ['ntNiveles','ntCestas','ntVol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', function() {
+      const target = document.getElementById(this.getAttribute('data-target'));
+      if (target) target.textContent = this.value;
+    });
+  });
+
+  document.getElementById('ntGuardar').addEventListener('click', () => {
+    const nombre    = document.getElementById('ntNombre').value.trim() || ('Torre ' + (state.torres.length+1));
+    const niveles   = parseInt(document.getElementById('ntNiveles').value);
+    const cestas    = parseInt(document.getElementById('ntCestas').value);
+    const vol       = parseInt(document.getElementById('ntVol').value);
+    const nutriente = document.getElementById('ntNutriente').value;
+    const EMOJIS    = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
+    const n         = state.torres.length + 1;
+
+    const nuevaTorre = {
+      id: Date.now(), nombre, emoji: EMOJIS[(n-1) % EMOJIS.length],
+      config: { numNiveles:niveles, numCestas:cestas, volDeposito:vol, nutriente },
+      torre: [], modoActual:'lechugas', mediciones:[], registro:[],
+    };
+    for (let nv = 0; nv < niveles; nv++) {
+      nuevaTorre.torre.push([]);
+      for (let c = 0; c < cestas; c++) {
+        nuevaTorre.torre[nv].push({ variedad:'', fecha:'', notas:'' });
+      }
+    }
+    guardarEstadoTorreActual();
+    state.torres.push(nuevaTorre);
+    overlay.remove();
+    const newIdx = state.torres.length - 1;
+    cambiarTorreActiva(newIdx);
+    showToast('🌿 ' + nombre + ' creada con ' + nutriente);
+  });
+
+  document.getElementById('ntCancelar').addEventListener('click', () => overlay.remove());
+}
+
 function crearNuevaTorre() {
   if (state.torres.length >= MAX_TORRES) {
     showToast('Máximo ' + MAX_TORRES + ' torres', true); return;
@@ -10124,6 +10299,18 @@ function borrarTorre(idx) {
 function actualizarBadgesNutriente() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
+
+  // Actualizar rangos dinámicos en las cards de Medir
+  const ecOptimaCultivos = getECOptimaTorre();
+  const ecMin = ecOptimaCultivos.min;
+  const ecMax = ecOptimaCultivos.max;
+  const phMin = nut.pHRango   ? nut.pHRango[0]    : 5.5;
+  const phMax = nut.pHRango   ? nut.pHRango[1]    : 6.5;
+
+  const rangeEC = document.getElementById('paramRangeEC');
+  const rangePH = document.getElementById('paramRangePH');
+  if (rangeEC) rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm';
+  if (rangePH) rangePH.textContent = phMin + ' – ' + phMax;
 
   // Dashboard
   const dashNombre  = document.getElementById('dashNutrienteNombre');
