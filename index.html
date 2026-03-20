@@ -5698,6 +5698,7 @@ const NUTRIENTES_DB = [
     ecObjetivo: [900, 1400], // mS/cm según fabricante (0.9-1.4 con agua EC 0)
     calmagNecesario: true,
     calmagMl: 13,            // calibrado: 13ml→400µS en 18L agua destilada
+    orden: ['Aqua Vega A', 'Aqua Vega B'],
     pHBuffer: true,
     pHRango: [5.2, 6.2],     // rango oficial Canna
     pHIntervenir: [5.0, 6.4],// solo intervenir fuera de este rango
@@ -5795,7 +5796,7 @@ const NUTRIENTES_DB = [
     pHBuffer: false,
     pHRango: [5.5, 6.5],
     pHIntervenir: [5.5, 6.5],
-    orden: ['FloraMicro', 'FloraGro', 'FloraBloom'],
+    orden: ['FloraMicro ⚠️ primero', 'FloraGro', 'FloraBloom'],
     dosis: {
       lechugas_veg: { micro: 2.6, gro: 1.3, bloom: 1.3 }, // 1:2:1 ratio lechugas
       unidad: 'ml/L',
@@ -6194,17 +6195,21 @@ function calcularDosisSetup(nutId, vol, ecObj) {
   const ecObjetivo = ecObj || getSetupECObjetivo();
   const ecMeta = Math.round((ecObjetivo.min + ecObjetivo.max) / 2); // EC central del rango
 
-  // CalMag primero (si necesario)
+  // CalMag: la EC que aporta es de CONCENTRACIÓN, no de cantidad total
+  // 13ml en 18L → 400 µS/cm. En 50L → 36ml pero sigue siendo 400 µS/cm (misma concentración)
+  const EC_CALMAG_FIJA = 400; // µS/cm que aporta CalMag a su concentración estándar
   const mlCalMag = nut.calmagNecesario
     ? Math.round(nut.calmagMl * (vol / 18) * 10) / 10
     : 0;
-  const ecCalMag = nut.calmagNecesario
-    ? Math.round(nut.ecPorMl * mlCalMag)
-    : 0;
+  const ecCalMag = nut.calmagNecesario ? EC_CALMAG_FIJA : 0;
 
   // A+B: cantidad necesaria para llegar a EC objetivo tras CalMag
+  // EC aportada por A+B también es proporcional a concentración:
+  // 33 µS/cm por ml en 18L → 33 µS/cm por ml × (18/vol) en volumen diferente
+  const partes = nut.partes || 2; // fallback a 2 si no definido
+  const ecPorMlAjustado = (nut.ecPorMl || 33) * (18 / vol);
   const ecNecesaria = Math.max(0, ecMeta - ecCalMag);
-  const mlAB = Math.max(1, Math.round((ecNecesaria / (nut.ecPorMl || 30)) * 10) / 10);
+  const mlAB = Math.max(1, Math.round((ecNecesaria / ecPorMlAjustado) * 10) / 10);
 
   return { nut, vol, mlCalMag, ecCalMag, mlAB, ecMeta, ecObjetivo };
 }
@@ -6217,7 +6222,7 @@ function renderDosisSetup() {
   const ecObj  = getSetupECObjetivo();
   const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
   const nut    = d.nut;
-  const orden  = nut.orden || ['Parte A', 'Parte B'];
+  const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
 
   let html = '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;' +
     'color:#15803d;margin-bottom:8px">📋 Dosis calculadas para tu torre</div>';
@@ -6282,6 +6287,12 @@ function renderDosisSetup() {
       pHRango[0] + ' y deja actuar los buffers</div>';
   }
 
+  // Advertencia especial para GHE Flora (Micro siempre primero)
+  if (nut.id === 'ghe_flora') {
+    html += '<div style="font-size:10px;color:#dc2626;background:#fff5f5;border-radius:6px;' +
+      'padding:4px 8px;margin-top:4px;font-weight:700">⚠️ GHE: añadir FloraMicro SIEMPRE PRIMERO. ' +
+      'Nunca mezclar Micro directamente con Bloom.</div>';
+  }
   html += '<div style="font-size:10px;color:#6b7280;margin-top:8px;text-align:center">' +
     '* Dosis finales se confirman en el checklist tras medir EC real</div>';
 
@@ -6410,70 +6421,173 @@ function guardarSetupYContinuar() {
 }
 
 function preguntarIniciarChecklist() {
-  const nut  = getNutrienteTorre();
-  const cfg  = state.configTorre || {};
-  const torre = state.torres?.[state.torreActiva || 0];
-  const nombreTorre = torre?.nombre || 'esta torre';
+  const nut        = getNutrienteTorre();
+  const cfg        = state.configTorre || {};
+  const torre      = state.torres?.[state.torreActiva || 0];
+  const nombreTorre = torre?.nombre || 'Torre 1';
+  const vol        = cfg.volDeposito || 18;
+  const ecObj      = getECOptimaTorre();
+  const ecMeta     = Math.round((ecObj.min + ecObj.max) / 2);
+
+  // Calcular dosis con los datos reales de la torre
+  const EC_CALMAG  = 400;
+  const mlCalMag   = nut.calmagNecesario ? Math.round(nut.calmagMl * (vol/18) * 10)/10 : 0;
+  const ecCalMag   = nut.calmagNecesario ? EC_CALMAG : 0;
+  const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / vol);
+  const ecNec      = Math.max(0, ecMeta - ecCalMag);
+  const mlAB       = Math.max(1, Math.round((ecNec / ecPorMlAdj) * 10)/10);
+  const orden      = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
+
+  // Construir resumen de dosis
+  let dosisLineas = '';
+  if (mlCalMag > 0) {
+    dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span>1. CalMag</span><span style="font-weight:800;color:#15803d">' + mlCalMag + ' ml</span></div>';
+  }
+  let paso = mlCalMag > 0 ? 2 : 1;
+  if (nut.partes === 1) {
+    dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+  } else if (nut.partes === 2) {
+    dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+    dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span>' + paso++ + '. ' + orden[1] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+  } else if (nut.partes >= 3) {
+    for (let i = 0; i < nut.partes; i++) {
+      dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
+        '<span>' + paso++ + '. ' + (orden[i]||'Parte '+(i+1)) + '</span>' +
+        '<span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+    }
+  }
+  const pHMin = nut.pHRango?.[0] || 5.5;
+  const pHMax = nut.pHRango?.[1] || 6.5;
+  dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0">' +
+    '<span>' + paso + '. pH objetivo</span>' +
+    '<span style="font-weight:800;color:#1d4ed8">' + (nut.pHBuffer ? pHMin + ' (buffers hacen el resto)' : pHMin + '–' + pHMax) + '</span></div>';
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9500;' +
+  overlay.id = 'checklistPreguntaOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9500;' +
     'display:flex;align-items:flex-end;justify-content:center;' +
-    'padding-bottom:env(safe-area-inset-bottom,20px)';
+    'padding-bottom:env(safe-area-inset-bottom,0px)';
 
   overlay.innerHTML =
-    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px">' +
-      '<div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;' +
+      'max-height:92vh;overflow-y:auto;padding:20px">' +
 
-      // Icono y título
-      '<div style="text-align:center;margin-bottom:16px">' +
-        '<div style="font-size:48px;margin-bottom:8px">🌿</div>' +
-        '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#111827">' +
-          '¡Torre lista!' +
-        '</div>' +
-        '<div style="font-size:13px;color:#6b7280;margin-top:6px">' +
-          '<strong>' + nombreTorre + '</strong> configurada con ' +
-          '<strong>' + nut.nombre + '</strong>' +
+      // Handle
+      '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px"></div>' +
+
+      // Cabecera
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+        '<div style="font-size:40px">🌿</div>' +
+        '<div>' +
+          '<div style="font-family:var(--font-display);font-size:17px;font-weight:900;color:#111827">' +
+            '¡' + nombreTorre + ' lista!' +
+          '</div>' +
+          '<div style="font-size:12px;color:#6b7280;margin-top:3px">' +
+            nut.nombre + ' · ' + vol + 'L · EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
+          '</div>' +
         '</div>' +
       '</div>' +
 
-      // Info del checklist
+      // Dosis calculadas
       '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;' +
-        'padding:12px 14px;margin-bottom:16px">' +
-        '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;' +
-          'color:#15803d;margin-bottom:6px">📋 Checklist de primera recarga</div>' +
-        '<div style="font-size:12px;color:#374151;line-height:1.7">' +
-          '✓ Protocolo paso a paso para ' + nut.nombre + '<br>' +
-          '✓ Dosis de CalMag: <strong>' + (nut.calmagNecesario ? calcularMlCalMag() + ' ml' : 'No necesario') + '</strong><br>' +
-          '✓ Dosis A+B: <strong>' + calcularMlAB() + ' ml de cada parte</strong><br>' +
-          '✓ Protocolo pH adaptado a ' + (nut.pHBuffer ? 'buffers integrados' : 'ajuste manual') +
+        'padding:12px 14px;margin-bottom:14px">' +
+        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;' +
+          'color:#15803d;margin-bottom:8px">💊 Dosis calculadas para esta recarga</div>' +
+        '<div style="font-size:12px;color:#374151">' + dosisLineas + '</div>' +
+        (nut.pHBuffer
+          ? '<div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;' +
+            'padding:4px 8px;margin-top:6px">⚠️ Subir pH solo hasta ' + pHMin +
+            ' — los buffers de ' + nut.nombre + ' completarán el ajuste solos en 2-3h</div>'
+          : '') +
+      '</div>' +
+
+      // Pregunta tipo de checklist
+      '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;' +
+        'color:#374151;margin-bottom:10px;text-align:center">¿Para qué ocasión?</div>' +
+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+        // Primer uso
+        '<div id="optPrimerUso" data-tipo="primer_uso" class="tipo-checklist-opt" ' +
+          'style="border:2px solid #16a34a;background:#f0fdf4;border-radius:14px;' +
+          'padding:14px 10px;text-align:center;cursor:pointer">' +
+          '<div style="font-size:28px;margin-bottom:6px">🆕</div>' +
+          '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#15803d">' +
+            'Primer uso</div>' +
+          '<div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.4">' +
+            'Torre nueva o después de montarla por primera vez' +
+          '</div>' +
+        '</div>' +
+        // Tras limpieza
+        '<div id="optTrasLimpieza" data-tipo="tras_limpieza" class="tipo-checklist-opt" ' +
+          'style="border:2px solid #e5e7eb;background:#fff;border-radius:14px;' +
+          'padding:14px 10px;text-align:center;cursor:pointer">' +
+          '<div style="font-size:28px;margin-bottom:6px">🧹</div>' +
+          '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#374151">' +
+            'Tras limpieza</div>' +
+          '<div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.4">' +
+            'Depósito vaciado, limpiado y enjuagado completamente' +
+          '</div>' +
         '</div>' +
       '</div>' +
 
-      // Botones
-      '<button id="btnSiChecklist" ' +
+      // Botones acción
+      '<button id="btnIniciarChecklist" ' +
         'style="width:100%;padding:14px;background:#16a34a;color:white;border:none;border-radius:14px;' +
-        'font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
-        '📋 Iniciar checklist ahora' +
+        'font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;' +
+        'margin-bottom:8px;-webkit-tap-highlight-color:transparent">' +
+        '📋 Iniciar checklist' +
       '</button>' +
-      '<button id="btnNoChecklist" ' +
-        'style="width:100%;padding:12px;background:#f9fafb;color:#374151;border:1.5px solid #e5e7eb;' +
-        'border-radius:14px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+      '<button id="btnChecklistDespues" ' +
+        'style="width:100%;padding:12px;background:#f9fafb;color:#6b7280;' +
+        'border:1.5px solid #e5e7eb;border-radius:14px;font-family:var(--font-display);' +
+        'font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">' +
         'Más tarde — ir a la app' +
       '</button>' +
     '</div>';
 
   document.body.appendChild(overlay);
 
-  document.getElementById('btnSiChecklist').addEventListener('click', () => {
+  // Event delegation para opciones tipo checklist
+  overlay.querySelectorAll('.tipo-checklist-opt').forEach(el => {
+    el.addEventListener('click', function() {
+      seleccionarTipoChecklist(this, this.getAttribute('data-tipo'));
+    });
+  });
+
+  // Tipo de checklist seleccionado (primer_uso por defecto)
+  window._tipoChecklist = 'primer_uso';
+
+  document.getElementById('btnIniciarChecklist').addEventListener('click', () => {
     overlay.remove();
     abrirChecklist(true);
   });
-  document.getElementById('btnNoChecklist').addEventListener('click', () => {
+  document.getElementById('btnChecklistDespues').addEventListener('click', () => {
     overlay.remove();
-    showToast('✅ ' + nombreTorre + ' configurada · Checklist disponible cuando quieras');
+    showToast('✅ ' + nombreTorre + ' lista · Checklist en pestaña Historial cuando quieras');
     goTab('inicio');
   });
 }
+
+function seleccionarTipoChecklist(el, tipo) {
+  window._tipoChecklist = tipo;
+  // Reset estilos
+  ['optPrimerUso','optTrasLimpieza'].forEach(id => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.style.border = '2px solid #e5e7eb';
+    e.style.background = '#fff';
+    e.querySelector('div:nth-child(2)').style.color = '#374151';
+  });
+  // Activar seleccionado
+  el.style.border = '2px solid #16a34a';
+  el.style.background = '#f0fdf4';
+  el.querySelector('div:nth-child(2)').style.color = '#15803d';
+}
+
 
 function aplicarConfigTorre() {
   if (!state.configTorre) return;
@@ -8172,7 +8286,7 @@ function generarPasosNutriente() {
   const ecFinal = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
   const tieneBuffer = nut.pHBuffer;
   const pHRango = nut.pHRango || [5.5, 6.5];
-  const orden  = nut.orden || ['Parte A', 'Parte B'];
+  const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
   const pasos  = [];
 
   // PASO 4.2 — CalMag (solo si necesario)
@@ -10585,14 +10699,19 @@ function renderSetupPlantasGrid() {
     const dosisText = document.getElementById('dosisSegunCultivoTexto');
     if (dosisDiv && dosisText) {
       dosisDiv.style.display = 'block';
-      const orden = nut.orden || ['A','B'];
+      const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
       let txt = '📦 ' + vol + 'L · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
       if (d.mlCalMag > 0) txt += '• CalMag: <strong>' + d.mlCalMag + ' ml</strong><br>';
-      if (nut.partes <= 2) {
+      // Mostrar TODAS las partes del nutriente
+      if (nut.partes === 1) {
         txt += '• ' + orden[0] + ': <strong>' + d.mlAB + ' ml</strong><br>';
-        if (nut.partes === 2) txt += '• ' + orden[1] + ': <strong>' + d.mlAB + ' ml</strong><br>';
-      } else {
-        orden.forEach(p => { txt += '• ' + p + ': <strong>' + d.mlAB + ' ml</strong><br>'; });
+      } else if (nut.partes === 2) {
+        txt += '• ' + orden[0] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+        txt += '• ' + orden[1] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+      } else if (nut.partes === 3) {
+        txt += '• ' + orden[0] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+        txt += '• ' + orden[1] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+        txt += '• ' + orden[2] + ': <strong>' + d.mlAB + ' ml</strong><br>';
       }
       txt += '• pH objetivo: <strong>' + (nut.pHRango?.[0]||5.5) + '–' + (nut.pHRango?.[1]||6.5) + '</strong>';
       if (ecObj.advertencia) txt += '<br><span style="color:#f59e0b">⚠️ Cultivos con EC distinta — ajustar por torre</span>';
@@ -10647,13 +10766,17 @@ function actualizarResumenSetup() {
   const ecObj  = getSetupECObjetivo();
   const volNum = parseInt(vol);
   const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volNum, ecObj);
-  const ordenR = d.nut.orden || ['A','B'];
+  const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
   let dosisHtml = '';
   if (d.mlCalMag > 0) dosisHtml += 'CalMag ' + d.mlCalMag + 'ml · ';
-  if (d.nut.partes <= 2) {
+  // Todas las partes siempre explícitas
+  if (d.nut.partes === 1) {
     dosisHtml += ordenR[0] + ' ' + d.mlAB + 'ml';
-    if (d.nut.partes === 2) dosisHtml += ' · ' + ordenR[1] + ' ' + d.mlAB + 'ml';
+  } else if (d.nut.partes === 2) {
+    dosisHtml += ordenR[0] + ' ' + d.mlAB + 'ml · ' + ordenR[1] + ' ' + d.mlAB + 'ml';
+  } else if (d.nut.partes === 3) {
+    dosisHtml += ordenR[0] + ' ' + d.mlAB + 'ml · ' + ordenR[1] + ' ' + d.mlAB + 'ml · ' + ordenR[2] + ' ' + d.mlAB + 'ml';
   } else {
     dosisHtml += ordenR.map(p => p + ' ' + d.mlAB + 'ml').join(' · ');
   }
