@@ -3924,7 +3924,7 @@ body::before { display: none; }
               <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
             </div>
             <input type="range" class="torre-slider" id="sliderVol"
-              min="5" max="100" value="20" step="5" oninput="updateTorreBuilder()">
+              min="5" max="100" value="20" step="5" oninput="updateTorreBuilder();if(setupPagina>=4)renderDosisSetup()">
           </div>
         </div>
       </div>
@@ -4307,6 +4307,14 @@ body::before { display: none; }
       <div id="setupPlantasSeleccionadas" style="background:#f0fdf4;border:1.5px solid #86efac;
         border-radius:12px;padding:10px 14px;font-size:12px;color:#15803d;display:none">
         <strong>Seleccionadas:</strong> <span id="setupPlantasTexto">—</span>
+      </div>
+
+      <!-- Dosis calculadas según cultivo seleccionado -->
+      <div id="dosisSegunCultivo" style="display:none;margin-top:10px;background:#eff6ff;
+        border:1.5px solid #93c5fd;border-radius:12px;padding:12px 14px">
+        <div style="font-family:var(--font-display);font-size:12px;font-weight:800;
+          color:#1d4ed8;margin-bottom:6px">⚡ EC y dosis para estos cultivos</div>
+        <div id="dosisSegunCultivoTexto" style="font-size:12px;color:#374151;line-height:1.8"></div>
       </div>
     </div>
 
@@ -6003,7 +6011,7 @@ function renderSetupPage() {
 
   // Acciones específicas por página
   if (setupPagina === 1) updateTorreBuilder();
-  if (setupPagina === 4) renderNutrientesGrid();
+  if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
   if (setupPagina === 6) setTimeout(renderSetupPlantasGrid, 50);
   if (setupPagina === 7) setTimeout(actualizarResumenSetup, 50);
 
@@ -6148,19 +6156,145 @@ function renderNutrientesGrid() {
   `).join('');
 }
 
+// ══════════════════════════════════════════════════
+// CÁLCULO DINÁMICO SETUP — volumen + cultivo + nutriente
+// ══════════════════════════════════════════════════
+
+function getSetupVolumen() {
+  return parseInt(document.getElementById('sliderVol')?.value || 20);
+}
+
+function getSetupECObjetivo() {
+  // EC óptima según cultivos seleccionados en spage6
+  if (setupPlantasSeleccionadas.size === 0) {
+    // Sin cultivos → usar EC del nutriente
+    const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
+    return { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400, fuente: 'nutriente' };
+  }
+  // Con cultivos → calcular intersección de rangos
+  const rangos = [];
+  setupPlantasSeleccionadas.forEach(gKey => {
+    const g = GRUPOS_CULTIVO[gKey];
+    if (!g) return;
+    const partes = g.ec.split('-').map(Number);
+    if (partes.length === 2) rangos.push({ min: partes[0], max: partes[1] });
+  });
+  if (rangos.length === 0) return { min: 900, max: 1400, fuente: 'default' };
+  const ecMin = Math.max(...rangos.map(r => r.min));
+  const ecMax = Math.min(...rangos.map(r => r.max));
+  if (ecMax >= ecMin + 100) return { min: ecMin, max: ecMax, fuente: 'cultivos' };
+  // Sin intersección → promedio
+  const avgMin = Math.round(rangos.reduce((s,r) => s+r.min,0) / rangos.length);
+  const avgMax = Math.round(rangos.reduce((s,r) => s+r.max,0) / rangos.length);
+  return { min: avgMin, max: avgMax, fuente: 'promedio', advertencia: true };
+}
+
+function calcularDosisSetup(nutId, vol, ecObj) {
+  const nut = NUTRIENTES_DB.find(n => n.id === nutId) || NUTRIENTES_DB[0];
+  const ecObjetivo = ecObj || getSetupECObjetivo();
+  const ecMeta = Math.round((ecObjetivo.min + ecObjetivo.max) / 2); // EC central del rango
+
+  // CalMag primero (si necesario)
+  const mlCalMag = nut.calmagNecesario
+    ? Math.round(nut.calmagMl * (vol / 18) * 10) / 10
+    : 0;
+  const ecCalMag = nut.calmagNecesario
+    ? Math.round(nut.ecPorMl * mlCalMag)
+    : 0;
+
+  // A+B: cantidad necesaria para llegar a EC objetivo tras CalMag
+  const ecNecesaria = Math.max(0, ecMeta - ecCalMag);
+  const mlAB = Math.max(1, Math.round((ecNecesaria / (nut.ecPorMl || 30)) * 10) / 10);
+
+  return { nut, vol, mlCalMag, ecCalMag, mlAB, ecMeta, ecObjetivo };
+}
+
+function renderDosisSetup() {
+  const preview = document.getElementById('nutProtocoloPreview');
+  if (!preview) return;
+
+  const vol    = getSetupVolumen();
+  const ecObj  = getSetupECObjetivo();
+  const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
+  const nut    = d.nut;
+  const orden  = nut.orden || ['Parte A', 'Parte B'];
+
+  let html = '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;' +
+    'color:#15803d;margin-bottom:8px">📋 Dosis calculadas para tu torre</div>';
+
+  // Contexto del cálculo
+  html += '<div style="font-size:11px;color:#6b7280;margin-bottom:8px;' +
+    'background:#f8fafc;border-radius:8px;padding:6px 10px;line-height:1.7">' +
+    '📦 Depósito: <strong>' + vol + 'L</strong> · ' +
+    '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
+    (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d">(según cultivos)</span>' :
+     ecObj.fuente === 'promedio' ? ' <span style="color:#f59e0b">⚠️ cultivos con EC diferente</span>' :
+     ' <span style="color:#6b7280">(según nutriente)</span>') +
+    '</div>';
+
+  // Pasos de adición en orden
+  let paso = 1;
+  if (nut.calmagNecesario && d.mlCalMag > 0) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+      'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> CalMag</span>' +
+      '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+        d.mlCalMag + ' ml</span></div>';
+  }
+
+  if (nut.partes === 1) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+      'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[0] + '</span>' +
+      '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+        d.mlAB + ' ml</span></div>';
+  } else if (nut.partes === 2) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+      'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[0] + '</span>' +
+      '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+        d.mlAB + ' ml</span></div>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+      'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
+      '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[1] + '</span>' +
+      '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+        d.mlAB + ' ml</span></div>';
+  } else if (nut.partes === 3) {
+    [orden[0], orden[1], orden[2]].forEach(parte => {
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+        'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
+        '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + parte + '</span>' +
+        '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
+          d.mlAB + ' ml</span></div>';
+    });
+  }
+
+  // pH
+  const pHRango = nut.pHRango || [5.5, 6.5];
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">' +
+    '<span style="font-size:12px;color:#374151"><strong>' + paso + '.</strong> pH objetivo</span>' +
+    '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#1d4ed8">' +
+      pHRango[0] + '–' + pHRango[1] + '</span></div>';
+
+  if (nut.pHBuffer) {
+    html += '<div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;' +
+      'padding:4px 8px;margin-top:4px">⚠️ Buffer integrado: sube pH solo hasta ' +
+      pHRango[0] + ' y deja actuar los buffers</div>';
+  }
+
+  html += '<div style="font-size:10px;color:#6b7280;margin-top:8px;text-align:center">' +
+    '* Dosis finales se confirman en el checklist tras medir EC real</div>';
+
+  preview.style.display = 'block';
+  preview.innerHTML = html;
+}
+
 function selNutriente(id) {
   setupNutriente = id;
   document.querySelectorAll('.nutriente-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('nut-' + id)?.classList.add('selected');
-
-  // Mostrar protocolo del nutriente
-  const nut = NUTRIENTES_DB.find(n => n.id === id);
-  const preview = document.getElementById('nutProtocoloPreview');
-  const texto   = document.getElementById('nutProtocoloTexto');
-  if (preview && texto && nut && nut.protocolo) {
-    preview.style.display = 'block';
-    texto.innerHTML = nut.protocolo.map(p => '• ' + p).join('<br>');
-  }
+  // Recalcular dosis con volumen actual y cultivos seleccionados
+  renderDosisSetup();
 }
 
 function buscarCiudadSetup(query) {
@@ -10441,8 +10575,33 @@ function renderSetupPlantasGrid() {
     texto.textContent = [...setupPlantasSeleccionadas].map(k =>
       grupos.find(g => g.key === k)?.label || k
     ).join(', ');
+
+    // Mostrar EC objetivo y dosis calculadas
+    const ecObj = getSetupECObjetivo();
+    const vol   = getSetupVolumen();
+    const d     = calcularDosisSetup(setupNutriente, vol, ecObj);
+    const nut   = d.nut;
+    const dosisDiv  = document.getElementById('dosisSegunCultivo');
+    const dosisText = document.getElementById('dosisSegunCultivoTexto');
+    if (dosisDiv && dosisText) {
+      dosisDiv.style.display = 'block';
+      const orden = nut.orden || ['A','B'];
+      let txt = '📦 ' + vol + 'L · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
+      if (d.mlCalMag > 0) txt += '• CalMag: <strong>' + d.mlCalMag + ' ml</strong><br>';
+      if (nut.partes <= 2) {
+        txt += '• ' + orden[0] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+        if (nut.partes === 2) txt += '• ' + orden[1] + ': <strong>' + d.mlAB + ' ml</strong><br>';
+      } else {
+        orden.forEach(p => { txt += '• ' + p + ': <strong>' + d.mlAB + ' ml</strong><br>'; });
+      }
+      txt += '• pH objetivo: <strong>' + (nut.pHRango?.[0]||5.5) + '–' + (nut.pHRango?.[1]||6.5) + '</strong>';
+      if (ecObj.advertencia) txt += '<br><span style="color:#f59e0b">⚠️ Cultivos con EC distinta — ajustar por torre</span>';
+      dosisText.innerHTML = txt;
+    }
   } else {
     info.style.display = 'none';
+    const dosisDiv = document.getElementById('dosisSegunCultivo');
+    if (dosisDiv) dosisDiv.style.display = 'none';
   }
 }
 
@@ -10453,6 +10612,8 @@ function toggleSetupPlanta(key) {
     setupPlantasSeleccionadas.add(key);
   }
   renderSetupPlantasGrid();
+  // Recalcular dosis con los cultivos actualizados
+  renderDosisSetup();
 }
 
 function seleccionarNumTorres(tipo) {
@@ -10483,9 +10644,26 @@ function actualizarResumenSetup() {
   };
   const plantasSel = [...setupPlantasSeleccionadas].map(k => plantasNombres[k]||k).join(', ') || 'Sin seleccionar';
 
+  const ecObj  = getSetupECObjetivo();
+  const volNum = parseInt(vol);
+  const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volNum, ecObj);
+  const ordenR = d.nut.orden || ['A','B'];
+
+  let dosisHtml = '';
+  if (d.mlCalMag > 0) dosisHtml += 'CalMag ' + d.mlCalMag + 'ml · ';
+  if (d.nut.partes <= 2) {
+    dosisHtml += ordenR[0] + ' ' + d.mlAB + 'ml';
+    if (d.nut.partes === 2) dosisHtml += ' · ' + ordenR[1] + ' ' + d.mlAB + 'ml';
+  } else {
+    dosisHtml += ordenR.map(p => p + ' ' + d.mlAB + 'ml').join(' · ');
+  }
+
   el.innerHTML =
     '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>' +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
+    '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
+    (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
+    '💊 Dosis primera recarga: <strong>' + dosisHtml + '</strong><br>' +
     (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong><br>' +
     '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
     '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Torre)' : 'Una torre') + '</strong>';
