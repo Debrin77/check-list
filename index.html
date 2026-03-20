@@ -3931,6 +3931,105 @@ body::before { display: none; }
         </div>
       </div>
 
+      <!-- Tubo y bomba — solo para torres DIY/personalizadas -->
+      <div id="seccionTuboBomba" style="display:none">
+
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
+          color:#374151;margin-bottom:8px;margin-top:4px">
+          🔧 Tubo central y bomba
+        </div>
+
+        <!-- Diámetro del tubo -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#6b7280;
+            text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+            Diámetro interior del tubo central
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
+            <div class="equip-card" id="tubo50"  onclick="seleccionarTubo(50)"  style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">50mm</div>
+              <div style="font-size:9px;color:#6b7280">VEVOR estándar</div>
+            </div>
+            <div class="equip-card" id="tubo75"  onclick="seleccionarTubo(75)"  style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">75mm</div>
+              <div style="font-size:9px;color:#6b7280">Torres domésticas</div>
+            </div>
+            <div class="equip-card" id="tubo110" onclick="seleccionarTubo(110)" style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">110mm</div>
+              <div style="font-size:9px;color:#6b7280">PVC estándar</div>
+            </div>
+            <div class="equip-card" id="tubo125" onclick="seleccionarTubo(125)" style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">125mm</div>
+              <div style="font-size:9px;color:#f97316;font-weight:700">⚠️ Riesgo raíces</div>
+            </div>
+            <div class="equip-card" id="tubo160" onclick="seleccionarTubo(160)" style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">160mm</div>
+              <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Tubo interior</div>
+            </div>
+            <div class="equip-card" id="tubo200" onclick="seleccionarTubo(200)" style="padding:8px;text-align:center">
+              <div style="font-size:15px;font-weight:800;color:#374151">200mm</div>
+              <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Profesional</div>
+            </div>
+          </div>
+          <!-- Aviso anti-raíces dinámico -->
+          <div id="avisoAntiRaices" style="display:none;border-radius:10px;
+            padding:10px 12px;font-size:11px;line-height:1.6;margin-bottom:8px"></div>
+        </div>
+
+        <!-- Sistema anti-raíces (aparece si ≥125mm) -->
+        <div id="seccionAntiRaices" style="display:none;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#6b7280;
+            text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+            🌿 Sistema anti-obstrucción de raíces
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="equip-card" id="antiTuboInt" onclick="seleccionarAntiRaices('tubo_interior')" style="padding:10px">
+              <div style="font-size:18px;margin-bottom:4px">🔩</div>
+              <div style="font-size:11px;font-weight:700;color:#374151">Tubo interior perforado</div>
+              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Tubo fino dentro del central con tela filtrante. Solución más eficaz.</div>
+            </div>
+            <div class="equip-card" id="antiSeparadores" onclick="seleccionarAntiRaices('separadores')" style="padding:10px">
+              <div style="font-size:18px;margin-bottom:4px">🔲</div>
+              <div style="font-size:11px;font-weight:700;color:#374151">Separadores de nivel</div>
+              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Bandejas perforadas entre niveles que retienen las raíces.</div>
+            </div>
+            <div class="equip-card" id="antiCanal" onclick="seleccionarAntiRaices('canal_lateral')" style="padding:10px">
+              <div style="font-size:18px;margin-bottom:4px">↕️</div>
+              <div style="font-size:11px;font-weight:700;color:#374151">Tubo lateral de bajada</div>
+              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Subida y bajada separadas. Las raíces no interfieren.</div>
+            </div>
+            <div class="equip-card" id="antiNinguno" onclick="seleccionarAntiRaices('ninguno')" style="padding:10px">
+              <div style="font-size:18px;margin-bottom:4px">❌</div>
+              <div style="font-size:11px;font-weight:700;color:#dc2626">Sin protección</div>
+              <div style="font-size:9px;color:#dc2626;margin-top:2px;line-height:1.4">No recomendado con ≥125mm.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Altura de la torre -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:#6b7280;
+            text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+            📏 Altura total de la torre
+            <span id="valAltura" style="color:#15803d;font-size:13px;font-weight:800"> 1.2m</span>
+          </div>
+          <input type="range" class="torre-slider" id="sliderAltura"
+            min="0.5" max="3.0" value="1.2" step="0.1"
+            oninput="calcularBombaRecomendada()"
+            aria-label="Altura total de la torre en metros">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:2px">
+            <span>0.5m</span><span>1.5m</span><span>3.0m</span>
+          </div>
+        </div>
+
+        <!-- Resultado cálculo bomba -->
+        <div id="resultadoBomba" style="background:#eff6ff;border:1.5px solid #93c5fd;
+          border-radius:12px;padding:12px 14px;font-size:12px;color:#1e40af;line-height:1.8">
+          Selecciona diámetro y altura para calcular la bomba recomendada
+        </div>
+
+      </div>
+
       <!-- Tamaño de cestas -->
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:8px;margin-top:4px">
@@ -6129,6 +6228,10 @@ function guardarSetupYContinuar() {
     nutriente:    setupNutriente,
     tamanoCesta:  setupTamanoCesta,
     tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
+    diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
+    antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
+    alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+    bombaCalculada: window.setupBombaCalculada || null,
     ciudad:       setupCoordenadas.ciudad,
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0513,
@@ -10079,6 +10182,152 @@ function actualizarResumenSetup() {
 
 // Tamaño de cestas
 let setupTamanoCesta = '50'; // cm por defecto
+
+// ══ Tubo central y bomba ══════════════════════════
+let setupDiametroTubo  = 50;
+let setupAntiRaices    = 'tubo_interior';
+let setupAlturaTorre   = 1.2;
+
+function mostrarSeccionTuboBomba(mostrar) {
+  const el = document.getElementById('seccionTuboBomba');
+  if (el) el.style.display = mostrar ? 'block' : 'none';
+}
+
+function seleccionarTubo(mm) {
+  setupDiametroTubo = mm;
+  [50,75,110,125,160,200].forEach(d => {
+    const el = document.getElementById('tubo' + d);
+    if (el) el.classList.remove('selected');
+  });
+  const el = document.getElementById('tubo' + mm);
+  if (el) el.classList.add('selected');
+
+  // Aviso según diámetro
+  const aviso  = document.getElementById('avisoAntiRaices');
+  const secAR  = document.getElementById('seccionAntiRaices');
+
+  if (mm <= 110) {
+    aviso.style.display = 'none';
+    secAR.style.display = 'none';
+  } else if (mm === 125) {
+    aviso.style.display = 'block';
+    aviso.style.background = '#fff7ed';
+    aviso.style.border = '1.5px solid #fed7aa';
+    aviso.style.color = '#92400e';
+    aviso.innerHTML = '⚠️ <strong>125mm — riesgo moderado de obstrucción por raíces.</strong><br>' +
+      'Con lechugas y hierbas las raíces pueden crecer hacia los niveles inferiores en 3-4 semanas. ' +
+      'Se recomienda un sistema anti-obstrucción.';
+    secAR.style.display = 'block';
+  } else if (mm === 160) {
+    aviso.style.display = 'block';
+    aviso.style.background = '#fff5f5';
+    aviso.style.border = '1.5px solid #fca5a5';
+    aviso.style.color = '#7f1d1d';
+    aviso.innerHTML = '🔴 <strong>160mm — obstrucción casi segura sin protección.</strong><br>' +
+      'Las raíces de los niveles superiores taponarán el flujo en 2-3 semanas. ' +
+      '<strong>Obligatorio</strong> instalar tubo interior perforado (32-40mm) con tela filtrante, ' +
+      'o separadores de nivel entre cada bandeja.';
+    secAR.style.display = 'block';
+  } else if (mm >= 200) {
+    aviso.style.display = 'block';
+    aviso.style.background = '#fff5f5';
+    aviso.style.border = '1.5px solid #fca5a5';
+    aviso.style.color = '#7f1d1d';
+    aviso.innerHTML = '🔴 <strong>200mm — sistema profesional.</strong><br>' +
+      'Requiere tubo interior perforado de 50mm con tela filtrante, ' +
+      'o diseño de doble tubo (subida + bajada separadas). ' +
+      'Sin protección el sistema fallará en la primera semana.';
+    secAR.style.display = 'block';
+  }
+
+  calcularBombaRecomendada();
+}
+
+function seleccionarAntiRaices(tipo) {
+  setupAntiRaices = tipo;
+  ['TuboInt','Separadores','Canal','Ninguno'].forEach(t => {
+    const el = document.getElementById('anti' + t);
+    if (el) el.classList.remove('selected');
+  });
+  const map = { tubo_interior:'TuboInt', separadores:'Separadores', canal_lateral:'Canal', ninguno:'Ninguno' };
+  const el = document.getElementById('anti' + (map[tipo]||tipo));
+  if (el) el.classList.add('selected');
+}
+
+function calcularBombaRecomendada() {
+  const sliderH = document.getElementById('sliderAltura');
+  if (!sliderH) return;
+  setupAlturaTorre = parseFloat(sliderH.value);
+
+  const alturaEl = document.getElementById('valAltura');
+  if (alturaEl) alturaEl.textContent = ' ' + setupAlturaTorre.toFixed(1) + 'm';
+
+  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
+
+  // Cálculo técnico de bomba
+  // Caudal necesario: 1.5 L/min por nivel activo = 1.5 × N × 60 = 90N L/h
+  const caudalMin  = Math.round(1.5 * niveles * 60);         // L/h mínimo
+  const caudalRec  = Math.round(2.0 * niveles * 60);         // L/h recomendado
+
+  // Head (altura de elevación) = altura torre + 20% de pérdidas por fricción
+  const headMetros = Math.round(setupAlturaTorre * 1.2 * 10) / 10;
+
+  // Potencia estimada (W) = (Q × H) / (367 × η) donde η≈0.35 para bombas pequeñas
+  // Q en m³/h, H en metros
+  const Q = caudalRec / 1000;  // m³/h
+  const potenciaW = Math.ceil((Q * headMetros) / (0.367 * 0.35));
+  const potenciaRec = Math.max(5, potenciaW * 2); // factor seguridad ×2
+
+  // Recomendación de bomba según caudal y head
+  let modeloRec = '';
+  if (caudalRec <= 400 && headMetros <= 1.5) {
+    modeloRec = 'Bomba 5-8W · 400-600 L/h · head 1.5m (ej: Jebao, Sunsun SS-200)';
+  } else if (caudalRec <= 600 && headMetros <= 2.0) {
+    modeloRec = 'Bomba 8-12W · 600-800 L/h · head 2.0m (ej: Jebao PP-388)';
+  } else if (caudalRec <= 900 && headMetros <= 2.5) {
+    modeloRec = 'Bomba 12-18W · 800-1000 L/h · head 2.5m (ej: Sunsun CHJ-503)';
+  } else {
+    modeloRec = 'Bomba 18-25W · 1200+ L/h · head 3m+ (consultar catálogo)';
+  }
+
+  // Aviso tubo interior si aplica
+  let avisoTuboInt = '';
+  if (setupDiametroTubo >= 125 && setupAntiRaices === 'tubo_interior') {
+    const dTuboInt = setupDiametroTubo >= 200 ? '50mm' : setupDiametroTubo >= 160 ? '40mm' : '32mm';
+    avisoTuboInt = '<br>🔩 <strong>Tubo interior recomendado: ' + dTuboInt + '</strong> perforado (agujeros 8mm cada 7cm) + tela filtrante tipo jersey.';
+  }
+
+  const el = document.getElementById('resultadoBomba');
+  if (!el) return;
+  el.innerHTML =
+    '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:8px">' +
+      '⚡ Bomba recomendada para tu torre' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">' +
+      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">Caudal mínimo</div>' +
+        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + caudalMin + ' L/h</div>' +
+      '</div>' +
+      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">Caudal recomendado</div>' +
+        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + caudalRec + ' L/h</div>' +
+      '</div>' +
+      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">Head necesario</div>' +
+        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + headMetros + 'm</div>' +
+      '</div>' +
+      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;color:#6b7280;font-weight:600">Potencia mínima</div>' +
+        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + potenciaRec + 'W</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:#374151;background:#fff;border-radius:8px;padding:8px">' +
+      '💡 ' + modeloRec + avisoTuboInt +
+    '</div>';
+
+  // Guardar en setupData
+  window.setupBombaCalculada = { caudalMin, caudalRec, headMetros, potenciaRec, modeloRec };
+}
 
 function seleccionarCesta(tam) {
   setupTamanoCesta = tam;
