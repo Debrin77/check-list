@@ -5217,7 +5217,7 @@ function goTab(tab) {
     const nivelesActivos = getNivelesActivos();
     let totalPlantas = 0;
     nivelesActivos.forEach(n => {
-      state.torre[n].forEach(c => { if (c.variedad) totalPlantas++; });
+      (state.torre[n] || []).forEach(c => { if (c.variedad) totalPlantas++; });
     });
     if (totalPlantas > 0) {
       document.getElementById('riegoNPlantas').value = totalPlantas;
@@ -5800,7 +5800,7 @@ function updateTorreStats() {
 
   const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
-    state.torre[n].forEach(c => {
+    (state.torre[n] || []).forEach(c => {
       if (c.variedad) {
         totalPlantas++;
         const dias = getDias(c.fecha);
@@ -7123,6 +7123,8 @@ async function agregarFotoCesta(event) {
 
       if (!editingCesta) return;
       const { nivel, cesta } = editingCesta;
+      if (!state.torre[nivel]) state.torre[nivel] = [];
+      if (!state.torre[nivel][cesta]) state.torre[nivel][cesta] = { variedad:'', fecha:'', notas:'', fotos:[], fotoKeys:[] };
       const cestaData = state.torre[nivel][cesta];
       if (!cestaData.fotos) cestaData.fotos = [];
 
@@ -9790,8 +9792,8 @@ function generarEventos(fecha) {
   // ── Cosechas y rotación ───────────────────────────────────────────────
   const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
-    state.torre[n].forEach((c, ci) => {
-      if (!c.variedad || !c.fecha) return;
+    (state.torre[n] || []).forEach((c, ci) => {
+      if (!c || !c.variedad || !c.fecha) return;
       const diasTrasplante = Math.round((d - new Date(c.fecha)) / 86400000);
       const diasTotal = DIAS_COSECHA[c.variedad] || 50;
       const diasParaCosecha = diasTotal - diasTrasplante;
@@ -10391,8 +10393,8 @@ function calcularEdadAutomatica() {
   let totalPlantas = 0;
 
   nivelesActivos.forEach(n => {
-    state.torre[n].forEach(c => {
-      if (c.variedad && c.fecha) {
+    (state.torre[n] || []).forEach(c => {
+      if (c && c.variedad && c.fecha) {
         const dias = getDias(c.fecha);
         totalDias += dias;
         totalPlantas++;
@@ -10708,7 +10710,7 @@ function updateDashTorre() {
   const nivelesActivos = getNivelesActivos();
 
   nivelesActivos.forEach(n => {
-    state.torre[n].forEach(c => {
+    (state.torre[n] || []).forEach(c => {
       if (c.variedad) {
         plantas++;
         const dias = getDias(c.fecha);
@@ -11504,16 +11506,17 @@ function cargarEstadoTorre(idx) {
   state.registro    = t.registro   || [];
   state.configTorre = t.config     || null;
   modoActual        = t.modoActual || 'lechugas';
-  // Asegurar estructura correcta de la torre con sus dimensiones reales
+  // Asegurar estructura COMPLETA siempre — rellenar niveles y cestas que falten
   const nivR = state.configTorre?.numNiveles || NUM_NIVELES;
   const cesR = state.configTorre?.numCestas  || NUM_CESTAS;
-  if (!state.torre || state.torre.length === 0) {
-    state.torre = [];
-    for (let n = 0; n < nivR; n++) {
-      state.torre.push([]);
-      for (let c = 0; c < cesR; c++) {
-        state.torre[n].push({ variedad:'', fecha:'', notas:'' });
-      }
+  if (!state.torre) state.torre = [];
+  // Añadir niveles que falten
+  while (state.torre.length < nivR) state.torre.push([]);
+  // Añadir cestas que falten en cada nivel
+  for (let n = 0; n < nivR; n++) {
+    if (!state.torre[n]) state.torre[n] = [];
+    while (state.torre[n].length < cesR) {
+      state.torre[n].push({ variedad:'', fecha:'', notas:'', fotos:[], fotoKeys:[] });
     }
   }
   // Aplicar constantes de la config de esta torre
