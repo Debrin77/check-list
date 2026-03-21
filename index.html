@@ -5218,18 +5218,8 @@ function goTab(tab) {
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
-    // Siempre recalcular plantas desde la torre activa
-    const nivelesActivos = getNivelesActivos();
-    let totalPlantas = 0;
-    nivelesActivos.forEach(n => {
-      (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
-    });
-    document.getElementById('riegoNPlantas').value = Math.max(1, totalPlantas) || 15;
-    // Restaurar edad guardada para esta torre
-    const riegoGuardado = state.torres?.[state.torreActiva || 0]?.riego;
-    if (riegoGuardado?.edadSem) {
-      document.getElementById('riegoEdad').value = riegoGuardado.edadSem;
-    }
+    // Sincronizar inputs con la torre activa y calcular
+    sincronizarInputsRiego();
     initDiaRiego();
     calcularRiego();
     window._riegoObsoleto = false;
@@ -6163,6 +6153,13 @@ function elegirTipoTorre(tipo) {
 }
 
 function renderSetupPage() {
+  // Si es nueva torre y estamos en spage7 (¿más de una torre?), saltarlo
+  if (setupEsNuevaTorre && setupPagina === 7) {
+    // spage7 no tiene sentido para nueva torre — guardamos directamente
+    guardarSetupYContinuar();
+    return;
+  }
+
   // Ocultar todas las páginas
   document.querySelectorAll('.setup-page').forEach(p => p.classList.remove('active'));
 
@@ -6198,21 +6195,29 @@ function renderSetupPage() {
   ];
   const labelEl = document.getElementById('setupStepLabel');
   if (labelEl) {
-    labelEl.textContent = setupPagina === 0
-      ? 'Bienvenido'
-      : 'Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-1) + ' — ' + (labels[setupPagina] || '');
+    if (setupEsNuevaTorre) {
+      labelEl.textContent = setupPagina === 0
+        ? '🌿 ' + setupNombreNuevaTorre + ' — nueva torre'
+        : setupNombreNuevaTorre + ' · Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-2) + ' — ' + (labels[setupPagina] || '');
+    } else {
+      labelEl.textContent = setupPagina === 0
+        ? 'Bienvenido'
+        : 'Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-1) + ' — ' + (labels[setupPagina] || '');
+    }
   }
 
   // Botones navegación
   const back = document.getElementById('setupBtnBack');
   const next = document.getElementById('setupBtnNext');
   if (back) back.style.display = setupPagina > 0 ? 'block' : 'none';
-  if (next) next.textContent   = setupPagina === SETUP_TOTAL_PAGES - 1 ? '✅ Guardar y empezar' : 'Siguiente →';
+  const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
+  if (next) next.textContent   = setupPagina === ultimoPaso ? '✅ Guardar y empezar' : 'Siguiente →';
 }
 
 function setupNext() {
   if (setupPagina === 0) return; // página 0 se controla con elegirTipoTorre
-  if (setupPagina < SETUP_TOTAL_PAGES - 1) {
+  const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
+  if (setupPagina < ultimoPaso) {
     setupPagina++;
     renderSetupPage();
   } else {
@@ -6605,23 +6610,49 @@ function guardarSetupYContinuar() {
   state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];
   state.configTorre.multiplesT = setupNumTorres;
 
-  // Sincronizar con la torre activa en el array de torres
-  const tIdx = state.torreActiva || 0;
-  if (state.torres && state.torres[tIdx]) {
-    state.torres[tIdx].config = { ...state.configTorre };
+  if (setupEsNuevaTorre) {
+    // ── NUEVA TORRE: crear entrada en state.torres ────────────────────────
+    setupEsNuevaTorre = false; // resetear flag
+    const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
+    const nTorres = (state.torres || []).length;
+    const nuevaTorre = {
+      id: Date.now(),
+      nombre: setupNombreNuevaTorre || ('Torre ' + (nTorres + 1)),
+      emoji: EMOJIS[nTorres % EMOJIS.length],
+      config: { ...state.configTorre },
+      torre: JSON.parse(JSON.stringify(state.torre)),
+      modoActual: 'lechugas',
+      mediciones: [],
+      registro: [],
+    };
+    guardarEstadoTorreActual(); // guardar la torre actual antes de cambiar
+    if (!state.torres) state.torres = [];
+    state.torres.push(nuevaTorre);
+    const newIdx = state.torres.length - 1;
+    state.torreActiva = newIdx;
+    state.torre       = nuevaTorre.torre;
+    state.mediciones  = [];
+    state.registro    = [];
+    // state.configTorre ya está actualizado arriba
+  } else {
+    // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
+    const tIdx = state.torreActiva || 0;
+    if (state.torres && state.torres[tIdx]) {
+      state.torres[tIdx].config = { ...state.configTorre };
+      state.torres[tIdx].torre  = JSON.parse(JSON.stringify(state.torre));
+    }
   }
 
   saveState();
   aplicarConfigTorre();
+  actualizarHeaderTorre();
   actualizarBadgesNutriente();
   renderTorre();
   updateTorreStats();
   updateDashboard();
 
   // Mostrar panel checklist PRIMERO, luego cerrar setup
-  // Esto evita cualquier problema de z-index o timing
   preguntarIniciarChecklist();
-  // Cerrar el setup overlay después de que el panel esté en el DOM
   setTimeout(() => cerrarSetup(), 50);
 }
 
@@ -10428,25 +10459,59 @@ function getCoordsActivas() {
   };
 }
 
+
+// Sincronizar inputs de riego con la torre activa
+function sincronizarInputsRiego() {
+  const nivelesActivos = getNivelesActivos();
+  let totalPlantas = 0;
+  nivelesActivos.forEach(n => {
+    (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
+  });
+  const riegoNPl = document.getElementById('riegoNPlantas');
+  if (riegoNPl) riegoNPl.value = Math.max(1, totalPlantas) || 15;
+
+  // Edad automática desde las plantas reales de esta torre
+  const edadAuto = calcularEdadAutomatica();
+  const riegoEd = document.getElementById('riegoEdad');
+  const riegoInfo = document.getElementById('riegoEdadInfo');
+  if (edadAuto && riegoEd) {
+    riegoEd.value = Math.round(edadAuto.semanas * 10) / 10;
+    if (riegoInfo) {
+      riegoInfo.textContent = 'Auto: ' + edadAuto.plantas + ' plantas · mín ' + Math.round(edadAuto.semanas * 7) + 'd';
+      riegoInfo.style.color = 'var(--green)';
+    }
+  } else if (riegoEd) {
+    // Restaurar edad guardada para esta torre si existe
+    const riegoGuardado = state.torres?.[state.torreActiva || 0]?.riego;
+    if (riegoGuardado?.edadSem) {
+      riegoEd.value = riegoGuardado.edadSem;
+    } else {
+      riegoEd.value = 4; // default
+    }
+    if (riegoInfo) {
+      riegoInfo.textContent = totalPlantas > 0 ? 'Manual' : 'Sin plantas — valor manual';
+      riegoInfo.style.color = 'var(--muted)';
+    }
+  }
+
+  // Toldo
+  const toldoGuardado = state.torres?.[state.torreActiva || 0]?.riego?.toldo;
+  if (toldoGuardado !== undefined) {
+    toldoDesplegado = toldoGuardado;
+    const sw = document.getElementById('toldoSwitch');
+    if (sw) sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+  }
+}
+
 async function calcularRiego() {
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
-  const nPlantas = parseInt(riegoNPl.value) || 15;
 
-  // Usar edad automática de la Torre si está disponible
-  const edadAuto = calcularEdadAutomatica();
-  let edadSem;
-  if (edadAuto) {
-    edadSem = edadAuto.semanas;
-    document.getElementById('riegoEdad').value = Math.round(edadAuto.semanas * 10) / 10;
-    document.getElementById('riegoEdadInfo').textContent =
-      `Auto: ${edadAuto.plantas} plantas · mín ${Math.round(edadAuto.semanas * 7)}d`;
-    document.getElementById('riegoEdadInfo').style.color = 'var(--green)';
-  } else {
-    edadSem = parseFloat(document.getElementById('riegoEdad').value) || 4;
-    document.getElementById('riegoEdadInfo').textContent = 'Manual — añade plantas en Torre';
-    document.getElementById('riegoEdadInfo').style.color = 'var(--muted)';
-  }
+  // Sincronizar siempre con la torre activa antes de calcular
+  sincronizarInputsRiego();
+
+  const nPlantas = parseInt(riegoNPl.value) || 15;
+  const edadSem = parseFloat(document.getElementById('riegoEdad').value) || 4;
 
   document.getElementById('riegoLoader').style.display = 'flex';
   document.getElementById('riegoResultado').style.display = 'none';
@@ -11148,6 +11213,8 @@ function actualizarResumenSetup() {
 
 // Tamaño de cestas
 let setupTamanoCesta = '50'; // cm por defecto
+let setupEsNuevaTorre = false; // true cuando se configura una torre adicional
+let setupNombreNuevaTorre = ''; // nombre de la nueva torre
 
 // ══ Tubo central y bomba ══════════════════════════
 let setupDiametroTubo  = 50;
@@ -11520,8 +11587,11 @@ function cambiarTorreActiva(idx) {
   // Marcar datos como obsoletos — se recargarán al abrir cada pestaña
   window._meteoObsoleto = true;
   window._riegoObsoleto  = true;
-  // Recargar si la pestaña ya está abierta
-  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+  // Recargar si la pestaña ya está abierta (sincronizar primero)
+  if (document.getElementById('tab-riego')?.classList.contains('active')) {
+    sincronizarInputsRiego();
+    calcularRiego();
+  }
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
   if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
 }
@@ -11643,129 +11713,33 @@ function renderListaTorres() {
 }
 
 function abrirSetupNuevaTorre() {
-  // Configurador rápido para nueva torre — modal dedicado
-  const overlay = document.createElement('div');
-  overlay.id = 'nuevaTorreModal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;' +
-    'display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom)';
+  // Marcar que es una torre nueva (no reconfiguración)
+  setupEsNuevaTorre = true;
+  const n = (state.torres || []).length + 1;
+  setupNombreNuevaTorre = 'Torre ' + n;
 
-  const nutOpciones = NUTRIENTES_DB.filter(n => n.id !== 'otro').map(n =>
-    '<option value="' + n.id + '">' + n.bandera + ' ' + n.nombre + '</option>'
-  ).join('');
+  // Preconfigurar sliders con valores razonables para torre nueva
+  setupPagina = 0;
+  setupTipoTorre = 'vevor';
+  setupEquipamiento = new Set(['difusor','calentador','bomba','timer','medidorEC']);
+  setupNutriente = 'canna_aqua';
+  setupUbicacion = 'exterior';
+  setupPlantasSeleccionadas = new Set();
+  setupNumTorres = 'una'; // no relevante para nueva torre
 
-  overlay.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;' +
-    'max-width:430px;padding:24px 20px;max-height:90vh;overflow-y:auto">' +
-    '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>' +
-    '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#111827;margin-bottom:4px">' +
-      '🌿 Nueva torre</div>' +
-    '<div style="font-size:12px;color:#6b7280;margin-bottom:20px">Configura los datos básicos. Podrás ajustar más detalles después.</div>' +
+  // Abrir el setup overlay igual que el setup inicial
+  document.getElementById('setupOverlay').classList.add('open');
+  renderNutrientesGrid();
+  updateTorreBuilder();
+  renderSetupPage();
 
-    // Nombre
-    '<div style="margin-bottom:14px">' +
-      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">Nombre</label>' +
-      '<input id="ntNombre" type="text" placeholder="Torre 2" maxlength="20" ' +
-        'style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;' +
-        'font-size:15px;outline:none;box-sizing:border-box;font-family:var(--font-display);font-weight:700">' +
-    '</div>' +
-
-    // Niveles × Cestas
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
-      '<div>' +
-        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
-          'Niveles <span id="ntNivelesVal" style="color:#15803d">5</span></label>' +
-        '<input type="range" id="ntNiveles" min="1" max="10" value="5" ' +
-          'data-target="ntNivelesVal" ' +
-          'style="width:100%;accent-color:#16a34a">' +
-      '</div>' +
-      '<div>' +
-        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
-          'Cestas/nivel <span id="ntCestasVal" style="color:#15803d">5</span></label>' +
-        '<input type="range" id="ntCestas" min="1" max="8" value="5" ' +
-          'data-target="ntCestasVal" ' +
-          'style="width:100%;accent-color:#16a34a">' +
-      '</div>' +
-    '</div>' +
-
-    // Volumen
-    '<div style="margin-bottom:14px">' +
-      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
-        'Volumen depósito: <span id="ntVolVal" style="color:#15803d">20</span>L</label>' +
-      '<input type="range" id="ntVol" min="5" max="100" value="20" step="5" ' +
-        'data-target="ntVolVal" ' +
-        'style="width:100%;accent-color:#16a34a">' +
-    '</div>' +
-
-    // Nutriente
-    '<div style="margin-bottom:20px">' +
-      '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">' +
-        '🧪 Nutriente</label>' +
-      '<select id="ntNutriente" ' +
-        'style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;' +
-        'font-size:14px;outline:none;background:#fff;box-sizing:border-box">' +
-        nutOpciones +
-      '</select>' +
-    '</div>' +
-
-    // Botones
-    '<button id="ntGuardar" ' +
-      'style="width:100%;padding:14px;background:#16a34a;color:white;border:none;border-radius:14px;' +
-      'font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
-      '✅ Crear torre</button>' +
-    '<button id="ntCancelar" ' +
-      'style="width:100%;padding:12px;background:#f9fafb;color:#374151;border:1.5px solid #e5e7eb;' +
-      'border-radius:14px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
-      'Cancelar</button>' +
-  '</div>';
-
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  document.body.appendChild(overlay);
-
-  // Event listeners for sliders
-  ['ntNiveles','ntCestas','ntVol'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', function() {
-      const target = document.getElementById(this.getAttribute('data-target'));
-      if (target) target.textContent = this.value;
-    });
-  });
-
-  document.getElementById('ntGuardar').addEventListener('click', () => {
-    const nombre    = document.getElementById('ntNombre').value.trim() || ('Torre ' + (state.torres.length+1));
-    const niveles   = parseInt(document.getElementById('ntNiveles').value);
-    const cestas    = parseInt(document.getElementById('ntCestas').value);
-    const vol       = parseInt(document.getElementById('ntVol').value);
-    const nutriente = document.getElementById('ntNutriente').value;
-    const EMOJIS    = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
-    const n         = state.torres.length + 1;
-
-    const nuevaTorre = {
-      id: Date.now(), nombre, emoji: EMOJIS[(n-1) % EMOJIS.length],
-      config: {
-        numNiveles: niveles, numCestas: cestas, volDeposito: vol, nutriente,
-        // Heredar ciudad y coordenadas de la torre 1 si existen
-        lat:    state.torres[0]?.config?.lat    || setupCoordenadas.lat || 39.9864,
-        lon:    state.torres[0]?.config?.lon    || setupCoordenadas.lon || -0.0495,
-        ciudad: state.torres[0]?.config?.ciudad || setupCoordenadas.ciudad || 'Castelló de la Plana',
-      },
-      torre: [], modoActual:'lechugas', mediciones:[], registro:[],
-    };
-    for (let nv = 0; nv < niveles; nv++) {
-      nuevaTorre.torre.push([]);
-      for (let c = 0; c < cestas; c++) {
-        nuevaTorre.torre[nv].push({ variedad:'', fecha:'', notas:'' });
-      }
-    }
-    guardarEstadoTorreActual();
-    state.torres.push(nuevaTorre);
-    overlay.remove();
-    const newIdx = state.torres.length - 1;
-    cambiarTorreActiva(newIdx);
-    // Preguntar si iniciar checklist para la nueva torre
-    setTimeout(() => preguntarIniciarChecklist(), 400);
-  });
-
-  document.getElementById('ntCancelar').addEventListener('click', () => overlay.remove());
+  // Actualizar el título para indicar que es una torre nueva
+  setTimeout(() => {
+    const titulo = document.querySelector('.setup-header-title');
+    if (titulo) titulo.textContent = '🌿 Nueva torre — ' + setupNombreNuevaTorre;
+  }, 50);
 }
+
 
 function crearNuevaTorre() {
   if (state.torres.length >= MAX_TORRES) {
