@@ -3472,23 +3472,28 @@ body::before { display: none; }
         💾 Guardar torre en Google Sheets
       </button>
 
-      <!-- Añadir nueva torre -->
-      <button onclick="abrirSetupNuevaTorre()"
-        aria-label="Añadir nueva torre de cultivo"
-        style="width:100%;padding:14px;border-radius:14px;
-               border:2px dashed #86efac;background:#f0fdf4;
-               font-family:var(--font-display);font-size:14px;font-weight:700;
-               color:#15803d;cursor:pointer;display:flex;align-items:center;
-               justify-content:center;gap:10px;margin-top:4px;
-               -webkit-tap-highlight-color:transparent">
-        <span style="font-size:22px">➕</span>
-        <div style="text-align:left">
-          <div>Añadir nueva torre</div>
-          <div style="font-size:11px;font-weight:400;color:#4b5563;margin-top:1px">
-            Cada torre tiene su propio nutriente, plantas e historial
-          </div>
-        </div>
-      </button>
+      <!-- Acciones de torre: actualizar + añadir -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0">
+
+        <button onclick="actualizarTorreActual()"
+          style="padding:12px;border-radius:14px;
+                 border:2px solid #3b82f6;background:#eff6ff;
+                 font-family:var(--font-display);font-size:13px;font-weight:800;
+                 color:#1d4ed8;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          🔄 Actualizar torre
+        </button>
+
+        <button onclick="abrirSetupNuevaTorre()"
+          style="padding:12px;border-radius:14px;
+                 border:2px dashed #86efac;background:#f0fdf4;
+                 font-family:var(--font-display);font-size:13px;font-weight:800;
+                 color:#15803d;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          ➕ Nueva torre
+        </button>
+
+      </div>
+
+      
 
     </div>
     <!-- FIN TAB TORRE -->
@@ -5213,14 +5218,17 @@ function goTab(tab) {
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
-    // Pre-rellenar con datos de la torre si hay plantas
+    // Siempre recalcular plantas desde la torre activa
     const nivelesActivos = getNivelesActivos();
     let totalPlantas = 0;
     nivelesActivos.forEach(n => {
-      (state.torre[n] || []).forEach(c => { if (c.variedad) totalPlantas++; });
+      (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
     });
-    if (totalPlantas > 0) {
-      document.getElementById('riegoNPlantas').value = totalPlantas;
+    document.getElementById('riegoNPlantas').value = Math.max(1, totalPlantas) || 15;
+    // Restaurar edad guardada para esta torre
+    const riegoGuardado = state.torres?.[state.torreActiva || 0]?.riego;
+    if (riegoGuardado?.edadSem) {
+      document.getElementById('riegoEdad').value = riegoGuardado.edadSem;
     }
     initDiaRiego();
     calcularRiego();
@@ -11459,6 +11467,29 @@ function getTorreActiva() {
   return state.torres[idx] || state.torres[0];
 }
 
+
+// Actualizar todos los datos de la torre activa
+function actualizarTorreActual() {
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  renderTorre();
+  updateTorreStats();
+  updateDashboard();
+  actualizarBadgesNutriente();
+  // Recalcular plantas y edad automáticamente
+  if (document.getElementById('tab-riego')?.classList.contains('active')) {
+    calcularRiego();
+  }
+  if (document.getElementById('tab-meteo')?.classList.contains('active')) {
+    cargarMeteo();
+  }
+  if (document.getElementById('tab-calendario')?.classList.contains('active')) {
+    renderCalendario();
+  }
+  showToast('🔄 Torre actualizada · ' + (getTorreActiva()?.nombre || 'Torre'));
+}
+
 function cambiarTorreActiva(idx) {
   // Guardar estado actual en la torre activa
   guardarEstadoTorreActual();
@@ -11473,6 +11504,15 @@ function cambiarTorreActiva(idx) {
   updateTorreStats();
   updateDashboard();
   actualizarBadgesNutriente();
+  // Recalcular plantas para la nueva torre en el input de riego
+  const nivelesActivos = getNivelesActivos();
+  let totalPlantas = 0;
+  nivelesActivos.forEach(n => {
+    (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
+  });
+  const riegoNPl = document.getElementById('riegoNPlantas');
+  if (riegoNPl) riegoNPl.value = Math.max(1, totalPlantas) || 15;
+
   // Toast con nombre de la torre
   const t = state.torres[idx];
   const nombre = t ? t.nombre : 'Torre ' + (idx+1);
@@ -11495,6 +11535,13 @@ function guardarEstadoTorreActual() {
   state.torres[idx].mediciones = state.mediciones || [];
   state.torres[idx].registro   = state.registro   || [];
   state.torres[idx].config     = state.configTorre || null;
+  // Guardar configuración de riego específica de esta torre
+  state.torres[idx].riego = {
+    nPlantas:   parseInt(document.getElementById('riegoNPlantas')?.value) || 15,
+    edadSem:    parseFloat(document.getElementById('riegoEdad')?.value) || 4,
+    toldo:      toldoDesplegado,
+    diaRiego:   diaRiego,
+  };
 }
 
 function cargarEstadoTorre(idx) {
@@ -11519,6 +11566,18 @@ function cargarEstadoTorre(idx) {
       state.torre[n].push({ variedad:'', fecha:'', notas:'', fotos:[], fotoKeys:[] });
     }
   }
+  // Restaurar configuración de riego de esta torre
+  const riegoData = t.riego || {};
+  const riegoNPl = document.getElementById('riegoNPlantas');
+  const riegoEd  = document.getElementById('riegoEdad');
+  if (riegoNPl && riegoData.nPlantas) riegoNPl.value = riegoData.nPlantas;
+  if (riegoEd  && riegoData.edadSem)  riegoEd.value  = riegoData.edadSem;
+  if (riegoData.toldo !== undefined) {
+    toldoDesplegado = riegoData.toldo;
+    const sw = document.getElementById('toldoSwitch');
+    if (sw) sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+  }
+  if (riegoData.diaRiego) diaRiego = riegoData.diaRiego;
   // Aplicar constantes de la config de esta torre
   aplicarConfigTorre();
 }
