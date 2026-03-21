@@ -5173,7 +5173,7 @@ function initApp() {
 
   // Detectar primera vez — si no tiene configuración de torre ni datos
   const hayConfig = !!state.configTorre;
-  const hayPlantas = MODOS_CULTIVO[modoActual].niveles.some(n =>
+  const hayPlantas = getNivelesActivos().some(n =>
     state.torre[n] && state.torre[n].some(c => c.variedad)
   );
   const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
@@ -5207,14 +5207,14 @@ function goTab(tab) {
   currentTab = tab;
   if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
-  if (tab === 'meteo') cargarMeteo();
+  if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
   if (tab === 'torre') { renderTorre(); renderCompatGrid(); calcularRotacion(); }
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
   if (tab === 'riego') {
     // Pre-rellenar con datos de la torre si hay plantas
-    const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+    const nivelesActivos = getNivelesActivos();
     let totalPlantas = 0;
     nivelesActivos.forEach(n => {
       state.torre[n].forEach(c => { if (c.variedad) totalPlantas++; });
@@ -5222,8 +5222,9 @@ function goTab(tab) {
     if (totalPlantas > 0) {
       document.getElementById('riegoNPlantas').value = totalPlantas;
     }
-    initDiaRiego();   // auto-seleccionar hoy o mañana según hora
+    initDiaRiego();
     calcularRiego();
+    window._riegoObsoleto = false;
   }
 }
 
@@ -5797,7 +5798,7 @@ function updateTorreStats() {
   let totalDias = 0;
   let cosechas = 0;
 
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
     state.torre[n].forEach(c => {
       if (c.variedad) {
@@ -6804,8 +6805,28 @@ function seleccionarTipoChecklist(el, tipo) {
 }
 
 
+
+// Niveles activos basados en la torre real (no en modos fijos)
+function getNivelesActivos() {
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
+  // Generar array [0, 1, 2, ..., numNiveles-1]
+  return Array.from({length: numNiveles}, (_, i) => i);
+}
+
 function aplicarConfigTorre() {
-  if (!state.configTorre) return;
+  // Si no hay config, usar defaults para que la torre funcione
+  if (!state.configTorre) {
+    state.configTorre = {
+      numNiveles: NUM_NIVELES,
+      numCestas:  NUM_CESTAS,
+      volDeposito: 18,
+      nutriente: 'canna_aqua',
+      lat: 39.9864,
+      lon: -0.0495,
+      ciudad: 'Castelló de la Plana',
+    };
+  }
   const cfg = state.configTorre;
 
   // Actualizar constantes dinámicas — NUM_NIVELES y NUM_CESTAS ahora son variables
@@ -6822,7 +6843,7 @@ function aplicarConfigTorre() {
 
 // ── Detectar si hay plántulas nuevas (< 5 días) en la torre ─────────────────
 function hayPlantulasNuevas() {
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   return nivelesActivos.some(n =>
     (state.torre[n] || []).some(c => {
       if (!c.variedad || !c.fecha) return false;
@@ -6840,7 +6861,7 @@ function calcularRotacion() {
   const card = document.getElementById('rotacionCard');
   if (!card) return;
 
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
 
   // Solo mostrar en modo lechuga o mixto (3 niveles escalonados)
   if (nivelesActivos.length < 2) { card.style.display = 'none'; return; }
@@ -6956,7 +6977,7 @@ function calcularRotacion() {
 
 function iniciarRotacion() {
   // Modal de confirmación con pasos de rotación
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   const pasos = [
     `✂️ Cosechar todas las plantas del nivel ${nivelesActivos[nivelesActivos.length-1] + 1}`,
     `🔽 Mover plantas del nivel ${nivelesActivos[1] + 1} → nivel ${nivelesActivos[nivelesActivos.length-1] + 1}`,
@@ -6973,7 +6994,7 @@ function iniciarRotacion() {
 }
 
 function ejecutarRotacion() {
-  const nivelesActivos = [...MODOS_CULTIVO[modoActual].niveles];
+  const nivelesActivos = [...getNivelesActivos()];
   // Ordenar por edad (mayor a menor — el más maduro primero)
   const edadesPorNivel = nivelesActivos.map(n => {
     const plantas = state.torre[n].filter(c => c.variedad && c.fecha);
@@ -7093,12 +7114,12 @@ async function agregarFotoCesta(event) {
     img.onload = async function() {
       // Comprimir: máx 900px ancho, calidad 0.75
       const canvas = document.createElement('canvas');
-      const maxW = 900;
+      const maxW = 400; // más pequeño para no desbordar localStorage
       const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
       canvas.width  = Math.round(img.width  * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      const compressed = canvas.toDataURL('image/jpeg', 0.5); // ~15-30KB por foto
 
       if (!editingCesta) return;
       const { nivel, cesta } = editingCesta;
@@ -7126,19 +7147,13 @@ async function agregarFotoCesta(event) {
       const torreIdx = state.torreActiva || 0;
       const fotoKey  = 'foto_t' + torreIdx + '_n' + nivel + '_c' + cesta + '_' +
                        now.toISOString().replace(/[:.]/g,'_');
-      try {
-        await guardarFotoIDB(fotoKey, foto);
-        console.log('[IDB] Foto guardada:', fotoKey);
-      } catch(err) {
-        console.error('[IDB] Error guardando foto:', err);
-      }
-
-      // En state solo guardamos la key (no el base64)
+      // Guardar foto directamente en state (con compresión agresiva para caber en localStorage)
       if (!cestaData.fotoKeys) cestaData.fotoKeys = [];
-      cestaData.fotoKeys.push(fotoKey);
-      // Compatibilidad: mantener también en cestaData.fotos sin el data
       if (!cestaData.fotos) cestaData.fotos = [];
-      cestaData.fotos.push({ ...foto, data: null, key: fotoKey });
+      cestaData.fotos.push(foto); // foto.data contiene el base64 comprimido
+
+      // También intentar guardar en IDB como backup (sin bloquear)
+      guardarFotoIDB(fotoKey, foto).catch(() => {});
 
       // También guardar en el registro de la torre para el diario
       addRegistro('foto', {
@@ -7161,58 +7176,40 @@ async function agregarFotoCesta(event) {
   event.target.value = '';
 }
 
-async function renderFotosCesta() {
+function renderFotosCesta() {
   const preview = document.getElementById('fotosPreview');
   if (!preview || !editingCesta) return;
   const { nivel, cesta } = editingCesta;
   const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
-  const fotosMeta = (cestaData && cestaData.fotos) || [];
-  const fotoKeys  = (cestaData && cestaData.fotoKeys) || fotosMeta.map(f=>f.key).filter(Boolean);
-
-  if (fotoKeys.length === 0 && fotosMeta.length === 0) {
-    preview.innerHTML = '';
-    return;
-  }
-
-  // Cargar fotos desde IDB
-  const fotos = [];
-  for (let i = 0; i < fotoKeys.length; i++) {
-    try {
-      const f = await leerFotoIDB(fotoKeys[i]);
-      if (f && f.data) fotos.push({ ...f, _key: fotoKeys[i], _idx: i });
-    } catch(e) {}
-  }
-  // Fallback fotos antiguas con data en state
-  if (fotos.length === 0) {
-    fotosMeta.forEach((f, i) => { if (f.data) fotos.push({ ...f, _idx: i }); });
-  }
+  const fotos = (cestaData && cestaData.fotos) || [];
 
   if (fotos.length === 0) { preview.innerHTML = ''; return; }
 
-  preview.innerHTML = fotos.map((f, i) =>
-    '<div style="position:relative;flex-shrink:0">' +
-      '<div class="foto-thumb-slot" data-idx="' + i + '" ' +
-        'style="width:72px;height:72px;background:#f3f4f6;border-radius:10px;' +
-        'border:2px solid #86efac;display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>' +
-      '<button onclick="borrarFotoCesta(' + i + ')" aria-label="Borrar foto ' + (i+1) + '" ' +
-        'style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;' +
-        'border-radius:50%;background:#dc2626;color:white;border:none;' +
-        'font-size:11px;cursor:pointer;display:flex;align-items:center;' +
-        'justify-content:center;font-weight:900">✕</button>' +
-      '<div style="font-size:9px;color:#6b7280;text-align:center;margin-top:2px">' + (f.fecha||'') + '</div>' +
-    '</div>'
-  ).join('');
+  preview.innerHTML = '';
+  fotos.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;flex-shrink:0';
 
-  // Insertar imágenes reales con createElement
-  preview.querySelectorAll('.foto-thumb-slot').forEach((slot, i) => {
-    if (!fotos[i] || !fotos[i].data) return;
     const img = document.createElement('img');
-    img.src = fotos[i].data;
-    img.alt = 'Foto planta ' + (fotos[i].fecha || '');
-    img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid #86efac;cursor:pointer';
+    img.src = f.data || '';
+    img.alt = 'Foto ' + (f.fecha || '');
+    img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid #86efac;cursor:pointer;display:block';
     img.addEventListener('click', () => verFotoCompleta(i));
-    img.title = (fotos[i].fecha || '') + ' ' + (fotos[i].hora || '');
-    slot.replaceWith(img);
+
+    const btn = document.createElement('button');
+    btn.textContent = '✕';
+    btn.setAttribute('aria-label', 'Borrar foto ' + (i+1));
+    btn.style.cssText = 'position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:white;border:none;font-size:11px;cursor:pointer;font-weight:900';
+    btn.addEventListener('click', () => borrarFotoCesta(i));
+
+    const fecha = document.createElement('div');
+    fecha.style.cssText = 'font-size:9px;color:#6b7280;text-align:center;margin-top:2px';
+    fecha.textContent = f.fecha || '';
+
+    wrap.appendChild(img);
+    wrap.appendChild(btn);
+    wrap.appendChild(fecha);
+    preview.appendChild(wrap);
   });
 }
 
@@ -7295,35 +7292,23 @@ async function renderDiarioSelector() {
     });
   });
 
-  // Cargar miniaturas desde IndexedDB (donde se guardan los datos reales)
-  const thumbSlots = sel.querySelectorAll('.diario-thumb-slot');
-  for (const slot of thumbSlots) {
+    // Insertar miniaturas reales con createElement
+  sel.querySelectorAll('.diario-thumb-slot').forEach(slot => {
     const n = parseInt(slot.getAttribute('data-n'));
     const c = parseInt(slot.getAttribute('data-c'));
     const cestaData = (state.torre[n] || [])[c];
-    if (!cestaData) continue;
-    // Intentar obtener key de la última foto
-    let fotoKey = null;
-    if (cestaData.fotoKeys && cestaData.fotoKeys.length > 0) {
-      fotoKey = cestaData.fotoKeys[cestaData.fotoKeys.length - 1];
-    } else if (cestaData.fotos && cestaData.fotos.length > 0) {
-      const uf = cestaData.fotos[cestaData.fotos.length - 1];
-      fotoKey = uf.key || null;
-    }
-    if (!fotoKey) continue;
-    try {
-      const fotoObj = await leerFotoIDB(fotoKey);
-      if (!fotoObj || !fotoObj.data) continue;
-      const img = document.createElement('img');
-      img.src = fotoObj.data;
-      img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
-      img.alt = cestaData.variedad || '';
-      slot.replaceWith(img);
-    } catch(e) { console.warn('IDB thumb error:', e); }
-  }
+    if (!cestaData || !cestaData.fotos || cestaData.fotos.length === 0) return;
+    const uf = cestaData.fotos[cestaData.fotos.length - 1];
+    if (!uf || !uf.data) return;
+    const img = document.createElement('img');
+    img.src = uf.data;
+    img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
+    img.alt = cestaData.variedad || '';
+    slot.replaceWith(img);
+  });
 }
 
-async function renderDiarioPlanta(nivel, cesta) {
+function renderDiarioPlanta(nivel, cesta) {
   try {
   const contenido = document.getElementById('diarioContenido');
   const sel = document.getElementById('diarioPlantaSelector');
@@ -7332,20 +7317,8 @@ async function renderDiarioPlanta(nivel, cesta) {
   const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
   if (!cestaData) return;
 
-  // Cargar fotos reales desde IndexedDB
-  let fotos = [];
-  const fotosMeta = cestaData.fotos || [];
-  const fotoKeys  = cestaData.fotoKeys || fotosMeta.map(f => f.key).filter(Boolean);
-  for (const key of fotoKeys) {
-    try {
-      const f = await leerFotoIDB(key);
-      if (f) fotos.push(f);
-    } catch(e) { console.warn('IDB read error', key, e); }
-  }
-  // Fallback: si hay fotos en state con data (versión antigua), usarlas
-  if (fotos.length === 0 && fotosMeta.some(f => f.data)) {
-    fotos = fotosMeta.filter(f => f.data);
-  }
+  // Leer fotos directamente del state (se guardan con data incluido)
+  const fotos = (cestaData.fotos || []).filter(f => f.data);
   const variedad = cestaData.variedad || 'Planta';
   const diasDesde = cestaData.fecha
     ? Math.floor((new Date() - new Date(cestaData.fecha)) / 86400000)
@@ -9815,7 +9788,7 @@ function generarEventos(fecha) {
   }
 
   // ── Cosechas y rotación ───────────────────────────────────────────────
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
     state.torre[n].forEach((c, ci) => {
       if (!c.variedad || !c.fecha) return;
@@ -9897,11 +9870,13 @@ function tieneEventos(fecha) {
 }
 
 function renderCalendario() {
+  try {
+  const calMesLabel = document.getElementById('calMesLabel');
+  if (!calMesLabel) return; // pestaña no activa
   const hoy  = new Date();
   const año  = calFecha.getFullYear();
   const mes  = calFecha.getMonth();
-
-  document.getElementById('calMesLabel').textContent = MESES_LARGO[mes] + ' ' + año;
+  calMesLabel.textContent = MESES_LARGO[mes] + ' ' + año;
 
   // ── Construir mapa de eventos ────────────────────────────────────────────
   const eventos = {};
@@ -9941,7 +9916,7 @@ function renderCalendario() {
   }
 
   // Cosechas estimadas por planta
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach((cesta, c) => {
       if (!cesta.variedad || !cesta.fecha) return;
@@ -10010,6 +9985,8 @@ function renderCalendario() {
     '<div style="font-size:13px;color:var(--white);font-weight:600">' + e.label + '</div>' +
     '</div>'
   ).join('');
+
+  } catch(e) { console.error("renderCalendario error:", e); }
 }
 
 function mostrarEventosDiaHC(d, mes, año) {
@@ -10103,10 +10080,15 @@ function vpdEstado(vpd) {
 }
 
 async function cargarMeteo() {
-  document.getElementById('meteoLoader').style.display = 'flex';
-  document.getElementById('meteoDias').style.display = 'none';
-  document.getElementById('meteoDetalle').style.display = 'none';
-  document.getElementById('meteoAlertas').style.display = 'none';
+  const meteoLoader = document.getElementById('meteoLoader');
+  if (!meteoLoader) return; // pestaña no activa — no hacer nada
+  meteoLoader.style.display = 'flex';
+  const meteoDias = document.getElementById('meteoDias');
+  const meteoDetalle = document.getElementById('meteoDetalle');
+  const meteoAlertas = document.getElementById('meteoAlertas');
+  if (meteoDias) meteoDias.style.display = 'none';
+  if (meteoDetalle) meteoDetalle.style.display = 'none';
+  if (meteoAlertas) meteoAlertas.style.display = 'none';
 
   try {
     // ECMWF para temp/humedad + modelo default para UV
@@ -10403,7 +10385,7 @@ function toggleToldo() {
 
 // Calcular edad automática desde las plantas más jóvenes de la Torre
 function calcularEdadAutomatica() {
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   let edadMinDias = Infinity;
   let totalDias = 0;
   let totalPlantas = 0;
@@ -10437,7 +10419,9 @@ function getCoordsActivas() {
 }
 
 async function calcularRiego() {
-  const nPlantas = parseInt(document.getElementById('riegoNPlantas').value) || 15;
+  const riegoNPl = document.getElementById('riegoNPlantas');
+  if (!riegoNPl) return; // pestaña no activa
+  const nPlantas = parseInt(riegoNPl.value) || 15;
 
   // Usar edad automática de la Torre si está disponible
   const edadAuto = calcularEdadAutomatica();
@@ -10721,7 +10705,7 @@ function updateTiles(m) {
 
 function updateDashTorre() {
   let plantas = 0, totalDias = 0, cosechas = 0, proxDias = 999;
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
 
   nivelesActivos.forEach(n => {
     state.torre[n].forEach(c => {
@@ -10814,7 +10798,7 @@ async function fetchMeteoAlert() {
   const textEl    = document.getElementById('meteoAlertText');
 
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.9864&longitude=-0.0495' +
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&current=temperature_2m,relative_humidity_2m,windspeed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto&models=ecmwf_ifs';
 
@@ -11487,14 +11471,17 @@ function cambiarTorreActiva(idx) {
   updateTorreStats();
   updateDashboard();
   actualizarBadgesNutriente();
-  // Recargar meteo y riego con coordenadas de la nueva torre
+  // Toast con nombre de la torre
   const t = state.torres[idx];
   const nombre = t ? t.nombre : 'Torre ' + (idx+1);
-  const ciudad = t?.config?.ciudad || 'Castelló de la Plana';
-  showToast('🌿 ' + nombre + ' · 📍 ' + ciudad);
-  // Si la pestaña de riego o meteo está activa, refrescar
+  showToast('🌿 Ahora en: ' + nombre);
+  // Marcar datos como obsoletos — se recargarán al abrir cada pestaña
+  window._meteoObsoleto = true;
+  window._riegoObsoleto  = true;
+  // Recargar si la pestaña ya está abierta
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
+  if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
 }
 
 function guardarEstadoTorreActual() {
@@ -11691,7 +11678,13 @@ function abrirSetupNuevaTorre() {
 
     const nuevaTorre = {
       id: Date.now(), nombre, emoji: EMOJIS[(n-1) % EMOJIS.length],
-      config: { numNiveles:niveles, numCestas:cestas, volDeposito:vol, nutriente },
+      config: {
+        numNiveles: niveles, numCestas: cestas, volDeposito: vol, nutriente,
+        // Heredar ciudad y coordenadas de la torre 1 si existen
+        lat:    state.torres[0]?.config?.lat    || setupCoordenadas.lat || 39.9864,
+        lon:    state.torres[0]?.config?.lon    || setupCoordenadas.lon || -0.0495,
+        ciudad: state.torres[0]?.config?.ciudad || setupCoordenadas.ciudad || 'Castelló de la Plana',
+      },
       torre: [], modoActual:'lechugas', mediciones:[], registro:[],
     };
     for (let nv = 0; nv < niveles; nv++) {
@@ -11979,7 +11972,7 @@ function programarRecordatorios() {
   }
 
   // Alertas cosecha — plantas listas
-  const nivelesActivos = MODOS_CULTIVO[modoActual].niveles;
+  const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach((c, ci) => {
       if (!c.variedad || !c.fecha) return;
