@@ -3447,6 +3447,9 @@ body::before { display: none; }
         </div>
       </div>
 
+      <!-- Tabla resumen de variedades -->
+      <div id="tablaVariedades" style="margin-top:4px;margin-bottom:8px"></div>
+
       <!-- Compatibilidad de cultivos — panel expansible -->
       <div class="card" style="padding:0;overflow:hidden">
         <button onclick="toggleCompatPanel()" 
@@ -5536,6 +5539,83 @@ function generarSVGTorre() {
 }
 
 
+
+// ── Tabla resumen de variedades debajo del SVG ───────────────────────────────
+function renderTablaVariedades() {
+  const el = document.getElementById('tablaVariedades');
+  if (!el) return;
+
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const plantas = [];
+
+  for (let n = 0; n < numNiveles; n++) {
+    (state.torre[n] || []).forEach((c, ci) => {
+      if (!c || !c.variedad) return;
+      const dias   = c.fecha ? getDias(c.fecha) : null;
+      const cultivo = getCultivoDB(c.variedad);
+      const diasTotal = cultivo?.dias || 45;
+      const pct    = dias !== null ? Math.min(100, Math.round((dias / diasTotal) * 100)) : null;
+      const estado = dias === null ? 'Sin fecha'
+        : pct >= 100 ? 'Cosechar'
+        : pct >= 70  ? 'Madurez'
+        : pct >= 30  ? 'Crecimiento'
+        : 'Plántula';
+      const color  = pct >= 100 ? '#dc2626'
+        : pct >= 70  ? '#d97706'
+        : pct >= 30  ? '#16a34a'
+        : '#2563eb';
+      plantas.push({ n, ci, variedad: c.variedad, dias, diasTotal, pct, estado, color,
+        fecha: c.fecha || '', ecMin: cultivo?.ecMin, ecMax: cultivo?.ecMax });
+    });
+  }
+
+  if (plantas.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+
+  // Ordenar: primero los que toca cosechar, luego por nivel
+  plantas.sort((a, b) => (b.pct||0) - (a.pct||0));
+
+  let html = '<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-top:8px">' +
+    '<div style="display:grid;grid-template-columns:32px 1fr 52px 70px 52px;' +
+    'background:#f8fafc;padding:6px 10px;border-bottom:1px solid #e5e7eb;' +
+    'font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">' +
+    '<span>N·C</span><span>Variedad</span><span>Días</span><span>Estado</span><span>EC</span>' +
+    '</div>';
+
+  plantas.forEach((p, i) => {
+    const bgRow = i % 2 === 0 ? '#fff' : '#fafafa';
+    const diasText = p.dias !== null ? p.dias + '/' + p.diasTotal : '—';
+    const ecText   = p.ecMin ? p.ecMin + '-' + p.ecMax : '—';
+
+    // Barra de progreso mini
+    const barW = p.pct !== null ? Math.min(100, p.pct) : 0;
+    const barColor = p.color;
+
+    html += '<div style="display:grid;grid-template-columns:32px 1fr 52px 70px 52px;' +
+      'padding:7px 10px;border-bottom:1px solid #f3f4f6;background:' + bgRow + ';' +
+      'align-items:center">' +
+      '<span style="font-size:10px;font-weight:800;color:#6b7280">' + (p.n+1) + '·' + (p.ci+1) + '</span>' +
+      '<div style="min-width:0">' +
+        '<div style="font-size:12px;font-weight:700;color:#111827;white-space:nowrap;' +
+          'overflow:hidden;text-overflow:ellipsis">' + p.variedad + '</div>' +
+        (p.pct !== null ? '<div style="height:3px;background:#e5e7eb;border-radius:2px;margin-top:3px">' +
+          '<div style="height:100%;width:' + barW + '%;background:' + barColor + ';border-radius:2px"></div>' +
+          '</div>' : '') +
+      '</div>' +
+      '<span style="font-size:11px;color:#374151;text-align:center">' + diasText + '</span>' +
+      '<span style="font-size:10px;font-weight:700;color:' + barColor + ';' +
+        'background:' + barColor + '15;border-radius:6px;padding:2px 6px;text-align:center">' + p.estado + '</span>' +
+      '<span style="font-size:10px;color:#6b7280;text-align:center">' + ecText + '</span>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderTorre() {
   // Generar SVG dinámico
   const wrap = document.getElementById('torreSVGWrap');
@@ -5820,6 +5900,7 @@ function updateTorreStats() {
   const tipo = cfg.tipoTorre === 'vevor' ? 'VEVOR' : (torreNombre);
 
   // Título torre
+  renderTablaVariedades();
   const ttEl = document.getElementById('torreTabTitle');
   if (ttEl) ttEl.textContent = torreNombre;
 
@@ -10503,6 +10584,50 @@ function sincronizarInputsRiego() {
   }
 }
 
+
+// Calcular factor de cultivo basado en las variedades en la torre activa
+function calcularFactorCultivo() {
+  const nivelesActivos = getNivelesActivos();
+  const factoresPorGrupo = {
+    lechugas: 1.0, hojas: 1.0, asiaticas: 0.95, hierbas: 0.75,
+    frutos: 1.5, fresas: 1.3, raices: 0.8, microgreens: 0.6
+  };
+  let sumFactores = 0, nPlantas = 0;
+  nivelesActivos.forEach(n => {
+    (state.torre[n] || []).forEach(c => {
+      if (!c || !c.variedad) return;
+      const cultivo = getCultivoDB(c.variedad);
+      const grupo = cultivo?.grupo || 'lechugas';
+      sumFactores += (factoresPorGrupo[grupo] || 1.0);
+      nPlantas++;
+    });
+  });
+  return nPlantas > 0 ? sumFactores / nPlantas : 1.0;
+}
+
+// Calcular factor de edad real basado en el ciclo de vida del cultivo
+function calcularFactorEdad() {
+  const nivelesActivos = getNivelesActivos();
+  let sumaFactores = 0, nPlantas = 0;
+  nivelesActivos.forEach(n => {
+    (state.torre[n] || []).forEach(c => {
+      if (!c || !c.variedad || !c.fecha) return;
+      const dias = getDias(c.fecha);
+      const cultivo = getCultivoDB(c.variedad);
+      const diasTotal = cultivo?.dias || 45;
+      const pct = dias / diasTotal; // 0 = recién trasplantada, 1 = lista para cosechar
+      // Factor: plántula(0-20%) → 0.5, crecimiento(20-60%) → 1.0, madurez(60%+) → 1.4
+      let factor;
+      if (pct < 0.2) factor = 0.5 + pct * 2.5;       // 0.5 → 1.0
+      else if (pct < 0.6) factor = 1.0 + (pct - 0.2) * 1.0; // 1.0 → 1.4
+      else factor = 1.4 + Math.min(0.3, (pct - 0.6) * 0.75); // 1.4 → 1.7 max
+      sumaFactores += factor;
+      nPlantas++;
+    });
+  });
+  return nPlantas > 0 ? sumaFactores / nPlantas : 1.0;
+}
+
 async function calcularRiego() {
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
@@ -10572,67 +10697,80 @@ async function calcularRiego() {
     const vpdMediodia = calcVPD(temp13hAjustada, hum1315);
 
     // ── Sección A: calcular MinON ─────────────────────────────────────────
-    const vOnPlantas  = nPlantas * 0.12;
-    const vOnEdad     = edadSem * 0.3;
-    const minONBase   = 8 + vOnPlantas + vOnEdad;
+    // ── Factores específicos de la torre activa ─────────────────────────
+    const esInterior   = (state.configTorre?.ubicacion === 'interior');
+    const factorCultivo = calcularFactorCultivo();  // 0.6-1.5 según tipo planta
+    const factorEdadReal = calcularFactorEdad();    // 0.4-1.7 según madurez
 
-    // Factor ON por VPD
-    let factorON;
-    if      (vpd >= 1.6) factorON = 1.35;
-    else if (vpd >= 1.2) factorON = 1.20;
-    else if (vpd >= 0.8) factorON = 1.05;
-    else if (vpd >= 0.4) factorON = 0.90;
-    else                 factorON = 0.75;
+    // BASE minON: depende de nPlantas, tipo cultivo y madurez
+    // Torre con 15 lechugas maduras: mucho más ON que 5 plántulas de hierbas
+    const basePorPlanta = 0.6; // minutos por planta (mucho más significativo que 0.12)
+    const minONBase = Math.max(3,
+      (4 + nPlantas * basePorPlanta) * factorCultivo * factorEdadReal
+    );
 
-    // Ajuste viento ON
-    let ajusteVientoON = 0;
-    if      (viento > 30) ajusteVientoON = 0.25;
-    else if (viento > 20) ajusteVientoON = 0.10;
-    else if (viento < 10) ajusteVientoON = -0.05;
-    factorON += ajusteVientoON;
+    let factorON, factorOFF, minONRaw, minON, minOFF;
+    const sustrato = CONFIG_SUSTRATO[state.configTorre?.sustrato || state.configSustrato || 'esponja'];
+    const minOFFBase = sustrato.minOFFBase;
 
-    // Ajuste UV ON
-    let ajusteLuzON = 0;
-    if      (uvMax >= 9) ajusteLuzON = 0.20;
-    else if (uvMax >= 7) ajusteLuzON = 0.15;
-    else if (uvMax >= 5) ajusteLuzON = 0.10;
-    else if (uvMax >= 3) ajusteLuzON = 0.05;
-    if (toldoDesplegado) ajusteLuzON = 0;
-    factorON += ajusteLuzON;
+    if (esInterior) {
+      // ── INTERIOR: sin VPD solar, ciclo constante por horasLuz ───────────
+      const horasLuz = state.configTorre?.horasLuz || 16;
+      // Interior con LED: menos transpiración → ciclos más largos OFF
+      factorON  = 0.85;   // menos calor que exterior
+      factorOFF = 1.30;   // más OFF porque no hay viento ni sol directo
+      // Ajuste por horas de luz (más horas = más transpiración acumulada)
+      if (horasLuz >= 18) { factorON += 0.10; factorOFF -= 0.10; }
+      else if (horasLuz <= 14) { factorON -= 0.10; factorOFF += 0.15; }
+      minONRaw = minONBase * factorON;
+      minON    = Math.max(3, Math.round(minONRaw));
+      minOFF   = Math.max(10, Math.round(minOFFBase * factorOFF));
 
-    const minONRaw = minONBase * factorON;
-    const minON    = Math.round(minONRaw);
+    } else {
+      // ── EXTERIOR: VPD real + UV + viento ────────────────────────────────
+      // Factor ON por VPD
+      if      (vpd >= 1.6) factorON = 1.35;
+      else if (vpd >= 1.2) factorON = 1.20;
+      else if (vpd >= 0.8) factorON = 1.05;
+      else if (vpd >= 0.4) factorON = 0.90;
+      else                 factorON = 0.75;
 
-    // ── Sección B: calcular MinOFF ────────────────────────────────────────
-    // Base MinOFF según sustrato
-    const sustrato = CONFIG_SUSTRATO[state.configSustrato || 'esponja'];
-    const minOFFBase = sustrato.minOFFBase; // 25 esponja, 32 lana de roca
+      // Ajuste viento ON
+      if      (viento > 30) factorON += 0.25;
+      else if (viento > 20) factorON += 0.10;
+      else if (viento < 10) factorON -= 0.05;
 
-    // Factor OFF por VPD
-    let factorOFF;
-    if      (vpd >= 1.6) factorOFF = 0.70;
-    else if (vpd >= 1.2) factorOFF = 0.85;
-    else if (vpd >= 0.8) factorOFF = 1.00;
-    else if (vpd >= 0.4) factorOFF = 1.20;
-    else                 factorOFF = 1.40;
+      // Ajuste UV ON (reducido si toldo)
+      if (!toldoDesplegado) {
+        if      (uvMax >= 9) factorON += 0.20;
+        else if (uvMax >= 7) factorON += 0.15;
+        else if (uvMax >= 5) factorON += 0.10;
+        else if (uvMax >= 3) factorON += 0.05;
+      }
 
-    // Ajuste viento OFF
-    let ajusteVientoOFF = 0;
-    if      (viento > 30) ajusteVientoOFF = -0.20;
-    else if (viento > 20) ajusteVientoOFF = -0.10;
-    else if (viento < 10) ajusteVientoOFF = 0.10;
-    factorOFF += ajusteVientoOFF;
+      minONRaw = minONBase * factorON;
+      minON    = Math.max(3, Math.round(minONRaw));
 
-    // Ajuste UV OFF
-    let ajusteLuzOFF = 0;
-    if      (uvMax >= 9) ajusteLuzOFF = -0.20;
-    else if (uvMax >= 7) ajusteLuzOFF = -0.15;
-    else if (uvMax >= 5) ajusteLuzOFF = -0.10;
-    else if (uvMax >= 3) ajusteLuzOFF = -0.05;
-    if (toldoDesplegado) ajusteLuzOFF = 0;
-    factorOFF += ajusteLuzOFF;
+      // Factor OFF por VPD
+      if      (vpd >= 1.6) factorOFF = 0.70;
+      else if (vpd >= 1.2) factorOFF = 0.85;
+      else if (vpd >= 0.8) factorOFF = 1.00;
+      else if (vpd >= 0.4) factorOFF = 1.20;
+      else                 factorOFF = 1.40;
 
-    const minOFF = Math.round(minOFFBase * factorOFF);
+      if      (viento > 30) factorOFF -= 0.20;
+      else if (viento > 20) factorOFF -= 0.10;
+      else if (viento < 10) factorOFF += 0.10;
+
+      if (!toldoDesplegado) {
+        if      (uvMax >= 9) factorOFF -= 0.20;
+        else if (uvMax >= 7) factorOFF -= 0.15;
+        else if (uvMax >= 5) factorOFF -= 0.10;
+        else if (uvMax >= 3) factorOFF -= 0.05;
+      }
+
+      minOFF = Math.max(5, Math.round(minOFFBase * factorOFF));
+    }
 
     // ── Sección C: ciclos ─────────────────────────────────────────────────
     const minCiclo    = minON + minOFF;
@@ -10641,22 +10779,26 @@ async function calcularRiego() {
     const totalON     = minON * ciclos;
 
     // ── Programa mediodía ─────────────────────────────────────────────────
-    let factorONMedio;
-    if      (vpdMediodia >= 1.6) factorONMedio = 1.60;
-    else if (vpdMediodia >= 1.2) factorONMedio = 1.40;
-    else if (vpdMediodia >= 0.8) factorONMedio = 1.20;
-    else if (vpdMediodia >= 0.4) factorONMedio = 1.00;
-    else                          factorONMedio = 0.75;
+    let factorONMedio, factorOFFMedio;
+    if (esInterior) {
+      factorONMedio  = factorON;   // igual que general para interior
+      factorOFFMedio = factorOFF;
+    } else {
+      if      (vpdMediodia >= 1.6) factorONMedio = 1.60;
+      else if (vpdMediodia >= 1.2) factorONMedio = 1.40;
+      else if (vpdMediodia >= 0.8) factorONMedio = 1.20;
+      else if (vpdMediodia >= 0.4) factorONMedio = 1.00;
+      else                          factorONMedio = 0.75;
 
-    let factorOFFMedio;
-    if      (vpdMediodia >= 1.6) factorOFFMedio = 0.50;
-    else if (vpdMediodia >= 1.2) factorOFFMedio = 0.65;
-    else if (vpdMediodia >= 0.8) factorOFFMedio = 0.80;
-    else if (vpdMediodia >= 0.4) factorOFFMedio = 1.00;
-    else                          factorOFFMedio = 1.40;
+      if      (vpdMediodia >= 1.6) factorOFFMedio = 0.50;
+      else if (vpdMediodia >= 1.2) factorOFFMedio = 0.65;
+      else if (vpdMediodia >= 0.8) factorOFFMedio = 0.80;
+      else if (vpdMediodia >= 0.4) factorOFFMedio = 1.00;
+      else                          factorOFFMedio = 1.40;
+    }
 
-    const minONMedio   = Math.round(minONBase * factorONMedio);
-    const minOFFMedio  = Math.round(minOFFBase * factorOFFMedio);
+    const minONMedio   = Math.max(3, Math.round(minONBase * factorONMedio));
+    const minOFFMedio  = Math.max(5, Math.round(minOFFBase * factorOFFMedio));
     const ciclosMedio  = Math.floor(240 / (minONMedio + minOFFMedio));
     const totalONMedio = minONMedio * ciclosMedio;
 
@@ -10671,8 +10813,11 @@ async function calcularRiego() {
     document.getElementById('resFactorON').textContent  = Math.round(factorON * 100) / 100;
     document.getElementById('resFactorON').style.color  = fONcolor;
     document.getElementById('resFactorOFF').textContent = Math.round(factorOFF * 100) / 100;
-    document.getElementById('resVPD').textContent       = vpd;
-    document.getElementById('resUV').textContent        = uvMax;
+    document.getElementById('resVPD').textContent       = esInterior ? 'Interior' : vpd;
+    document.getElementById('resUV').textContent        = esInterior ? '—' : uvMax;
+    // Mostrar factores de torre en el clima usado
+    const factCultivoLbl = factorCultivo.toFixed(2);
+    const factEdadLbl    = factorEdadReal.toFixed(2);
 
     document.getElementById('resMedioON').textContent    = minONMedio;
     document.getElementById('resMedioOFF').textContent   = minOFFMedio;
@@ -10683,14 +10828,33 @@ async function calcularRiego() {
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const agua2 = CONFIG_AGUA[state.configAgua || 'destilada'];
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
+    const torreTipo = esInterior
+      ? '🏠 Interior · ' + (state.configTorre?.horasLuz || 16) + 'h luz'
+      : '☀️ Exterior';
+    const resumenCultivos = (() => {
+      const niveles = getNivelesActivos();
+      const grupos = {};
+      niveles.forEach(n => {
+        (state.torre[n]||[]).forEach(c => {
+          if (!c||!c.variedad) return;
+          const cult = getCultivoDB(c.variedad);
+          const g = cult?.grupo || 'otros';
+          grupos[g] = (grupos[g]||0) + 1;
+        });
+      });
+      return Object.entries(grupos).map(([g,n]) => n + ' ' + g).join(' · ') || 'Sin plantas';
+    })();
     document.getElementById('riegoClimaUsado').innerHTML =
-      `<strong style="color:var(--white)">${etiquetaDia}</strong><br>` +
-      `🌡️ Temp: ${tempMin}°C / ${tempMax}°C · Media: ${Math.round(tempMedia*10)/10}°C<br>` +
-      `💧 Humedad media: ${humMedia}% · Viento: ${viento} km/h<br>` +
-      `☀️ UV máximo: ${uvMax} · Prob. lluvia: ${probLluvia}%<br>` +
-      `🌿 Temp 13-15h: ${temp1315}°C · Humedad 13-15h: ${hum1315}%` +
-      (ajusteFoliar > 0 ? ` (+${ajusteFoliar}°C ajuste foliar)` : '') + '<br>' +
-      `⚙️ Sustrato: ${sustrato.nombre} (MinOFF base: ${minOFFBase} min) · Agua: ${agua2.nombre}`;
+      '<strong style="color:var(--white)">' + etiquetaDia + ' · ' + torreTipo + '</strong><br>' +
+      (esInterior
+        ? '🌿 Cultivos: ' + resumenCultivos + '<br>' +
+          '📊 Factor cultivo: ' + factCultivoLbl + ' · Factor edad: ' + factEdadLbl + '<br>' +
+          '🪴 Base minON: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre
+        : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD: ' + vpd + '<br>' +
+          '💧 Humedad: ' + humMedia + '% · Viento: ' + viento + ' km/h · UV: ' + uvMax + '<br>' +
+          '🌿 Cultivos: ' + resumenCultivos + '<br>' +
+          '📊 Factor cultivo: ' + factCultivoLbl + ' · Factor edad: ' + factEdadLbl + '<br>' +
+          '🪴 Base minON: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre);
 
     // Guardar en state para uso en otros módulos
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
