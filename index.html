@@ -6654,69 +6654,95 @@ function guardarSetupYContinuar() {
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
   const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
 
-  // Guardar configuración en state
-  state.configTorre = {
-    tipoTorre:    setupTipoTorre,
-    numNiveles:   niveles,
-    numCestas:    cestas,
-    volDeposito:  vol,
-    ubicacion:    setupUbicacion,
-    equipamiento: [...setupEquipamiento],
-    nutriente:    setupNutriente,
-    tamanoCesta:  setupTamanoCesta,
-    tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
-    diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
-    antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
-    alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
-    bombaCalculada: window.setupBombaCalculada || null,
-    ciudad:       setupCoordenadas.ciudad,
-    lat:          setupCoordenadas.lat  || 39.9864,
-    lon:          setupCoordenadas.lon  || -0.0495,
-  };
-
-  // Aplicar constantes del nutriente seleccionado
-  const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
-  // Las constantes se usarán dinámicamente en evalEC y checklist
-
-  // Reinicializar torre con nueva configuración
-  state.torre = [];
-  for (let n = 0; n < niveles; n++) {
-    state.torre.push([]);
-    for (let c = 0; c < cestas; c++) {
-      state.torre[n].push({ variedad: '', fecha: '', notas: '' });
-    }
-  }
-
-  // Guardar cultivos seleccionados en el setup
-  state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];
-  state.configTorre.multiplesT = setupNumTorres;
-
   if (setupEsNuevaTorre) {
-    // ── NUEVA TORRE: crear entrada en state.torres ────────────────────────
-    setupEsNuevaTorre = false; // resetear flag
+    // ══ NUEVA TORRE ════════════════════════════════════════════════════════
+    // PASO 1: guardar torre activa ANTES de tocar nada
+    guardarEstadoTorreActual();
+
+    // PASO 2: construir config de la nueva torre
+    const nuevaConfig = {
+      tipoTorre:    setupTipoTorre,
+      numNiveles:   niveles,
+      numCestas:    cestas,
+      volDeposito:  vol,
+      ubicacion:    setupUbicacion,
+      equipamiento: [...setupEquipamiento],
+      nutriente:    setupNutriente,
+      tamanoCesta:  setupTamanoCesta,
+      tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
+      diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
+      antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
+      alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+      bombaCalculada: window.setupBombaCalculada || null,
+      ciudad:       setupCoordenadas.ciudad,
+      lat:          setupCoordenadas.lat  || 39.9864,
+      lon:          setupCoordenadas.lon  || -0.0495,
+      cultivosIniciales: [...setupPlantasSeleccionadas],
+      multiplesT:   setupNumTorres,
+    };
+
+    // PASO 3: crear torre nueva vacía con la nueva config
+    const nuevaTorreArray = [];
+    for (let n = 0; n < niveles; n++) {
+      nuevaTorreArray.push([]);
+      for (let c = 0; c < cestas; c++) {
+        nuevaTorreArray[n].push({ variedad: '', fecha: '', notas: '' });
+      }
+    }
     const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
     const nTorres = (state.torres || []).length;
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre || ('Torre ' + (nTorres + 1)),
       emoji: EMOJIS[nTorres % EMOJIS.length],
-      config: { ...state.configTorre },
-      torre: JSON.parse(JSON.stringify(state.torre)),
+      config: nuevaConfig,
+      torre: nuevaTorreArray,
       modoActual: 'lechugas',
       mediciones: [],
       registro: [],
     };
-    guardarEstadoTorreActual(); // guardar la torre actual antes de cambiar
+
+    // PASO 4: añadir y cambiar a ella
     if (!state.torres) state.torres = [];
     state.torres.push(nuevaTorre);
     const newIdx = state.torres.length - 1;
-    state.torreActiva = newIdx;
-    state.torre       = nuevaTorre.torre;
-    state.mediciones  = [];
-    state.registro    = [];
-    // state.configTorre ya está actualizado arriba
+    state.torreActiva  = newIdx;
+    state.configTorre  = nuevaConfig;
+    state.torre        = nuevaTorreArray;
+    state.mediciones   = [];
+    state.registro     = [];
+    setupEsNuevaTorre  = false;
+
   } else {
-    // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
+    // ══ RECONFIGURAR TORRE EXISTENTE ══════════════════════════════════════
+    state.configTorre = {
+      tipoTorre:    setupTipoTorre,
+      numNiveles:   niveles,
+      numCestas:    cestas,
+      volDeposito:  vol,
+      ubicacion:    setupUbicacion,
+      equipamiento: [...setupEquipamiento],
+      nutriente:    setupNutriente,
+      tamanoCesta:  setupTamanoCesta,
+      tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
+      diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
+      antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
+      alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+      bombaCalculada: window.setupBombaCalculada || null,
+      ciudad:       setupCoordenadas.ciudad,
+      lat:          setupCoordenadas.lat  || 39.9864,
+      lon:          setupCoordenadas.lon  || -0.0495,
+      cultivosIniciales: [...setupPlantasSeleccionadas],
+      multiplesT:   setupNumTorres,
+    };
+    // Reinicializar estructura de cestas (respetando los niveles nuevos)
+    state.torre = [];
+    for (let n = 0; n < niveles; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < cestas; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '' });
+      }
+    }
     const tIdx = state.torreActiva || 0;
     if (state.torres && state.torres[tIdx]) {
       state.torres[tIdx].config = { ...state.configTorre };
@@ -6732,7 +6758,6 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
-  // Mostrar panel checklist PRIMERO, luego cerrar setup
   preguntarIniciarChecklist();
   setTimeout(() => cerrarSetup(), 50);
 }
