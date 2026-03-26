@@ -3699,6 +3699,21 @@ body::before { display: none; }
     <!-- TAB 6: METEOROLOGÍA ════════════════════════════ -->
     <div class="tab-panel" id="tab-meteo">
 
+      <!-- Banner alerta urgente — visible solo cuando hay alertas críticas -->
+      <div id="meteoBannerAlerta" style="display:none;background:#fee2e2;border:2px solid #dc2626;
+        border-radius:14px;padding:12px 14px;margin-bottom:12px;
+        animation:pulse-alert 1.5s ease-in-out infinite">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px" id="meteoBannerIcon">🔴</span>
+          <div style="flex:1">
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:900;
+              color:#7f1d1d" id="meteoBannerTitulo">Alerta meteorológica</div>
+            <div style="font-size:12px;color:#991b1b;margin-top:2px"
+              id="meteoBannerTexto"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
 
       <!-- Loader -->
@@ -3826,41 +3841,49 @@ body::before { display: none; }
 
       <!-- Gráficas mediciones -->
       <div id="histMediciones" style="display:none">
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">⚡ EC µS/cm</div>
-            <div class="mini-chart-val" id="histECActual" style="color:var(--green)">—</div>
+        <!-- Últimos valores destacados -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">⚡ EC</div>
+            <div id="histECActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--green)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">µS/cm</div>
           </div>
-          <div class="chart-area" id="chartEC"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🧪 pH</div>
-            <div class="mini-chart-val" id="histPHActual" style="color:var(--blue)">—</div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🧪 pH</div>
+            <div id="histPHActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--blue)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">última med.</div>
           </div>
-          <div class="chart-area" id="chartPH"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🌡️ Temperatura agua °C</div>
-            <div class="mini-chart-val" id="histTempActual" style="color:var(--gold)">—</div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🌡️ Temp</div>
+            <div id="histTempActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--gold)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">°C agua</div>
           </div>
-          <div class="chart-area" id="chartTemp"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🪣 Volumen L</div>
-            <div class="mini-chart-val" id="histVolActual" style="color:var(--blue)">—</div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🪣 Vol</div>
+            <div id="histVolActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--blue)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">litros</div>
           </div>
-          <div class="chart-area" id="chartVol"></div>
         </div>
 
-        <!-- Tabla últimas mediciones -->
-        <div class="hist-tabla">
-          <div class="hist-tabla-header">
-            <span>Fecha</span><span>EC</span><span>pH</span><span>°C</span><span>Vol</span>
-          </div>
-          <div id="histTabla"></div>
+        <!-- Tabla mediciones — solo lista, sin gráficas -->
+        <div id="histTabla"></div>
+
+        <!-- IDs fantasma para que el JS no falle al actualizar charts -->
+        <div style="display:none">
+          <div id="chartEC"></div><div id="chartPH"></div>
+          <div id="chartTemp"></div><div id="chartVol"></div>
         </div>
       </div>
 
@@ -4664,7 +4687,32 @@ body::before { display: none; }
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar</button>
+    <!-- Rellenar en bloque -->
+    <div id="bloquePanel" style="background:#f0fdf4;border:1.5px solid #86efac;
+      border-radius:14px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-family:var(--font-display);font-size:12px;font-weight:800;
+        color:#15803d;margin-bottom:10px">🌿 Rellenar varias cestas a la vez</div>
+      <div style="font-size:11px;color:#4b5563;margin-bottom:8px">
+        Aplica esta variedad y fecha a múltiples cestas del mismo nivel o toda la torre.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <button onclick="rellenarBloque('nivel')"
+          style="padding:10px;border-radius:10px;border:1.5px solid #16a34a;
+                 background:#fff;font-family:var(--font-display);font-size:12px;
+                 font-weight:700;color:#15803d;cursor:pointer">
+          📋 Todo el nivel
+        </button>
+        <button onclick="rellenarBloque('seleccion')"
+          style="padding:10px;border-radius:10px;border:1.5px solid #3b82f6;
+                 background:#fff;font-family:var(--font-display);font-size:12px;
+                 font-weight:700;color:#1d4ed8;cursor:pointer">
+          ✏️ Elegir cestas
+        </button>
+      </div>
+      <div id="bloqueCestasSelector" style="display:none;margin-top:4px"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar solo esta cesta</button>
     <button class="btn" onclick="cosecharCesta()"
       style="margin-top:8px;background:#f0fdf4;color:#15803d;border:2px solid #16a34a;
              font-family:var(--font-display);font-weight:700;font-size:15px">
@@ -5160,7 +5208,7 @@ function initApp() {
   const modoBtn = document.getElementById('modo-' + modoActual);
   if (modoBtn) modoBtn.classList.add('active');
   const m = MODOS_CULTIVO[modoActual];
-  if (m) document.getElementById('modoInfoText').textContent = `${m.desc} — Toca una cesta para editar`;
+  if (m) actualizarInfoBannerTorre();
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -5252,6 +5300,26 @@ function toggleNivel(n) {
   }
 }
 
+
+// Actualizar el banner info de la torre con EC real según cultivos presentes
+function actualizarInfoBannerTorre() {
+  const el = document.getElementById('modoInfoText');
+  if (!el) return;
+  const ecOpt  = getECOptimaTorre();
+  const cfg    = state.configTorre || {};
+  const m      = MODOS_CULTIVO[modoActual] || MODOS_CULTIVO['lechuga'];
+  const nivActivos = getNivelesActivos().length;
+  // Contar plantas
+  let nPlantas = 0;
+  getNivelesActivos().forEach(n => {
+    (state.torre[n] || []).forEach(c => { if (c && c.variedad) nPlantas++; });
+  });
+  const ecText = nPlantas > 0
+    ? 'EC óptima ' + ecOpt.min + '–' + ecOpt.max + ' µS/cm'
+    : 'Sin plantas aún';
+  el.textContent = nivActivos + ' niveles activos · ' + ecText + ' — Toca una cesta para editar';
+}
+
 function setModo(modo) {
   modoActual = modo;
   state.modo = modo;
@@ -5261,8 +5329,7 @@ function setModo(modo) {
   document.getElementById('modo-' + modo).classList.add('active');
   // Update info
   const m = MODOS_CULTIVO[modo];
-  document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Toca una cesta para editar`;
+  actualizarInfoBannerTorre();
   renderTorre();
 }
 
@@ -5901,6 +5968,7 @@ function updateTorreStats() {
 
   // Título torre
   renderTablaVariedades();
+  actualizarInfoBannerTorre();
   const ttEl = document.getElementById('torreTabTitle');
   if (ttEl) ttEl.textContent = torreNombre;
 
@@ -7742,6 +7810,161 @@ function borrarFotoCesta(idx) {
   renderFotosCesta();
 }
 
+
+// ══════════════════════════════════════════════════
+// RELLENAR EN BLOQUE — múltiples cestas a la vez
+// ══════════════════════════════════════════════════
+
+function rellenarBloque(modo) {
+  if (!editingCesta) return;
+  const variedad = document.getElementById('editVariedad').value;
+  const fecha    = document.getElementById('editFecha').value;
+  const notas    = document.getElementById('editNotas').value;
+
+  if (!variedad) {
+    showToast('⚠️ Selecciona una variedad primero', true);
+    return;
+  }
+
+  const { nivel, cesta } = editingCesta;
+  const cfg     = state.configTorre || {};
+  const numCestas = cfg.numCestas || NUM_CESTAS;
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+
+  if (modo === 'nivel') {
+    // Rellenar TODAS las cestas del nivel actual con la misma variedad y fecha
+    let count = 0;
+    for (let c = 0; c < numCestas; c++) {
+      if (!state.torre[nivel]) state.torre[nivel] = [];
+      const cestaActual = state.torre[nivel][c] || {};
+      state.torre[nivel][c] = {
+        ...cestaActual,
+        variedad, fecha, notas,
+        fotos: cestaActual.fotos || [],
+        fotoKeys: cestaActual.fotoKeys || [],
+      };
+      count++;
+    }
+    saveState();
+    renderTorre();
+    updateTorreStats();
+    renderTablaVariedades();
+    closeModal();
+    showToast('✅ ' + count + ' cestas del nivel ' + (nivel+1) + ' rellenadas con ' + variedad);
+
+  } else if (modo === 'seleccion') {
+    // Mostrar selector de cestas para elegir cuáles rellenar
+    const sel = document.getElementById('bloqueCestasSelector');
+    sel.style.display = 'block';
+
+    // Generar checkboxes para cada nivel y sus cestas
+    let html = '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">' +
+      'Selecciona las cestas a rellenar:</div>';
+
+    for (let n = 0; n < numNiveles; n++) {
+      html += '<div style="margin-bottom:8px">' +
+        '<div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;' +
+        'letter-spacing:0.5px;margin-bottom:4px">Nivel ' + (n+1) + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+
+      for (let c = 0; c < numCestas; c++) {
+        const cestaData = (state.torre[n] || [])[c];
+        const ocupada = cestaData && cestaData.variedad;
+        const estaActual = n === nivel && c === cesta;
+        const checked = estaActual ? 'checked' : '';
+        const bgColor = ocupada ? '#fef3c7' : '#f0fdf4';
+        const label   = ocupada ? (cestaData.variedad.slice(0,6) + '…') : 'Vacía';
+
+        html += '<label style="display:flex;flex-direction:column;align-items:center;' +
+          'gap:2px;cursor:pointer;-webkit-tap-highlight-color:transparent">' +
+          '<input type="checkbox" id="blk_' + n + '_' + c + '" ' + checked +
+          ' style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer">' +
+          '<span style="font-size:9px;font-weight:700;color:#374151;' +
+          'background:' + bgColor + ';border-radius:4px;padding:1px 4px;' +
+          'white-space:nowrap">' + 'N' + (n+1) + 'C' + (c+1) + '</span>' +
+          (ocupada ? '<span style="font-size:8px;color:#d97706;max-width:40px;' +
+          'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + label + '</span>' : '') +
+          '</label>';
+      }
+      html += '</div></div>';
+    }
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">' +
+      '<button onclick="seleccionarTodoBloque(true)" ' +
+        'style="padding:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;' +
+        'font-size:11px;font-weight:700;cursor:pointer;color:#374151">✅ Todo</button>' +
+      '<button onclick="seleccionarTodoBloque(false)" ' +
+        'style="padding:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;' +
+        'font-size:11px;font-weight:700;cursor:pointer;color:#374151">⬜ Nada</button>' +
+      '</div>' +
+      '<button onclick="aplicarBloqueSeleccion()" ' +
+        'style="width:100%;margin-top:8px;padding:10px;border-radius:10px;' +
+        'background:#16a34a;color:white;border:none;font-family:var(--font-display);' +
+        'font-size:13px;font-weight:800;cursor:pointer">✅ Aplicar a selección</button>';
+
+    sel.innerHTML = html;
+  }
+}
+
+function seleccionarTodoBloque(marcar) {
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || NUM_CESTAS;
+  for (let n = 0; n < numNiveles; n++) {
+    for (let c = 0; c < numCestas; c++) {
+      const cb = document.getElementById('blk_' + n + '_' + c);
+      if (cb) cb.checked = marcar;
+    }
+  }
+}
+
+function aplicarBloqueSeleccion() {
+  if (!editingCesta) return;
+  const variedad = document.getElementById('editVariedad').value;
+  const fecha    = document.getElementById('editFecha').value;
+  const notas    = document.getElementById('editNotas').value;
+
+  if (!variedad) {
+    showToast('⚠️ Selecciona una variedad primero', true);
+    return;
+  }
+
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || NUM_CESTAS;
+  let count = 0;
+
+  for (let n = 0; n < numNiveles; n++) {
+    for (let c = 0; c < numCestas; c++) {
+      const cb = document.getElementById('blk_' + n + '_' + c);
+      if (cb && cb.checked) {
+        if (!state.torre[n]) state.torre[n] = [];
+        const cestaActual = state.torre[n][c] || {};
+        state.torre[n][c] = {
+          ...cestaActual,
+          variedad, fecha, notas,
+          fotos: cestaActual.fotos || [],
+          fotoKeys: cestaActual.fotoKeys || [],
+        };
+        count++;
+      }
+    }
+  }
+
+  if (count === 0) {
+    showToast('⚠️ No hay cestas seleccionadas', true);
+    return;
+  }
+
+  saveState();
+  guardarEstadoTorreActual();
+  renderTorre();
+  updateTorreStats();
+  renderTablaVariedades();
+  closeModal();
+  showToast('✅ ' + count + ' cestas rellenadas con ' + variedad);
+}
+
 function poblarSelectVariedades() {
   const sel = document.getElementById('editVariedad');
   if (!sel) return;
@@ -9503,29 +9726,81 @@ function renderHistMediciones() {
   renderMiniChart('chartTemp', toData(asc,'temp'), 18,   22,   '#b45309', '#b91c1c');
   renderMiniChart('chartVol',  toData(asc,'vol'),  16,   20,   '#1d4ed8', '#b91c1c');
 
-  // Tabla
+  // Tabla — filas grandes, fáciles de leer, sin gráficas
   const tabla = document.getElementById('histTabla');
-  tabla.innerHTML = mediciones.map((m, i) => `
-    <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
-      <span class="hist-fecha">${m.fecha}<br>
-        <span style="font-size:10px;color:var(--muted)">${m.hora}</span>
-        ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span style="display:inline-block;margin-top:2px;font-size:9px;
-          font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;
-          border-radius:6px;padding:1px 5px">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
-      </span>
-      <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
-      <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
-      <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
-      <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
-      <span style="display:flex;align-items:center;justify-content:flex-end">
-        <button onclick="borrarMedicion(${i})"
-          style="background:none;border:none;font-size:15px;cursor:pointer;
-                 color:#dc2626;padding:8px;-webkit-tap-highlight-color:transparent;
-                 min-width:44px;min-height:44px" aria-label="Borrar esta medición">🗑</button>
-      </span>
-      ${m.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">📝 ${m.notas}</span>` : ''}
-    </div>
-  `).join('');
+  tabla.innerHTML = mediciones.map((m, i) => {
+    const ecCls   = getClaseVal('ec',   m.ec);
+    const phCls   = getClaseVal('ph',   m.ph);
+    const tmpCls  = getClaseVal('temp', m.temp);
+    const volCls  = getClaseVal('vol',  m.vol);
+    const colorMap = { ok:'#16a34a', warn:'#d97706', bad:'#dc2626', '':'#6b7280' };
+    const ecColor  = colorMap[ecCls]  || '#6b7280';
+    const phColor  = colorMap[phCls]  || '#6b7280';
+    const tmpColor = colorMap[tmpCls] || '#6b7280';
+    const volColor = colorMap[volCls] || '#6b7280';
+    const isFirst  = i === 0;
+
+    return '<div style="background:' + (isFirst ? 'rgba(52,211,153,0.07)' : 'var(--bg2)') + ';' +
+      'border:1.5px solid ' + (isFirst ? '#86efac' : 'var(--border)') + ';' +
+      'border-radius:14px;padding:12px 14px;margin-bottom:8px">' +
+
+      // Cabecera: fecha + hora + torre + borrar
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+        '<div>' +
+          '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;' +
+            'color:var(--white)">' + m.fecha + '</span>' +
+          '<span style="font-size:12px;color:var(--muted);margin-left:8px">' + (m.hora||'') + '</span>' +
+          (m.torreNombre && state.torres && state.torres.length > 1
+            ? '<span style="margin-left:6px;font-size:10px;font-weight:700;color:#15803d;' +
+              'background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:2px 6px">' +
+              (m.torreEmoji||'🌿') + ' ' + m.torreNombre + '</span>'
+            : '') +
+        '</div>' +
+        '<button onclick="borrarMedicion(' + i + ')" aria-label="Borrar medición" ' +
+          'style="background:none;border:none;font-size:18px;cursor:pointer;color:#dc2626;' +
+          'padding:6px;min-width:40px;min-height:40px;-webkit-tap-highlight-color:transparent">🗑</button>' +
+      '</div>' +
+
+      // Valores en grid 2x2 grande y legible
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">' +
+        // EC
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (ecCls==='ok'?'#86efac':ecCls==='warn'?'#fcd34d':ecCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">⚡ EC</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + ecColor + '">' +
+            (m.ec||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">µS/cm</div>' +
+        '</div>' +
+        // pH
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (phCls==='ok'?'#86efac':phCls==='warn'?'#fcd34d':phCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🧪 pH</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + phColor + '">' +
+            (m.ph||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">5.7–6.4</div>' +
+        '</div>' +
+        // Temp
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (tmpCls==='ok'?'#86efac':tmpCls==='warn'?'#fcd34d':tmpCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🌡️ Temp</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + tmpColor + '">' +
+            (m.temp||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">°C</div>' +
+        '</div>' +
+        // Vol
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (volCls==='ok'?'#86efac':volCls==='warn'?'#fcd34d':volCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🪣 Vol</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + volColor + '">' +
+            (m.vol||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">litros</div>' +
+        '</div>' +
+      '</div>' +
+
+      (m.notas ? '<div style="margin-top:8px;font-size:12px;color:var(--muted);' +
+        'padding:6px 10px;background:var(--bg3);border-radius:8px">📝 ' + m.notas + '</div>' : '') +
+      '</div>';
+  }).join('');
 }
 
 
