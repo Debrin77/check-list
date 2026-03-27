@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -65,6 +66,54 @@
 :focus-visible {
   outline: 2px solid #1d4ed8;
   outline-offset: 2px;
+}
+
+/* “Saltar al contenido” — patrón Gov/UK · WCAG 2.4.1 */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 100000;
+  padding: 12px 16px;
+  background: #111827;
+  color: #f9fafb;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+}
+.skip-link:focus {
+  left: 0;
+  top: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  outline: 3px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* Respeta “Reduce motion” del sistema (Apple HIG, Material, WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .splash {
+    animation: none !important;
+  }
+  .splash-img-wrap {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 html {
@@ -3002,6 +3051,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
 <!-- ══ SPLASH SCREEN ══ -->
 <div class="splash" id="splashScreen">
   <div class="splash-img-wrap">
@@ -3019,7 +3070,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 </div>
 
 <!-- ══ PIN SCREEN ══ -->
-<div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo">
+<div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
   <div class="pin-logo" id="pinTitulo">CULTI<span>VA</span></div>
   <div class="pin-sub">Hidroponía fácil e inteligente</div>
   <div class="pin-dots">
@@ -3076,7 +3127,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   </div>
 
   <!-- CONTENT -->
-  <div class="content" role="main" id="main-content">
+  <div class="content" role="main" id="main-content" tabindex="-1">
 
     <!-- TAB 1: INICIO ══════════════════════════════════ -->
     <div class="tab-panel active" id="tab-inicio" role="tabpanel" aria-labelledby="btn-inicio" aria-hidden="false">
@@ -3344,7 +3395,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                   style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:110px;outline:none"
                   oninput="actualizarECBase()">
                 <span style="font-size:13px;color:var(--muted)">µS/cm</span>
-                <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank"
+                <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" rel="noopener noreferrer"
                   style="font-size:11px;color:#1d4ed8;text-decoration:none;margin-left:auto;font-weight:700;
                          padding:6px 10px;background:#eff6ff;border-radius:6px;border:1px solid #93c5fd">
                   📋 Abrir SINAC →
@@ -4806,7 +4857,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 </div>
 
 <!-- ══ MODAL FUENTES AGUA ══ -->
-<div class="modal-overlay" id="modalAgua" onclick="if(event.target===this)this.classList.remove('open')" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
+<div class="modal-overlay" id="modalAgua" onclick="cerrarModalAgua(event)" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">📋 Consulta la calidad del agua</div>
@@ -4820,7 +4871,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:4px">🏛️ SINAC — Ministerio de Sanidad</div>
       <div style="font-size:12px;color:#64748b;margin-bottom:8px">Portal oficial. Puede estar caído. Si carga: Acceso Ciudadano → tu municipio → análisis Completo → busca <strong>Conductividad</strong></div>
       <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionEntrada.do"
-        target="_blank"
+        target="_blank" rel="noopener noreferrer"
         style="display:block;text-align:center;padding:8px;background:#1d4ed8;color:white;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">
         Abrir SINAC →
       </a>
@@ -4833,17 +4884,17 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         La opción más fiable y con datos actualizados. Búscala en tu factura del agua o en el buscador:
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        <a href="https://www.aiguescastello.es" target="_blank"
+        <a href="https://www.aiguescastello.es" target="_blank" rel="noopener noreferrer"
           style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
           <span style="font-size:12px;font-weight:600;color:#15803d">💧 Aigues de Castelló</span>
           <span style="font-size:11px;color:#16a34a">Abrir →</span>
         </a>
-        <a href="https://www.canaldeisabelsegunda.es/calidad-del-agua" target="_blank"
+        <a href="https://www.canaldeisabelsegunda.es/calidad-del-agua" target="_blank" rel="noopener noreferrer"
           style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
           <span style="font-size:12px;font-weight:600;color:#15803d">💧 Canal Isabel II (Madrid)</span>
           <span style="font-size:11px;color:#16a34a">Abrir →</span>
         </a>
-        <a href="https://www.aiguestribasa.cat/ca/qualitat-de-laigua" target="_blank"
+        <a href="https://www.aiguestribasa.cat/ca/qualitat-de-laigua" target="_blank" rel="noopener noreferrer"
           style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;text-decoration:none;border:1px solid #86efac">
           <span style="font-size:12px;font-weight:600;color:#15803d">💧 ATLL / Aigues (Barcelona)</span>
           <span style="font-size:11px;color:#16a34a">Abrir →</span>
@@ -4878,7 +4929,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       </div>
     </div>
 
-    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalAgua').classList.remove('open')">
+    <button type="button" class="btn btn-ghost" onclick="cerrarModalAgua()">
       Cerrar
     </button>
   </div>
@@ -5430,7 +5481,11 @@ function updatePinDots() {
 
 function checkPin() {
   if (pinEntry === PIN) {
-    document.getElementById('pinScreen').style.display = 'none';
+    const pinEl = document.getElementById('pinScreen');
+    const appEl = document.getElementById('app');
+    a11yDetachFocusTrap(pinEl);
+    if (appEl) appEl.inert = false;
+    pinEl.style.display = 'none';
     try {
       // Guardar auth con timestamp de 8 horas
       localStorage.setItem('hc_auth', Date.now().toString());
@@ -5517,6 +5572,11 @@ function initApp() {
   }
   // Migrar fotos antiguas de localStorage a IndexedDB (solo la primera vez)
   abrirFotoDB().then(() => migrarFotosAIDB()).catch(e => console.warn('Migración IDB:', e));
+
+  if (!window._a11yEscapeBound) {
+    window._a11yEscapeBound = true;
+    document.addEventListener('keydown', a11yEscapeTopDialog);
+  }
 }
 function updateClock() {
   const now = new Date();
@@ -5532,6 +5592,113 @@ function a11yKeyActivate(ev, fn) {
   if (ev.key === 'Enter' || ev.key === ' ') {
     ev.preventDefault();
     if (typeof fn === 'function') fn();
+  }
+}
+
+const _a11yDialogFocusReturn = [];
+
+/** Misma lista que el foco inicial del diálogo; filtra nodos realmente visibles. */
+const A11Y_FOCUSABLE_SELECTOR =
+  'button:not([disabled]), a[href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function a11yCollectFocusables(rootEl) {
+  if (!rootEl) return [];
+  return Array.from(rootEl.querySelectorAll(A11Y_FOCUSABLE_SELECTOR)).filter(node => {
+    if (!(node instanceof HTMLElement)) return false;
+    if (node.getAttribute('aria-hidden') === 'true') return false;
+    const st = getComputedStyle(node);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    const r = node.getBoundingClientRect();
+    return r.width > 0 || r.height > 0;
+  });
+}
+
+function a11yAttachFocusTrap(rootEl) {
+  if (!rootEl || rootEl._a11yFocusTrapHandler) return;
+  const handler = e => {
+    if (e.key !== 'Tab') return;
+    const list = a11yCollectFocusables(rootEl);
+    if (!list.length) return;
+    const first = list[0];
+    const last = list[list.length - 1];
+    const active = document.activeElement;
+    if (!rootEl.contains(active)) {
+      e.preventDefault();
+      first.focus();
+      return;
+    }
+    if (e.shiftKey && active === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  rootEl._a11yFocusTrapHandler = handler;
+  rootEl.addEventListener('keydown', handler, true);
+}
+
+function a11yDetachFocusTrap(rootEl) {
+  if (!rootEl || !rootEl._a11yFocusTrapHandler) return;
+  rootEl.removeEventListener('keydown', rootEl._a11yFocusTrapHandler, true);
+  delete rootEl._a11yFocusTrapHandler;
+}
+
+function a11yDialogOpened(rootEl) {
+  if (!rootEl || rootEl.dataset.a11yFocusPushed) return;
+  rootEl.dataset.a11yFocusPushed = '1';
+  _a11yDialogFocusReturn.push(document.activeElement);
+  a11yAttachFocusTrap(rootEl);
+  requestAnimationFrame(() => {
+    const list = a11yCollectFocusables(rootEl);
+    const node = list[0];
+    if (node) node.focus();
+  });
+}
+
+function a11yDialogClosed(rootEl) {
+  if (!rootEl || !rootEl.dataset.a11yFocusPushed) return;
+  a11yDetachFocusTrap(rootEl);
+  delete rootEl.dataset.a11yFocusPushed;
+  const prev = _a11yDialogFocusReturn.pop();
+  if (prev && typeof prev.focus === 'function') {
+    try { prev.focus(); } catch (e) {}
+  }
+}
+
+function cerrarModalAgua(ev) {
+  const el = document.getElementById('modalAgua');
+  if (!el || !el.classList.contains('open')) return;
+  if (ev && ev.currentTarget === el && ev.target !== el) return;
+  el.classList.remove('open');
+  a11yDialogClosed(el);
+}
+
+function a11yEscapeTopDialog(ev) {
+  if (ev.key !== 'Escape' || ev.defaultPrevented) return;
+  const order = ['modalOverlay', 'checklistOverlay', 'setupOverlay', 'modalTorres', 'modalAgua'];
+  for (const id of order) {
+    const el = document.getElementById(id);
+    if (el && el.classList.contains('open')) {
+      if (id === 'checklistOverlay' && typeof clEsPrimeraVez !== 'undefined' && clEsPrimeraVez) return;
+      ev.preventDefault();
+      if (id === 'modalOverlay') {
+        document.getElementById('modalOverlay').classList.remove('open');
+        editingCesta = null;
+        a11yDialogClosed(el);
+      } else if (id === 'checklistOverlay') {
+        cerrarChecklist();
+      } else if (id === 'setupOverlay') {
+        cerrarSetup();
+      } else if (id === 'modalTorres') {
+        el.classList.remove('open');
+        a11yDialogClosed(el);
+      } else if (id === 'modalAgua') {
+        cerrarModalAgua();
+      }
+      return;
+    }
   }
 }
 
@@ -6174,6 +6341,7 @@ function tutorialAsignarOcultoPorUsuario() {
 function cerrarTutorialAsignarCultivo(noVolverAMostrar) {
   const ov = document.getElementById('tutorialAsignarOverlay');
   if (ov) {
+    a11yDialogClosed(ov);
     if (ov._escHandler) document.removeEventListener('keydown', ov._escHandler);
     ov.remove();
   }
@@ -6272,6 +6440,7 @@ function abrirTutorialAsignarCultivo(opts) {
   document.addEventListener('keydown', escHandler);
 
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 }
 
 function actualizarTorreEditarAyuda() {
@@ -6304,6 +6473,7 @@ function tutorialEditarOcultoPorUsuario() {
 function cerrarTutorialTorrePestana(marcarVisto, encadenarEditar) {
   const ov = document.getElementById('tutorialTorrePestanaOverlay');
   if (ov) {
+    a11yDialogClosed(ov);
     if (ov._escHandler) document.removeEventListener('keydown', ov._escHandler);
     ov.remove();
   }
@@ -6391,11 +6561,13 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
   document.addEventListener('keydown', escHandler);
 
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 }
 
 function cerrarTutorialEditarCultivo(noVolverAMostrar) {
   const ov = document.getElementById('tutorialEditarOverlay');
   if (ov) {
+    a11yDialogClosed(ov);
     if (ov._escHandler) document.removeEventListener('keydown', ov._escHandler);
     ov.remove();
   }
@@ -6494,6 +6666,7 @@ function abrirTutorialEditarCultivo(opts) {
   document.addEventListener('keydown', escHandler);
 
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 }
 
 function setTorreInteraccionModo(m) {
@@ -7353,14 +7526,18 @@ const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
 function abrirSetup() {
   setupPagina = 0;
-  document.getElementById('setupOverlay').classList.add('open');
+  const o = document.getElementById('setupOverlay');
+  o.classList.add('open');
   renderNutrientesGrid();
   updateTorreBuilder();
   renderSetupPage();
+  a11yDialogOpened(o);
 }
 
 function cerrarSetup() {
-  document.getElementById('setupOverlay').classList.remove('open');
+  const o = document.getElementById('setupOverlay');
+  o.classList.remove('open');
+  a11yDialogClosed(o);
 }
 
 function elegirTipoTorre(tipo) {
@@ -7938,6 +8115,9 @@ function preguntarIniciarChecklist() {
 
   const overlay = document.createElement('div');
   overlay.id = 'checklistPreguntaOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Iniciar checklist de torre');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;' +
     'display:flex;align-items:flex-end;justify-content:center;' +
     'padding-bottom:env(safe-area-inset-bottom,0px)';
@@ -8034,6 +8214,7 @@ function preguntarIniciarChecklist() {
     '</div>';
 
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 
   // Event delegation para opciones tipo checklist
   overlay.querySelectorAll('.tipo-checklist-opt').forEach(el => {
@@ -8046,10 +8227,12 @@ function preguntarIniciarChecklist() {
   window._tipoChecklist = 'primer_uso';
 
   document.getElementById('btnIniciarChecklist').addEventListener('click', () => {
+    a11yDialogClosed(overlay);
     overlay.remove();
     abrirChecklist(true);
   });
   document.getElementById('btnChecklistDespues').addEventListener('click', () => {
+    a11yDialogClosed(overlay);
     overlay.remove();
     showToast('✅ ' + nombreTorre + ' lista · Checklist en pestaña Historial cuando quieras');
     goTab('inicio');
@@ -8918,6 +9101,9 @@ async function agregarFotoDesdeDiario(event, nivel, cesta) {
 
 function verFotoCompletaDiario(dataUrl, variedad, fecha) {
   const overlay = document.createElement('div');
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Foto del diario');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;' +
     'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
   overlay.innerHTML =
@@ -8925,11 +9111,17 @@ function verFotoCompletaDiario(dataUrl, variedad, fecha) {
       'margin-bottom:12px;text-align:center">' + variedad + ' · ' + fecha + '</div>' +
     '<img src="' + dataUrl + '" alt="' + variedad + '" ' +
       'style="max-width:100%;max-height:75vh;object-fit:contain;border-radius:12px">' +
-    '<button style="margin-top:16px;padding:12px 32px;background:#fff;border:none;border-radius:14px;' +
-      'font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer" ' +
-      'onclick="this.parentElement.remove()">Cerrar</button>';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    '<button type="button" style="margin-top:16px;padding:12px 32px;background:#fff;border:none;border-radius:14px;' +
+      'font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+      'Cerrar</button>';
+  const cerrarOv = () => {
+    a11yDialogClosed(overlay);
+    overlay.remove();
+  };
+  overlay.querySelector('button')?.addEventListener('click', cerrarOv);
+  overlay.onclick = e => { if (e.target === overlay) cerrarOv(); };
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 }
 
 
@@ -8948,6 +9140,9 @@ async function verFotoCompleta(idx) {
   }
   if (!dataUrl) return;
   const overlay = document.createElement('div');
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Foto de la planta');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;' +
     'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML =
@@ -8962,9 +9157,14 @@ async function verFotoCompleta(idx) {
   const cerrar = overlay.querySelector('button');
   if (img) img.src = dataUrl;
   if (cap) cap.textContent = (f.fecha || '') + (f.hora ? ' · ' + f.hora : '');
-  if (cerrar) cerrar.addEventListener('click', () => overlay.remove());
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  const cerrarOv = () => {
+    a11yDialogClosed(overlay);
+    overlay.remove();
+  };
+  if (cerrar) cerrar.addEventListener('click', cerrarOv);
+  overlay.onclick = (e) => { if (e.target === overlay) cerrarOv(); };
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
 }
 
 async function borrarFotoCesta(idx) {
@@ -9037,15 +9237,19 @@ function openModal(nivel, cesta) {
   document.getElementById('editFecha').value = data.fecha || '';
   document.getElementById('editNotas').value = data.notas || '';
   poblarSelectVariedades();
-  document.getElementById('modalOverlay').classList.add('open');
+  const mo = document.getElementById('modalOverlay');
+  mo.classList.add('open');
+  a11yDialogOpened(mo);
   // Renderizar fotos si las hay
   setTimeout(renderFotosCesta, 50);
 }
 
 function closeModal(e) {
-  if (!e || e.target === document.getElementById('modalOverlay')) {
-    document.getElementById('modalOverlay').classList.remove('open');
+  const mo = document.getElementById('modalOverlay');
+  if (!e || e.target === mo) {
+    mo.classList.remove('open');
     editingCesta = null;
+    a11yDialogClosed(mo);
   }
 }
 
@@ -9365,7 +9569,7 @@ async function detectarMunicipio() {
           mostrarGeoEstado('info',
             `📍 Ubicación: <strong>${ciudad}</strong><br>` +
             `No está en nuestra base de datos. Introduce la EC manualmente o consulta el ` +
-            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
+            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
           );
           document.getElementById('inputBuscarMunicipio').value = ciudad;
           resetGeoBtn();
@@ -9495,7 +9699,9 @@ function seleccionarMunicipio(nombre, ec, dureza, nota) {
 }
 
 function mostrarAlternativasSINAC() {
-  document.getElementById('modalAgua').classList.add('open');
+  const el = document.getElementById('modalAgua');
+  el.classList.add('open');
+  a11yDialogOpened(el);
 }
 
 function resetMunicipio() {
@@ -10300,15 +10506,19 @@ function abrirChecklist(esPrimeraVez = false) {
   document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
 
   renderChecklist();
-  document.getElementById('checklistOverlay').classList.add('open');
+  const co = document.getElementById('checklistOverlay');
+  co.classList.add('open');
   updateClProgress();
+  a11yDialogOpened(co);
 }
 
 function cerrarChecklist() {
   if (clEsPrimeraVez) {
     if (!confirm('⚠️ Si cierras sin completar el checklist los datos del sistema no estarán registrados. ¿Continuar de todas formas?')) return;
   }
-  document.getElementById('checklistOverlay').classList.remove('open');
+  const co = document.getElementById('checklistOverlay');
+  co.classList.remove('open');
+  a11yDialogClosed(co);
 }
 
 function renderChecklist() {
@@ -10514,8 +10724,9 @@ async function finalizarChecklist() {
     console.error('Error guardando:', e);
   }
 
-  // Cerrar checklist y actualizar dashboard
-  document.getElementById('checklistOverlay').classList.remove('open');
+  const co = document.getElementById('checklistOverlay');
+  co.classList.remove('open');
+  a11yDialogClosed(co);
   updateDashboard();
   showToast('✅ Recarga registrada correctamente');
 
@@ -11236,11 +11447,41 @@ function mostrarTabConsejos(tab) {
   }
 }
 
+function a11yConsejosTablistKeydown(ev) {
+  const tabs = [...document.querySelectorAll('#consejosCats [role="tab"]')];
+  if (!tabs.length) return;
+  const i = tabs.indexOf(document.activeElement);
+  if (i < 0 && (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft' || ev.key === 'Home' || ev.key === 'End')) {
+    tabs[0].focus();
+    ev.preventDefault();
+    return;
+  }
+  if (i < 0) return;
+  if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') {
+    ev.preventDefault();
+    tabs[(i + 1) % tabs.length].focus();
+  } else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    tabs[(i - 1 + tabs.length) % tabs.length].focus();
+  } else if (ev.key === 'Home') {
+    ev.preventDefault();
+    tabs[0].focus();
+  } else if (ev.key === 'End') {
+    ev.preventDefault();
+    tabs[tabs.length - 1].focus();
+  }
+}
+
 function renderConsejos() {
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
   cats.setAttribute('role', 'tablist');
   cats.setAttribute('aria-label', 'Categorías de consejos');
+
+  if (!cats.dataset.a11yKeyNavBound) {
+    cats.dataset.a11yKeyNavBound = '1';
+    cats.addEventListener('keydown', a11yConsejosTablistKeydown);
+  }
 
   cats.innerHTML = Object.entries(CONSEJOS_DATA).map(([key, cat]) => `
     <button type="button" class="consejo-cat-btn ${key === consejoCatActiva ? 'active' : ''}"
@@ -13456,12 +13697,16 @@ function actualizarHeaderTorre() {
 function abrirSelectorTorres() {
   initTorres();
   renderListaTorres();
-  document.getElementById('modalTorres').classList.add('open');
+  const mt = document.getElementById('modalTorres');
+  mt.classList.add('open');
+  a11yDialogOpened(mt);
 }
 
 function cerrarModalTorres(e) {
-  if (!e || e.target === document.getElementById('modalTorres')) {
-    document.getElementById('modalTorres').classList.remove('open');
+  const mt = document.getElementById('modalTorres');
+  if (!e || e.target === mt) {
+    mt.classList.remove('open');
+    a11yDialogClosed(mt);
   }
 }
 
@@ -13524,11 +13769,12 @@ function abrirSetupNuevaTorre() {
   setupPlantasSeleccionadas = new Set();
   setupNumTorres = 'una'; // no relevante para nueva torre
 
-  // Abrir el setup overlay igual que el setup inicial
-  document.getElementById('setupOverlay').classList.add('open');
+  const so = document.getElementById('setupOverlay');
+  so.classList.add('open');
   renderNutrientesGrid();
   updateTorreBuilder();
   renderSetupPage();
+  a11yDialogOpened(so);
 
   // Actualizar el título para indicar que es una torre nueva
   setTimeout(() => {
@@ -13683,6 +13929,9 @@ function cambiarNutriente() {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;' +
     'display:flex;align-items:flex-end;justify-content:center';
   overlay.id = 'nutrienteQuickModal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Nutriente de esta torre');
 
   const nutActual = getNutrienteTorre().id;
 
@@ -13718,8 +13967,13 @@ function cambiarNutriente() {
       'Cancelar</button>' +
     '</div>';
 
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  const cerrarNutModal = () => {
+    a11yDialogClosed(overlay);
+    overlay.remove();
+  };
+  overlay.onclick = (e) => { if (e.target === overlay) cerrarNutModal(); };
   document.body.appendChild(overlay);
+  a11yDialogOpened(overlay);
   // Event delegation for nutriente cards
   overlay.querySelectorAll('[data-nut-id]').forEach(el => {
     el.addEventListener('click', function() {
@@ -13729,7 +13983,7 @@ function cambiarNutriente() {
   const otroBtn    = document.getElementById('nutOtroBtn');
   const cancelarBtn = document.getElementById('nutCancelarBtn');
   if (otroBtn) otroBtn.addEventListener('click', () => seleccionarNutrienteRapido('otro'));
-  if (cancelarBtn) cancelarBtn.addEventListener('click', () => overlay.remove());
+  if (cancelarBtn) cancelarBtn.addEventListener('click', cerrarNutModal);
 }
 
 function seleccionarNutrienteRapido(id) {
@@ -13741,7 +13995,11 @@ function seleccionarNutrienteRapido(id) {
     state.torres[tIdx].config.nutriente = id;
   }
   saveState();
-  document.getElementById('nutrienteQuickModal')?.remove();
+  const nutM = document.getElementById('nutrienteQuickModal');
+  if (nutM) {
+    a11yDialogClosed(nutM);
+    nutM.remove();
+  }
   aplicarConfigTorre();
   actualizarBadgesNutriente();
   updateDashboard();
@@ -13905,7 +14163,16 @@ window.onload = () => {
       return;
     }
   } catch(e) {}
-  // Sin auth válida — mostrar PIN (ya visible por defecto)
+  // Sin auth válida — mostrar PIN (ya visible por defecto): atrapar foco y bloquear tab hacia la app.
+  const appEl = document.getElementById('app');
+  const pinEl = document.getElementById('pinScreen');
+  if (appEl) appEl.inert = true;
+  if (pinEl) {
+    a11yAttachFocusTrap(pinEl);
+    requestAnimationFrame(() => {
+      try { pinEl.focus(); } catch (_) {}
+    });
+  }
 };
 
 // ══════════════════════════════════════════════════
