@@ -3417,6 +3417,10 @@ body::before { display: none; }
         <div id="torreSVGWrap" style="width:100%;overflow-x:auto" role="img" aria-label="Diagrama interactivo de la torre hidropónica. Pulsa cada cesta para ver o editar la planta.">
           <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">Cargando torre...</div>
         </div>
+        <div id="torreQuickTip" style="position:fixed;z-index:9999;display:none;pointer-events:none;
+          background:rgba(17,24,39,0.95);color:#fff;border:1px solid rgba(255,255,255,0.12);
+          border-radius:12px;padding:10px 12px;max-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+          font-size:12px;line-height:1.35"></div>
         <div style="text-align:center;margin:6px 0 2px;color:#6b7280;font-size:11px;font-weight:700;letter-spacing:0.2px">
           Desliza para girar
         </div>
@@ -3840,33 +3844,35 @@ body::before { display: none; }
 
       <!-- Gráficas mediciones -->
       <div id="histMediciones" style="display:none">
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">⚡ EC µS/cm</div>
-            <div class="mini-chart-val" id="histECActual" style="color:var(--green)">—</div>
+        <!-- Resumen legible (sin gráficas) -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+                    padding:14px;margin-bottom:10px">
+          <div style="font-family:var(--font-display);font-size:12px;font-weight:900;color:var(--muted);
+                      text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">
+            Última medición
           </div>
-          <div class="chart-area" id="chartEC"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🧪 pH</div>
-            <div class="mini-chart-val" id="histPHActual" style="color:var(--blue)">—</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);font-weight:700">⚡ EC</div>
+              <div id="histECActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--green)">—</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700">µS/cm</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);font-weight:700">🧪 pH</div>
+              <div id="histPHActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--blue)">—</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700"> </div>
+            </div>
+            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);font-weight:700">🌡️ Temp</div>
+              <div id="histTempActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--gold)">—</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700">°C</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);font-weight:700">🪣 Vol</div>
+              <div id="histVolActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--blue)">—</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700">L</div>
+            </div>
           </div>
-          <div class="chart-area" id="chartPH"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🌡️ Temperatura agua °C</div>
-            <div class="mini-chart-val" id="histTempActual" style="color:var(--gold)">—</div>
-          </div>
-          <div class="chart-area" id="chartTemp"></div>
-        </div>
-        <div class="mini-chart">
-          <div class="mini-chart-header">
-            <div class="mini-chart-title">🪣 Volumen L</div>
-            <div class="mini-chart-val" id="histVolActual" style="color:var(--blue)">—</div>
-          </div>
-          <div class="chart-area" id="chartVol"></div>
         </div>
 
         <!-- Tabla últimas mediciones -->
@@ -5093,11 +5099,43 @@ function saveState() {
     // Si falla por cuota, intentar limpiar datos antiguos
     if (e.name === 'QuotaExceededError') {
       try {
+        // Liberar espacio: eliminar base64 pesados del state (las fotos YA están en IndexedDB)
+        compactarStateFotos();
         localStorage.removeItem('hc_auth');
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch(e2) { console.error('No se pudo guardar:', e2); }
     }
   }
+}
+
+function compactarStateFotos() {
+  try {
+    // Cestas: dejar solo keys (fotoKeys) y máximo 1 thumbnail con data
+    for (let n = 0; n < (state.torre || []).length; n++) {
+      for (let c = 0; c < (state.torre[n] || []).length; c++) {
+        const cesta = state.torre[n][c];
+        if (!cesta) continue;
+        if (Array.isArray(cesta.fotos) && cesta.fotos.length > 0) {
+          // Asegurar fotoKeys
+          if (!Array.isArray(cesta.fotoKeys)) cesta.fotoKeys = [];
+          cesta.fotos.forEach(f => { if (f?.key && !cesta.fotoKeys.includes(f.key)) cesta.fotoKeys.push(f.key); });
+          // Mantener solo la última con data (si existe), el resto sin data
+          let lastWithData = null;
+          for (let i = cesta.fotos.length - 1; i >= 0; i--) {
+            if (cesta.fotos[i]?.data) { lastWithData = cesta.fotos[i]; break; }
+          }
+          cesta.fotos = lastWithData ? [{ ...lastWithData, data: lastWithData.data }] : [];
+        }
+      }
+    }
+
+    // Registro: eliminar fotoData base64, mantener fotoKey
+    if (Array.isArray(state.registro)) {
+      state.registro.forEach(e => {
+        if (e && e.tipo === 'foto' && e.fotoData) delete e.fotoData;
+      });
+    }
+  } catch(_) {}
 }
 
 // ══════════════════════════════════════════════════
@@ -5435,6 +5473,7 @@ function generarSVGTorre() {
     baskets.sort((a, b) => a.z - b.z).forEach((b) => {
       const r = (CESTA_R * b.scale);
       const clipId = `clip_${n}_${b.c}`;
+      const isSelected = !!(window.editingCesta && editingCesta.nivel === b.n && editingCesta.cesta === b.c);
 
       // Sombra (más fuerte al frente)
       s += `<ellipse cx="${b.cx2.toFixed(1)}" cy="${(b.cy2 + 3.5).toFixed(1)}" rx="${(r*1.05).toFixed(1)}" ry="${(r*0.65).toFixed(1)}"
@@ -5445,6 +5484,14 @@ function generarSVGTorre() {
 
       // Base
       s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
+
+      // Resalte selección (cuando el modal está abierto)
+      if (isSelected) {
+        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+4).toFixed(1)}"
+          fill="none" stroke="#22c55e" stroke-width="${(2.6*b.scale).toFixed(1)}" opacity="0.9"/>`;
+        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+7.5).toFixed(1)}"
+          fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="${(5.5*b.scale).toFixed(1)}" opacity="0.8"/>`;
+      }
 
       // Foto si existe (recorte circular)
       if (b.ultimaFoto?.data) {
@@ -5482,6 +5529,26 @@ function generarSVGTorre() {
       } else {
         s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
           font-size="${(8*b.scale).toFixed(1)}" fill="#d1d5db" text-anchor="middle">${b.c+1}</text>`;
+      }
+
+      // Badges funcionales (fotos / notas)
+      const hasFotos = !!(b.ultimaFoto?.data);
+      const hasNotas = !!(state.torre?.[b.n]?.[b.c]?.notas && String(state.torre[b.n][b.c].notas).trim().length > 0);
+      if (hasFotos) {
+        const bx = b.cx2 - r + 5;
+        const by = b.cy2 - r + 5;
+        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
+          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
+        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
+          text-anchor="middle" fill="#111827">📸</text>`;
+      }
+      if (hasNotas) {
+        const bx = b.cx2 + r - 5;
+        const by = b.cy2 - r + 5;
+        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
+          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
+        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
+          text-anchor="middle" fill="#111827">📝</text>`;
       }
 
       // Badge cosecha
@@ -5689,14 +5756,7 @@ function renderTorre() {
   // Swipe para girar torre (móvil): snap según numCestas
   try { initTorreGestos(wrap); } catch(e) {}
 
-  // Event listeners en las cestas SVG (data-n, data-c)
-  wrap.querySelectorAll('.hc-cesta').forEach(el => {
-    el.addEventListener('click', function() {
-      const n = parseInt(this.getAttribute('data-n'));
-      const c = parseInt(this.getAttribute('data-c'));
-      openModal(n, c);
-    });
-  });
+  bindTorreCestas(wrap);
 
   // Actualizar stats y rotación
   updateTorreStats();
@@ -5742,15 +5802,7 @@ function initTorreGestos(wrap) {
     raf = requestAnimationFrame(() => {
       raf = 0;
       wrap.innerHTML = generarSVGTorre();
-      // Reenganchar taps tras rerender
-      wrap.querySelectorAll('.hc-cesta').forEach(el => {
-        el.addEventListener('click', function() {
-          if (moved > 10) return;
-          const n = parseInt(this.getAttribute('data-n'));
-          const c = parseInt(this.getAttribute('data-c'));
-          openModal(n, c);
-        });
-      });
+      bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
     });
   };
 
@@ -5786,6 +5838,83 @@ function initTorreGestos(wrap) {
   wrap.addEventListener('pointermove', (e) => onMove(e.clientX), { passive: true });
   wrap.addEventListener('pointerup', onUp, { passive: true });
   wrap.addEventListener('pointercancel', onUp, { passive: true });
+}
+
+function bindTorreCestas(wrap, opts = {}) {
+  const shouldSuppressTap = typeof opts.suppressTapIfMoved === 'function'
+    ? opts.suppressTapIfMoved
+    : () => false;
+
+  const tipEl = document.getElementById('torreQuickTip');
+  const hideTip = () => { if (tipEl) tipEl.style.display = 'none'; };
+  const showTip = (html, x, y) => {
+    if (!tipEl) return;
+    tipEl.innerHTML = html;
+    tipEl.style.display = 'block';
+    // Offset y clamp simple
+    const pad = 10;
+    const ww = window.innerWidth || 390;
+    const wh = window.innerHeight || 800;
+    const w = 270;
+    let left = x + 12;
+    let top  = y + 14;
+    if (left + w + pad > ww) left = Math.max(pad, x - w - 12);
+    if (top + 120 + pad > wh) top = Math.max(pad, y - 120);
+    tipEl.style.left = left + 'px';
+    tipEl.style.top  = top + 'px';
+  };
+
+  wrap.querySelectorAll('.hc-cesta').forEach(el => {
+    const n = parseInt(el.getAttribute('data-n'));
+    const c = parseInt(el.getAttribute('data-c'));
+
+    // Tap
+    el.addEventListener('click', () => {
+      if (shouldSuppressTap()) return;
+      hideTip();
+      openModal(n, c);
+    });
+
+    // Long-press preview (móvil)
+    let t = 0;
+    let startX = 0, startY = 0;
+    const clear = () => { if (t) { clearTimeout(t); t = 0; } };
+
+    el.addEventListener('pointerdown', (ev) => {
+      clear();
+      hideTip();
+      startX = ev.clientX; startY = ev.clientY;
+      t = setTimeout(() => {
+        const dat = (state.torre?.[n]?.[c]) || {};
+        const variedad = dat.variedad || 'Cesta vacía';
+        const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+        const fotos = (dat.fotos || []).length;
+        const notas = (dat.notas || '').trim();
+        const meta = [
+          dias !== null ? `📅 ${dias} días` : '',
+          fotos ? `📸 ${fotos}` : '',
+          notas ? '📝' : ''
+        ].filter(Boolean).join(' · ');
+
+        showTip(
+          `<div style="font-weight:900;font-family:var(--font-display);font-size:13px;margin-bottom:4px">${variedad}</div>` +
+          (meta ? `<div style="opacity:0.9">${meta}</div>` : `<div style="opacity:0.9">Toca para editar</div>`),
+          ev.clientX, ev.clientY
+        );
+      }, 420);
+    }, { passive: true });
+
+    el.addEventListener('pointermove', (ev) => {
+      if (!t) return;
+      const dx = Math.abs(ev.clientX - startX);
+      const dy = Math.abs(ev.clientY - startY);
+      if (dx > 10 || dy > 10) clear();
+    }, { passive: true });
+
+    el.addEventListener('pointerup', () => { clear(); setTimeout(hideTip, 50); }, { passive: true });
+    el.addEventListener('pointercancel', () => { clear(); hideTip(); }, { passive: true });
+    el.addEventListener('pointerleave', () => { clear(); hideTip(); }, { passive: true });
+  });
 }
 
 function rotarTorrePaso(dir = 1) {
@@ -7426,17 +7555,23 @@ async function agregarFotoCesta(event) {
         notas:    '',  // se puede editar después
       };
 
-      // Guardar foto en IndexedDB (sin límite, no ocupa localStorage)
+      // Guardar foto en IndexedDB (persistencia real en móvil)
       const torreIdx = state.torreActiva || 0;
       const fotoKey  = 'foto_t' + torreIdx + '_n' + nivel + '_c' + cesta + '_' +
                        now.toISOString().replace(/[:.]/g,'_');
-      // Guardar foto directamente en state (con compresión agresiva para caber en localStorage)
+      // 1) Guardar SIEMPRE en IDB (await para asegurar)
+      await guardarFotoIDB(fotoKey, { ...foto, key: fotoKey });
+      // 2) Guardar la key en state (lo que persiste en localStorage)
       if (!cestaData.fotoKeys) cestaData.fotoKeys = [];
+      cestaData.fotoKeys.push(fotoKey);
+      // 3) Cache ligera en state para UI inmediata (solo últimas 2 con data)
       if (!cestaData.fotos) cestaData.fotos = [];
-      cestaData.fotos.push(foto); // foto.data contiene el base64 comprimido
-
-      // También intentar guardar en IDB como backup (sin bloquear)
-      guardarFotoIDB(fotoKey, foto).catch(() => {});
+      cestaData.fotos.push({ ...foto, key: fotoKey });
+      // Compactar: evita reventar localStorage en móvil
+      while (cestaData.fotos.length > 2) {
+        const old = cestaData.fotos.shift();
+        if (old) old.data = null;
+      }
 
       // También guardar en el registro de la torre para el diario
       addRegistro('foto', {
@@ -7444,7 +7579,7 @@ async function agregarFotoCesta(event) {
         nivel:       nivel + 1,
         cesta:       cesta + 1,
         diasCultivo: diasDesdeTrasplante,
-        fotoData:    compressed,
+        fotoKey:     fotoKey,
         fotoFecha:   foto.fecha,
         icono:       '📸'
       });
@@ -7465,11 +7600,12 @@ function renderFotosCesta() {
   const { nivel, cesta } = editingCesta;
   const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
   const fotos = (cestaData && cestaData.fotos) || [];
+  const keys  = (cestaData && cestaData.fotoKeys) || [];
 
-  if (fotos.length === 0) { preview.innerHTML = ''; return; }
+  if (fotos.length === 0 && keys.length === 0) { preview.innerHTML = ''; return; }
 
   preview.innerHTML = '';
-  fotos.forEach((f, i) => {
+  const renderOne = (f, i) => {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:relative;flex-shrink:0';
 
@@ -7493,7 +7629,36 @@ function renderFotosCesta() {
     wrap.appendChild(btn);
     wrap.appendChild(fecha);
     preview.appendChild(wrap);
+  };
+
+  // Preferir fotos cacheadas (rápido). Si faltan data pero hay keys, cargar desde IDB.
+  const all = fotos.slice();
+  all.forEach((f, i) => {
+    if (f && f.data) renderOne(f, i);
   });
+
+  const missing = keys.filter(k => !all.some(f => f && f.key === k && f.data));
+  if (missing.length > 0) {
+    // Cargar últimas 6 para no saturar
+    missing.slice(-6).forEach(async (k) => {
+      try {
+        const obj = await leerFotoIDB(k);
+        if (!obj || !obj.data) return;
+        // Insertar en cache si no existe
+        if (!cestaData.fotos) cestaData.fotos = [];
+        if (!cestaData.fotos.some(f => f && f.key === k)) {
+          cestaData.fotos.push({ ...obj, key: k });
+          while (cestaData.fotos.length > 2) {
+            const old = cestaData.fotos.shift();
+            if (old) old.data = null;
+          }
+        }
+        saveState();
+        // Rerender (rápido)
+        renderFotosCesta();
+      } catch(_) {}
+    });
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -9630,14 +9795,6 @@ function renderHistMediciones() {
   document.getElementById('histPHActual').textContent   = ult.ph   || '—';
   document.getElementById('histTempActual').textContent = ult.temp || '—';
   document.getElementById('histVolActual').textContent  = ult.vol  || '—';
-
-  // Gráficas — orden cronológico (invertir para izq→der)
-  const asc = [...mediciones].reverse();
-  const toData = (arr, key) => arr.filter(m => m[key]).map(m => ({ fecha: m.fecha, val: parseFloat(m[key]) }));
-  renderMiniChart('chartEC',   toData(asc,'ec'),   1300, 1400, '#15803d', '#b91c1c');
-  renderMiniChart('chartPH',   toData(asc,'ph'),   5.7,  6.4,  '#1d4ed8', '#b45309');
-  renderMiniChart('chartTemp', toData(asc,'temp'), 18,   22,   '#b45309', '#b91c1c');
-  renderMiniChart('chartVol',  toData(asc,'vol'),  16,   20,   '#1d4ed8', '#b91c1c');
 
   // Tabla
   const tabla = document.getElementById('histTabla');
