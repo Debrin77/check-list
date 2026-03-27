@@ -2810,6 +2810,12 @@ body::before { display: none; }
   color: var(--green);
 }
 .coming-soon p { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
+
+/* ══ WMO ALERTS pulse ══ */
+@keyframes pulse-alert {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+  50%       { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+}
 </style>
 </head>
 <body>
@@ -3397,32 +3403,17 @@ body::before { display: none; }
                 style="font-size:10px;color:#4b5563">EC · pH —</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button onclick="rotarTorrePaso(1)"
-              aria-label="Girar torre (una posición)"
-              style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
-                     padding:4px 8px;font-size:14px;font-weight:800;color:#15803d;cursor:pointer;min-width:38px">
-              ⟲
-            </button>
-            <button onclick="cambiarNutriente()"
-              aria-label="Cambiar nutriente de esta torre"
-              style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
-                     padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
-              Cambiar
-            </button>
-          </div>
+          <button onclick="cambiarNutriente()"
+            aria-label="Cambiar nutriente de esta torre"
+            style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
+                   padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+            Cambiar
+          </button>
         </div>
 
         <!-- SVG generado dinámicamente -->
         <div id="torreSVGWrap" style="width:100%;overflow-x:auto" role="img" aria-label="Diagrama interactivo de la torre hidropónica. Pulsa cada cesta para ver o editar la planta.">
           <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">Cargando torre...</div>
-        </div>
-        <div id="torreQuickTip" style="position:fixed;z-index:9999;display:none;pointer-events:none;
-          background:rgba(17,24,39,0.95);color:#fff;border:1px solid rgba(255,255,255,0.12);
-          border-radius:12px;padding:10px 12px;max-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
-          font-size:12px;line-height:1.35"></div>
-        <div style="text-align:center;margin:6px 0 2px;color:#6b7280;font-size:11px;font-weight:700;letter-spacing:0.2px">
-          Desliza para girar
         </div>
 
         <!-- Depósito + Nutriente -->
@@ -3714,6 +3705,21 @@ body::before { display: none; }
     <!-- TAB 6: METEOROLOGÍA ════════════════════════════ -->
     <div class="tab-panel" id="tab-meteo">
 
+      <!-- Banner alerta urgente — visible solo cuando hay alertas críticas -->
+      <div id="meteoBannerAlerta" style="display:none;background:#fee2e2;border:2px solid #dc2626;
+        border-radius:14px;padding:12px 14px;margin-bottom:12px;
+        animation:pulse-alert 1.5s ease-in-out infinite">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px" id="meteoBannerIcon">🔴</span>
+          <div style="flex:1">
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:900;
+              color:#7f1d1d" id="meteoBannerTitulo">Alerta meteorológica</div>
+            <div style="font-size:12px;color:#991b1b;margin-top:2px"
+              id="meteoBannerTexto"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
 
       <!-- Loader -->
@@ -3787,9 +3793,6 @@ body::before { display: none; }
 
       </div>
 
-      <!-- Avisos oficiales (AEMET / Meteoalerta) -->
-      <div id="meteoAvisosOficiales" class="meteo-alertas" style="display:none"></div>
-
       <!-- Alertas para cultivo -->
       <div id="meteoAlertas" class="meteo-alertas" style="display:none"></div>
 
@@ -3844,43 +3847,49 @@ body::before { display: none; }
 
       <!-- Gráficas mediciones -->
       <div id="histMediciones" style="display:none">
-        <!-- Resumen legible (sin gráficas) -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;
-                    padding:14px;margin-bottom:10px">
-          <div style="font-family:var(--font-display);font-size:12px;font-weight:900;color:var(--muted);
-                      text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">
-            Última medición
+        <!-- Últimos valores destacados -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">⚡ EC</div>
+            <div id="histECActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--green)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">µS/cm</div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--muted);font-weight:700">⚡ EC</div>
-              <div id="histECActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--green)">—</div>
-              <div style="font-size:10px;color:var(--muted);font-weight:700">µS/cm</div>
-            </div>
-            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--muted);font-weight:700">🧪 pH</div>
-              <div id="histPHActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--blue)">—</div>
-              <div style="font-size:10px;color:var(--muted);font-weight:700"> </div>
-            </div>
-            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--muted);font-weight:700">🌡️ Temp</div>
-              <div id="histTempActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--gold)">—</div>
-              <div style="font-size:10px;color:var(--muted);font-weight:700">°C</div>
-            </div>
-            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--muted);font-weight:700">🪣 Vol</div>
-              <div id="histVolActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--blue)">—</div>
-              <div style="font-size:10px;color:var(--muted);font-weight:700">L</div>
-            </div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🧪 pH</div>
+            <div id="histPHActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--blue)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">última med.</div>
+          </div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🌡️ Temp</div>
+            <div id="histTempActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--gold)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">°C agua</div>
+          </div>
+          <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+            padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;
+              letter-spacing:0.5px;margin-bottom:4px">🪣 Vol</div>
+            <div id="histVolActual" style="font-family:var(--font-display);font-size:20px;
+              font-weight:900;color:var(--blue)">—</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">litros</div>
           </div>
         </div>
 
-        <!-- Tabla últimas mediciones -->
-        <div class="hist-tabla">
-          <div class="hist-tabla-header">
-            <span>Fecha</span><span>EC</span><span>pH</span><span>°C</span><span>Vol</span>
-          </div>
-          <div id="histTabla"></div>
+        <!-- Tabla mediciones — solo lista, sin gráficas -->
+        <div id="histTabla"></div>
+
+        <!-- IDs fantasma para que el JS no falle al actualizar charts -->
+        <div style="display:none">
+          <div id="chartEC"></div><div id="chartPH"></div>
+          <div id="chartTemp"></div><div id="chartVol"></div>
         </div>
       </div>
 
@@ -4684,7 +4693,32 @@ body::before { display: none; }
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar</button>
+    <!-- Rellenar en bloque -->
+    <div id="bloquePanel" style="background:#f0fdf4;border:1.5px solid #86efac;
+      border-radius:14px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-family:var(--font-display);font-size:12px;font-weight:800;
+        color:#15803d;margin-bottom:10px">🌿 Rellenar varias cestas a la vez</div>
+      <div style="font-size:11px;color:#4b5563;margin-bottom:8px">
+        Aplica esta variedad y fecha a múltiples cestas del mismo nivel o toda la torre.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <button onclick="rellenarBloque('nivel')"
+          style="padding:10px;border-radius:10px;border:1.5px solid #16a34a;
+                 background:#fff;font-family:var(--font-display);font-size:12px;
+                 font-weight:700;color:#15803d;cursor:pointer">
+          📋 Todo el nivel
+        </button>
+        <button onclick="rellenarBloque('seleccion')"
+          style="padding:10px;border-radius:10px;border:1.5px solid #3b82f6;
+                 background:#fff;font-family:var(--font-display);font-size:12px;
+                 font-weight:700;color:#1d4ed8;cursor:pointer">
+          ✏️ Elegir cestas
+        </button>
+      </div>
+      <div id="bloqueCestasSelector" style="display:none;margin-top:4px"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveCesta()">✓ Guardar solo esta cesta</button>
     <button class="btn" onclick="cosecharCesta()"
       style="margin-top:8px;background:#f0fdf4;color:#15803d;border:2px solid #16a34a;
              font-family:var(--font-display);font-weight:700;font-size:15px">
@@ -5099,43 +5133,11 @@ function saveState() {
     // Si falla por cuota, intentar limpiar datos antiguos
     if (e.name === 'QuotaExceededError') {
       try {
-        // Liberar espacio: eliminar base64 pesados del state (las fotos YA están en IndexedDB)
-        compactarStateFotos();
         localStorage.removeItem('hc_auth');
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch(e2) { console.error('No se pudo guardar:', e2); }
     }
   }
-}
-
-function compactarStateFotos() {
-  try {
-    // Cestas: dejar solo keys (fotoKeys) y máximo 1 thumbnail con data
-    for (let n = 0; n < (state.torre || []).length; n++) {
-      for (let c = 0; c < (state.torre[n] || []).length; c++) {
-        const cesta = state.torre[n][c];
-        if (!cesta) continue;
-        if (Array.isArray(cesta.fotos) && cesta.fotos.length > 0) {
-          // Asegurar fotoKeys
-          if (!Array.isArray(cesta.fotoKeys)) cesta.fotoKeys = [];
-          cesta.fotos.forEach(f => { if (f?.key && !cesta.fotoKeys.includes(f.key)) cesta.fotoKeys.push(f.key); });
-          // Mantener solo la última con data (si existe), el resto sin data
-          let lastWithData = null;
-          for (let i = cesta.fotos.length - 1; i >= 0; i--) {
-            if (cesta.fotos[i]?.data) { lastWithData = cesta.fotos[i]; break; }
-          }
-          cesta.fotos = lastWithData ? [{ ...lastWithData, data: lastWithData.data }] : [];
-        }
-      }
-    }
-
-    // Registro: eliminar fotoData base64, mantener fotoKey
-    if (Array.isArray(state.registro)) {
-      state.registro.forEach(e => {
-        if (e && e.tipo === 'foto' && e.fotoData) delete e.fotoData;
-      });
-    }
-  } catch(_) {}
 }
 
 // ══════════════════════════════════════════════════
@@ -5212,7 +5214,7 @@ function initApp() {
   const modoBtn = document.getElementById('modo-' + modoActual);
   if (modoBtn) modoBtn.classList.add('active');
   const m = MODOS_CULTIVO[modoActual];
-  if (m) document.getElementById('modoInfoText').textContent = `${m.desc} — Toca una cesta para editar`;
+  if (m) actualizarInfoBannerTorre();
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -5304,6 +5306,26 @@ function toggleNivel(n) {
   }
 }
 
+
+// Actualizar el banner info de la torre con EC real según cultivos presentes
+function actualizarInfoBannerTorre() {
+  const el = document.getElementById('modoInfoText');
+  if (!el) return;
+  const ecOpt  = getECOptimaTorre();
+  const cfg    = state.configTorre || {};
+  const m      = MODOS_CULTIVO[modoActual] || MODOS_CULTIVO['lechuga'];
+  const nivActivos = getNivelesActivos().length;
+  // Contar plantas
+  let nPlantas = 0;
+  getNivelesActivos().forEach(n => {
+    (state.torre[n] || []).forEach(c => { if (c && c.variedad) nPlantas++; });
+  });
+  const ecText = nPlantas > 0
+    ? 'EC óptima ' + ecOpt.min + '–' + ecOpt.max + ' µS/cm'
+    : 'Sin plantas aún';
+  el.textContent = nivActivos + ' niveles activos · ' + ecText + ' — Toca una cesta para editar';
+}
+
 function setModo(modo) {
   modoActual = modo;
   state.modo = modo;
@@ -5313,354 +5335,277 @@ function setModo(modo) {
   document.getElementById('modo-' + modo).classList.add('active');
   // Update info
   const m = MODOS_CULTIVO[modo];
-  document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Toca una cesta para editar`;
+  actualizarInfoBannerTorre();
   renderTorre();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// NUEVA generarSVGTorre() — diseño de ROSETA CIRCULAR por nivel
+// Reemplaza la función existente completa
+// ═══════════════════════════════════════════════════════════════════════════
+
 function generarSVGTorre() {
-  // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const numCestas  = cfg.numCestas  || window.NUM_CESTAS_ACTIVO  || NUM_CESTAS;
-  const nivelesActivos = Array.from({length: numNiveles}, (_, i) => i);
-  const rot = (cfg._torreRotRad || 0);
-
-  // ── Dimensiones ───────────────────────────────────────────────────────────
-  const SVG_W     = 360;
-  const CX        = SVG_W / 2;
-  const NIVEL_H   = 62;
-  const NIVEL_GAP = 14;
-  const CESTA_R   = 14;
-  const EJE_W     = 12;
-  const MARG_T    = 54;   // espacio para rociador
-  const DEP_H     = 90;   // altura depósito
-  const DEP_W     = 200;
-  const DEP_GAP   = 18;   // espacio entre torre y depósito
-  const TORRE_W   = 190;  // ancho visual del cilindro
-  const TORRE_RX  = 86;   // radio X para cestas alrededor
-  const TORRE_RY  = 18;   // radio Y (profundidad) para efecto 3D
-
-  const torreaH = numNiveles * NIVEL_H + (numNiveles - 1) * NIVEL_GAP;
-  const SVG_H   = MARG_T + torreaH + DEP_GAP + DEP_H + 30;
-
-  const nivelY = (n) => MARG_T + n * (NIVEL_H + NIVEL_GAP) + NIVEL_H / 2;
-  const DEP_Y  = MARG_T + torreaH + DEP_GAP;
-  const DEP_X  = (SVG_W - DEP_W) / 2;
-
-  // Volumen actual del depósito
-  const volConfig  = cfg.volDeposito || VOL_OBJETIVO;
-  const volActual  = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.8;
-  const volPct     = Math.min(1, Math.max(0, volActual / volConfig));
   const nut        = getNutrienteTorre();
-  const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
-  const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
+  const vol        = state.ultimaMedicion?.vol
+    ? parseFloat(state.ultimaMedicion.vol)
+    : (cfg.volDeposito || 18) * 0.8;
+  const volConfig  = cfg.volDeposito || 18;
+  const volPct     = Math.min(1, Math.max(0, vol / volConfig));
+  const tieneDifusor    = cfg.equipamiento?.includes('difusor')    ?? true;
+  const tieneCalentador = cfg.equipamiento?.includes('calentador') ?? true;
+
+  // ── Dimensiones ──────────────────────────────────────────────────────────
+  const SVG_W     = 340;
+  const CX        = SVG_W / 2;
+  const NIVEL_SEP = 90;   // separación vertical entre centros de nivel
+  const MARG_T    = 54;
+  const DEP_H     = 88;
+  const DEP_W     = 200;
+  const DEP_GAP   = 24;
+  const RADIO_NVL = 56;   // radio de la roseta (distancia eje→cesta)
+  const CESTA_R   = 15;   // radio visual de cada cesta
+  const EJE_W     = 10;
+
+  const torreaH = numNiveles * NIVEL_SEP;
+  const SVG_H   = MARG_T + torreaH + DEP_GAP + DEP_H + 28;
+  const DEP_Y   = MARG_T + torreaH + DEP_GAP;
+  const DEP_X   = (SVG_W - DEP_W) / 2;
+  const nivelCY = (n) => MARG_T + n * NIVEL_SEP + NIVEL_SEP / 2;
+
+  // Colores por estado de cultivo
+  const EST_COLOR = {
+    empty:      { fill:'#f3f4f6', stroke:'#d1d5db', text:'#9ca3af' },
+    plantula:   { fill:'#eff6ff', stroke:'#3b82f6', text:'#1d4ed8' },
+    crecimiento:{ fill:'#f0fdf4', stroke:'#16a34a', text:'#15803d' },
+    madurez:    { fill:'#fffbeb', stroke:'#d97706', text:'#92400e' },
+    cosecha:    { fill:'#fff5f5', stroke:'#dc2626', text:'#b91c1c' },
+  };
 
   let s = '';
 
-  // ── DEFS ──────────────────────────────────────────────────────────────────
+  // ── DEFS ─────────────────────────────────────────────────────────────────
   s += `<defs>
-    <linearGradient id="ejeGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4ade80"/>
+    <radialGradient id="ejeGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#86efac"/>
       <stop offset="100%" stop-color="#15803d"/>
-    </linearGradient>
-    <linearGradient id="torreBodyGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#e5e7eb"/>
-      <stop offset="18%" stop-color="#f9fafb"/>
-      <stop offset="50%" stop-color="#d1d5db"/>
-      <stop offset="82%" stop-color="#f9fafb"/>
-      <stop offset="100%" stop-color="#e5e7eb"/>
-    </linearGradient>
-    <linearGradient id="torreGlowGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#86efac" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#86efac" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="depAguaGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.9"/>
-    </linearGradient>
-    <linearGradient id="depBodyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#e0f2fe"/>
+    </radialGradient>
+    <linearGradient id="depBodyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
       <stop offset="100%" stop-color="#bfdbfe"/>
     </linearGradient>
-    <clipPath id="depClip">
-      <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>
+    <linearGradient id="depAguaG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.95"/>
+    </linearGradient>
+    <clipPath id="depClip2">
+      <rect x="${DEP_X+4}" y="${DEP_Y+4}" width="${DEP_W-8}" height="${DEP_H-8}" rx="10"/>
     </clipPath>
+    <filter id="glowRed2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>`;
 
-  // ── EJE CENTRAL ───────────────────────────────────────────────────────────
-  const ejeTop = MARG_T - 36;
+  const ejeTop = MARG_T - 34;
   const ejeBot = DEP_Y + 8;
-  s += `<rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
-    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.92"/>`;
 
-  // Agua cayendo animada
-  s += `<line x1="${CX}" y1="${ejeTop+10}" x2="${CX}" y2="${ejeBot-4}"
-    stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 9" stroke-linecap="round" opacity="0.55">
-    <animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>
+  // ── EJE VERTICAL ─────────────────────────────────────────────────────────
+  s += `<rect x="${CX - EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot - ejeTop}"
+    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.9"/>`;
+  s += `<line x1="${CX}" y1="${ejeTop+8}" x2="${CX}" y2="${ejeBot-6}"
+    stroke="#38bdf8" stroke-width="3" stroke-dasharray="7 8" stroke-linecap="round" opacity="0.5">
+    <animate attributeName="stroke-dashoffset" from="0" to="30" dur="0.9s" repeatCount="indefinite" calcMode="linear"/>
   </line>`;
 
-  // ── ROCIADOR ──────────────────────────────────────────────────────────────
-  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
-    fill="#86efac" stroke="#16a34a" stroke-width="2"/>`;
-  s += `<text x="${CX}" y="${ejeTop+4}" font-size="13" text-anchor="middle">💧</text>`;
-  // Gotas
-  const gotas = [-20,-10,0,10,20];
-  gotas.forEach((dx,i) => {
-    const delay = i * 0.18;
-    s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
-      <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
-        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" from="0.8" to="0"
-        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
+  // ── ROCIADOR ─────────────────────────────────────────────────────────────
+  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="26" ry="12"
+    fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="${CX}" y="${ejeTop+5}" font-size="14" text-anchor="middle">💧</text>`;
+  [-22,-11,0,11,22].forEach((dx,i) => {
+    const delay = (i*0.18).toFixed(2);
+    s += `<circle cx="${CX+dx}" cy="${ejeTop+18}" r="2.5" fill="#93c5fd" opacity="0.75">
+      <animate attributeName="cy" from="${ejeTop+15}" to="${ejeTop+28}" dur="0.85s" begin="${delay}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="0.8" to="0" dur="0.85s" begin="${delay}s" repeatCount="indefinite"/>
     </circle>`;
   });
 
-  // ── NIVELES Y CESTAS ──────────────────────────────────────────────────────
+  // ── NIVELES — ROSETA DE CESTAS ───────────────────────────────────────────
   for (let n = 0; n < numNiveles; n++) {
-    const ny     = nivelY(n);
-    const activo = nivelesActivos.includes(n);
-    const bodyX = CX - TORRE_W / 2;
-    const bodyY = ny - (NIVEL_H/2 - 6);
-    const bodyH = (NIVEL_H - 12);
+    const cy   = nivelCY(n);
+    const nivel = state.torre[n] || [];
 
-    // Cuerpo de cilindro por nivel (modular, queda más “torre redonda”)
-    s += `<rect x="${bodyX}" y="${bodyY}" width="${TORRE_W}" height="${bodyH}" rx="18"
-      fill="url(#torreBodyGrad)" stroke="#e5e7eb" stroke-width="1.2" opacity="${activo ? 1 : 0.35}"/>`;
-    // Glow suave cuando está activo
-    if (activo) {
-      s += `<rect x="${bodyX+2}" y="${bodyY+2}" width="${TORRE_W-4}" height="${bodyH-4}" rx="16"
-        fill="url(#torreGlowGrad)" opacity="1"/>`;
-    }
+    // Disco de fondo del nivel
+    s += `<circle cx="${CX}" cy="${cy}" r="${RADIO_NVL + CESTA_R + 8}"
+      fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" opacity="0.75"/>`;
+    s += `<text x="13" y="${cy+4}" font-family="Syne,sans-serif" font-size="11" font-weight="800"
+      fill="#9ca3af" text-anchor="middle">N${n+1}</text>`;
 
-    // Etiqueta nivel
-    s += `<text x="${bodyX-10}" y="${ny+4}" font-family="Syne,sans-serif" font-size="11" font-weight="800"
-      fill="${activo ? '#15803d' : '#9ca3af'}" text-anchor="end">N${n+1}</text>`;
-
-    if (!activo) continue;
-
-    // Cestas alrededor del cilindro (2.5D): dibujar de atrás→delante
-    const phase = n * 0.55 + rot; // helicoidal suave + rotación por swipe
-    const baskets = [];
-
+    // Cestas en posición circular
     for (let c = 0; c < numCestas; c++) {
-      const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'', fotos:[] };
+      const angulo = (c / numCestas) * 2 * Math.PI - Math.PI / 2;
+      const cx2 = CX + RADIO_NVL * Math.cos(angulo);
+      const cy2 = cy + RADIO_NVL * Math.sin(angulo);
+
+      // Brazo radial
+      s += `<line x1="${CX}" y1="${cy}" x2="${cx2}" y2="${cy2}"
+        stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>`;
+
+      const dat  = nivel[c] || { variedad:'', fecha:'' };
       const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
-      const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
-      const diasT = DIAS_COSECHA[dat.variedad] || 50;
-      const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
+      const est  = dat.variedad ? getEstado(dat.variedad, dias) : 'empty';
+      const col  = EST_COLOR[est] || EST_COLOR.empty;
+      const diasTotal = DIAS_COSECHA[dat.variedad] || 50;
+      const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasTotal) * 100)) : 0;
+      const fotos = dat.fotos?.length || 0;
 
-      let fill, stroke, emoji;
-      if (!dat.variedad)           { fill='#f9fafb'; stroke='#d1d5db'; emoji=''; }
-      else if (est==='plantula')   { fill='#eff6ff'; stroke='#3b82f6'; emoji='🌱'; }
-      else if (est==='crecimiento'){ fill='#f0fdf4'; stroke='#16a34a'; emoji=getEmoji(est); }
-      else if (est==='madurez')    { fill='#fffbeb'; stroke='#d97706'; emoji=getEmoji(est); }
-      else                         { fill='#fff5f5'; stroke='#dc2626'; emoji='✂️'; }
+      // Sombra
+      s += `<circle cx="${cx2}" cy="${cy2+2}" r="${CESTA_R+3}" fill="rgba(0,0,0,0.06)"/>`;
 
-      const ang = (Math.PI * 2 * (c / numCestas)) + phase;
-      const z = (Math.sin(ang) + 1) / 2; // 0 detrás, 1 delante
-      const scale = 0.78 + 0.34 * z;
-      const opacity = 0.35 + 0.65 * z;
-      const cx2 = CX + Math.cos(ang) * TORRE_RX;
-      const cy2 = ny + Math.sin(ang) * TORRE_RY;
+      // Cesta principal — pulsable
+      if (est === 'cosecha') {
+        s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R}"
+          fill="${col.fill}" stroke="${col.stroke}" stroke-width="2.5"
+          filter="url(#glowRed2)"
+          class="hc-cesta" data-n="${n}" data-c="${c}" style="cursor:pointer">
+          <animate attributeName="stroke-width" values="2.5;4.5;2.5" dur="0.9s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="${CESTA_R};${CESTA_R+2};${CESTA_R}" dur="0.9s" repeatCount="indefinite"/>
+        </circle>`;
+      } else {
+        s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R}"
+          fill="${col.fill}" stroke="${col.stroke}" stroke-width="2.5"
+          class="hc-cesta" data-n="${n}" data-c="${c}" style="cursor:pointer"/>`;
+      }
 
-      const fotos = (dat.fotos || []).filter(f => f && f.data);
-      const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
+      // Arco de progreso exterior
+      if (pct > 0 && pct < 100) {
+        const rA   = CESTA_R + 7;
+        const ang0 = -Math.PI / 2;
+        const ang1 = ang0 + (pct / 100) * 2 * Math.PI;
+        const x1   = cx2 + rA * Math.cos(ang0);
+        const y1   = cy2 + rA * Math.sin(ang0);
+        const x2   = cx2 + rA * Math.cos(ang1);
+        const y2   = cy2 + rA * Math.sin(ang1);
+        const large = pct > 50 ? 1 : 0;
+        s += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${rA},${rA} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)}"
+          fill="none" stroke="${col.stroke}" stroke-width="3" stroke-linecap="round" opacity="0.7"
+          class="hc-cesta" data-n="${n}" data-c="${c}" style="cursor:pointer"/>`;
+      }
+      // Corona completa si 100%
+      if (pct >= 100) {
+        s += `<circle cx="${cx2}" cy="${cy2}" r="${CESTA_R+7}"
+          fill="none" stroke="${col.stroke}" stroke-width="3" opacity="0.5"
+          class="hc-cesta" data-n="${n}" data-c="${c}" style="cursor:pointer"/>`;
+      }
 
-      baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, emoji, pct, est, dias, ultimaFoto });
+      // Emoji de la planta
+      let emoji = '';
+      if (!dat.variedad)          emoji = '+';
+      else if (est==='plantula')   emoji = '🌱';
+      else if (est==='crecimiento') emoji = '🌿';
+      else if (est==='madurez')    emoji = '🥬';
+      else                          emoji = '✂️';
+
+      s += `<text x="${cx2}" y="${cy2+5}" font-size="${dat.variedad ? 14 : 17}"
+        text-anchor="middle" fill="${dat.variedad ? col.text : '#d1d5db'}"
+        class="hc-cesta" data-n="${n}" data-c="${c}" style="cursor:pointer">${emoji}</text>`;
+
+      // Días bajo la cesta
+      if (dat.variedad && dias > 0) {
+        s += `<text x="${cx2}" y="${cy2+CESTA_R+16}"
+          font-family="Inconsolata,monospace" font-size="9" font-weight="700"
+          fill="${col.text}" text-anchor="middle">${dias}d</text>`;
+      }
+
+      // Badge 📷 si tiene fotos
+      if (fotos > 0) {
+        s += `<circle cx="${(cx2+CESTA_R-1).toFixed(1)}" cy="${(cy2-CESTA_R+1).toFixed(1)}" r="7" fill="#1d4ed8"/>
+        <text x="${(cx2+CESTA_R-1).toFixed(1)}" y="${(cy2-CESTA_R+5).toFixed(1)}" font-size="8"
+          text-anchor="middle" fill="white">📷</text>`;
+      }
+
+      // Badge ! cosecha urgente
+      if (est === 'cosecha') {
+        s += `<circle cx="${(cx2-CESTA_R+1).toFixed(1)}" cy="${(cy2-CESTA_R+1).toFixed(1)}" r="7" fill="#dc2626">
+          <animate attributeName="r" values="6;8;6" dur="0.7s" repeatCount="indefinite"/>
+        </circle>
+        <text x="${(cx2-CESTA_R+1).toFixed(1)}" y="${(cy2-CESTA_R+5).toFixed(1)}" font-size="9"
+          text-anchor="middle" fill="white" font-weight="800">!</text>`;
+      }
+
+      // Número de cesta en el brazo
+      const mx = CX + (RADIO_NVL*0.42)*Math.cos(angulo);
+      const my = cy + (RADIO_NVL*0.42)*Math.sin(angulo);
+      s += `<text x="${mx.toFixed(1)}" y="${(my+3).toFixed(1)}"
+        font-family="Inconsolata,monospace" font-size="8" fill="#94a3b8"
+        text-anchor="middle">${c+1}</text>`;
     }
 
-    baskets.sort((a, b) => a.z - b.z).forEach((b) => {
-      const r = (CESTA_R * b.scale);
-      const clipId = `clip_${n}_${b.c}`;
-      const isSelected = !!(window.editingCesta && editingCesta.nivel === b.n && editingCesta.cesta === b.c);
-
-      // Sombra (más fuerte al frente)
-      s += `<ellipse cx="${b.cx2.toFixed(1)}" cy="${(b.cy2 + 3.5).toFixed(1)}" rx="${(r*1.05).toFixed(1)}" ry="${(r*0.65).toFixed(1)}"
-        fill="rgba(0,0,0,${(0.06 + 0.10*b.z).toFixed(3)})" opacity="${b.opacity.toFixed(2)}"/>`;
-
-      // Cesta pulsable
-      s += `<g data-n="${b.n}" data-c="${b.c}" class="hc-cesta" style="cursor:pointer" opacity="${b.opacity.toFixed(2)}">`;
-
-      // Base
-      s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
-
-      // Resalte selección (cuando el modal está abierto)
-      if (isSelected) {
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+4).toFixed(1)}"
-          fill="none" stroke="#22c55e" stroke-width="${(2.6*b.scale).toFixed(1)}" opacity="0.9"/>`;
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+7.5).toFixed(1)}"
-          fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="${(5.5*b.scale).toFixed(1)}" opacity="0.8"/>`;
-      }
-
-      // Foto si existe (recorte circular)
-      if (b.ultimaFoto?.data) {
-        s += `<defs><clipPath id="${clipId}"><circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-1.6).toFixed(1)}"/></clipPath></defs>`;
-        s += `<image href="${b.ultimaFoto.data}" x="${(b.cx2-r).toFixed(1)}" y="${(b.cy2-r).toFixed(1)}"
-          width="${(r*2).toFixed(1)}" height="${(r*2).toFixed(1)}" preserveAspectRatio="xMidYMid slice"
-          clip-path="url(#${clipId})" opacity="${(0.92).toFixed(2)}"></image>`;
-        // Borde para que se lea bien
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-0.6).toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="${(1.2*b.scale).toFixed(1)}"/>`;
-      }
-
-      // Arco de progreso
-      if (b.pct > 0 && b.pct < 100) {
-        const r2   = r + 5.2;
-        const ang2  = (b.pct / 100) * 2 * Math.PI - Math.PI / 2;
-        const x1e  = b.cx2 + r2 * Math.cos(-Math.PI/2);
-        const y1e  = b.cy2 + r2 * Math.sin(-Math.PI/2);
-        const x2e  = b.cx2 + r2 * Math.cos(ang2);
-        const y2e  = b.cy2 + r2 * Math.sin(ang2);
-        s += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2.toFixed(1)},${r2.toFixed(1)} 0 ${b.pct>50?1:0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
-          fill="none" stroke="${b.stroke}" stroke-width="${(2.0*b.scale).toFixed(1)}" stroke-linecap="round" opacity="0.55"/>`;
-      }
-
-      // Emoji o +
-      if (b.emoji) {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 6).toFixed(1)}" font-size="${(14*b.scale).toFixed(1)}" text-anchor="middle">${b.emoji}</text>`;
-      } else {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2+5).toFixed(1)}" font-size="${(15*b.scale).toFixed(1)}" text-anchor="middle" fill="#d1d5db">+</text>`;
-      }
-
-      // Días / número
-      if (b.dias && b.dias > 0 && b.emoji) {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
-          font-size="${(8*b.scale).toFixed(1)}" font-weight="700" fill="${b.stroke}" text-anchor="middle">${b.dias}d</text>`;
-      } else {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
-          font-size="${(8*b.scale).toFixed(1)}" fill="#d1d5db" text-anchor="middle">${b.c+1}</text>`;
-      }
-
-      // Badges funcionales (fotos / notas)
-      const hasFotos = !!(b.ultimaFoto?.data);
-      const hasNotas = !!(state.torre?.[b.n]?.[b.c]?.notas && String(state.torre[b.n][b.c].notas).trim().length > 0);
-      if (hasFotos) {
-        const bx = b.cx2 - r + 5;
-        const by = b.cy2 - r + 5;
-        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-          text-anchor="middle" fill="#111827">📸</text>`;
-      }
-      if (hasNotas) {
-        const bx = b.cx2 + r - 5;
-        const by = b.cy2 - r + 5;
-        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-          text-anchor="middle" fill="#111827">📝</text>`;
-      }
-
-      // Badge cosecha
-      if (b.est === 'cosecha') {
-        s += `<circle cx="${(b.cx2 + r - 2).toFixed(1)}" cy="${(b.cy2 - r + 2).toFixed(1)}" r="${(5*b.scale).toFixed(1)}" fill="#dc2626">
-          <animate attributeName="r" from="${(4*b.scale).toFixed(1)}" to="${(6*b.scale).toFixed(1)}" dur="0.7s" repeatCount="indefinite" direction="alternate"/>
-        </circle>`;
-        s += `<text x="${(b.cx2 + r - 2).toFixed(1)}" y="${(b.cy2 - r + 6).toFixed(1)}" font-size="${(7*b.scale).toFixed(1)}" text-anchor="middle" fill="white">!</text>`;
-      }
-
-      s += `</g>`;
-    });
+    // Hub central del nivel
+    s += `<circle cx="${CX}" cy="${cy}" r="11"
+      fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="${CX}" y="${cy+4}" font-family="Syne,sans-serif" font-size="10"
+      font-weight="800" fill="#15803d" text-anchor="middle">${n+1}</text>`;
   }
 
-  // ── DEPÓSITO ──────────────────────────────────────────────────────────────
-  // Cuerpo exterior
+  // ── DEPÓSITO ─────────────────────────────────────────────────────────────
   s += `<rect x="${DEP_X}" y="${DEP_Y}" width="${DEP_W}" height="${DEP_H}"
-    rx="14" fill="url(#depBodyGrad)" stroke="#60a5fa" stroke-width="2.5"/>`;
-
-  // Nivel del agua
-  const aguaH   = Math.round(volPct * (DEP_H - 20));
-  const aguaY   = DEP_Y + DEP_H - 10 - aguaH;
+    rx="14" fill="url(#depBodyG)" stroke="#60a5fa" stroke-width="2.5"/>`;
+  const aguaH  = Math.round(volPct * (DEP_H - 18));
+  const aguaY  = DEP_Y + DEP_H - 9 - aguaH;
   const aguaCol = volPct < 0.5 ? '#ef4444' : volPct < 0.7 ? '#f59e0b' : '#3b82f6';
-  s += `<rect x="${DEP_X+3}" y="${aguaY}" width="${DEP_W-6}" height="${aguaH+7}"
-    rx="0" fill="url(#depAguaGrad)" clip-path="url(#depClip)" opacity="0.8">
+  s += `<rect x="${DEP_X+4}" y="${aguaY}" width="${DEP_W-8}" height="${aguaH+5}"
+    fill="url(#depAguaG)" clip-path="url(#depClip2)" opacity="0.82">
     <animate attributeName="y" from="${aguaY+2}" to="${aguaY-2}" dur="2s" repeatCount="indefinite" direction="alternate"/>
   </rect>`;
-  // Espejo del agua (superficie)
   s += `<ellipse cx="${CX}" cy="${aguaY}" rx="${(DEP_W-16)/2}" ry="5"
-    fill="${aguaCol}" opacity="0.3">
-    <animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
-  </ellipse>`;
+    fill="${aguaCol}" opacity="0.3"/>`;
+  s += `<text x="${CX}" y="${aguaY-8}" font-family="Syne,sans-serif"
+    font-size="11" font-weight="800" fill="${aguaCol}" text-anchor="middle">${vol}L</text>`;
 
-  // Texto volumen
-  s += `<text x="${CX}" y="${aguaY - 8}" font-family="Syne,sans-serif"
-    font-size="11" font-weight="800" fill="${aguaCol}" text-anchor="middle">${volActual}L</text>`;
-
-  // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
-    const hx = DEP_X + 20;
-    const hy = aguaY + aguaH / 2;
-    // Cuerpo calentador
-    s += `<rect x="${hx-5}" y="${DEP_Y+DEP_H-40}" width="10" height="30"
-      rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.5"/>`;
-    // Luz piloto
-    s += `<circle cx="${hx}" cy="${DEP_Y+DEP_H-44}" r="4" fill="#fbbf24">
+    const hx = DEP_X + 22;
+    s += `<rect x="${hx-5}" y="${DEP_Y+DEP_H-38}" width="10" height="28"
+      rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.5"/>
+    <circle cx="${hx}" cy="${DEP_Y+DEP_H-42}" r="4" fill="#fbbf24">
       <animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
-    </circle>`;
-    s += `<text x="${hx}" y="${DEP_Y+DEP_H-52}" font-size="9" text-anchor="middle" fill="#ea580c" font-weight="700">🌡️</text>`;
-    s += `<text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
+    </circle>
+    <text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
       font-size="8" fill="#ea580c" text-anchor="middle" font-weight="600">CAL</text>`;
   }
 
-  // ── DIFUSOR DE AIRE ───────────────────────────────────────────────────────
   if (tieneDifusor) {
-    const ax  = DEP_X + DEP_W - 28;
-    const ay  = DEP_Y + DEP_H - 16; // piedra en el fondo
-
-    // Tubito de aire (desde fuera hasta el fondo)
-    s += `<line x1="${ax}" y1="${DEP_Y-8}" x2="${ax}" y2="${ay-10}"
-      stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3 2"/>`;
-
-    // Piedra difusora
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="12" ry="6"
-      fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>`;
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="10" ry="4" fill="#d1d5db" opacity="0.6"/>`;
-
-    // Burbujas animadas
-    const burbs = [[-8,0], [-3,0], [2,0], [7,0], [-5,0], [4,0]];
-    burbs.forEach(([dx], i) => {
-      const bx    = ax + dx + (i%3 - 1) * 3;
-      const byStart = ay - 5;
-      const byEnd   = aguaY - 10;
-      const delay   = (i * 0.28).toFixed(2);
-      const dur     = (1.2 + i * 0.15).toFixed(2);
-      s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i%2)*0.5}" fill="#93c5fd" opacity="0">
-        <animate attributeName="cy" from="${byStart}" to="${byEnd}"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
-        <animate attributeName="opacity" values="0;0.8;0.8;0"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
-        <animate attributeName="r" from="1.5" to="3"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+    const ax = DEP_X + DEP_W - 26;
+    const ay = DEP_Y + DEP_H - 14;
+    s += `<line x1="${ax}" y1="${DEP_Y-6}" x2="${ax}" y2="${ay-8}"
+      stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <ellipse cx="${ax}" cy="${ay}" rx="11" ry="5"
+      fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>
+    <ellipse cx="${ax}" cy="${ay}" rx="9" ry="3.5" fill="#d1d5db" opacity="0.6"/>`;
+    [-7,-2,3,8].forEach((dx,i) => {
+      const bx = ax+dx; const byS = ay-5; const byE = aguaY-12;
+      const delay = (i*0.3).toFixed(2);
+      s += `<circle cx="${bx}" cy="${byS}" r="1.8" fill="#93c5fd" opacity="0">
+        <animate attributeName="cy" from="${byS}" to="${byE}" dur="1.2s" begin="${delay}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.8;0.8;0" dur="1.2s" begin="${delay}s" repeatCount="indefinite"/>
+        <animate attributeName="r" from="1.8" to="3" dur="1.2s" begin="${delay}s" repeatCount="indefinite"/>
       </circle>`;
     });
-
     s += `<text x="${ax}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
       font-size="8" fill="#6b7280" text-anchor="middle" font-weight="600">AIR</text>`;
   }
 
-  // ── ETIQUETA DEPÓSITO ─────────────────────────────────────────────────────
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+4}" font-family="Syne,sans-serif"
-    font-size="11" font-weight="800" fill="#1d4ed8" text-anchor="middle">DEPÓSITO ${VOL_OBJETIVO}L</text>`;
-  s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
-    font-size="9" fill="#374151" text-anchor="middle">Bomba continua · recirculación</text>`;
+    font-size="11" font-weight="800" fill="#1d4ed8" text-anchor="middle">DEPÓSITO ${volConfig}L</text>
+  <text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
+    font-size="9" fill="#374151" text-anchor="middle">${nut.nombre.slice(0,24)}</text>`;
 
-  // Conexión depósito → eje (tubito de subida)
   s += `<line x1="${CX}" y1="${DEP_Y}" x2="${CX}" y2="${ejeBot}"
-    stroke="#3b82f6" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.4">
-    <animate attributeName="stroke-dashoffset" from="18" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/>
+    stroke="#3b82f6" stroke-width="3" stroke-dasharray="5 4" opacity="0.35">
+    <animate attributeName="stroke-dashoffset" from="18" to="0" dur="0.8s" repeatCount="indefinite"/>
   </line>`;
-
-  // ── NOTA INFERIOR ─────────────────────────────────────────────────────────
-  // Etiqueta depósito configurado
-  s += `<text x="${DEP_X+10}" y="${DEP_Y+14}" font-family="Syne,sans-serif"
-    font-size="9" font-weight="700" fill="#6b7280" text-anchor="start">
-    🪣 ${volConfig}L configurados</text>`;
-
-  // Etiqueta nutriente activo junto al depósito
-  const nutLabel = (nut.nombre || 'Nutriente').slice(0,22);
-  s += `<text x="${DEP_X+10}" y="${DEP_Y+26}" font-family="Syne,sans-serif"
-    font-size="8" font-weight="700" fill="#15803d" text-anchor="start">
-    🧪 ${nutLabel}</text>`;
 
   s += `<text x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
     font-size="9" fill="#9ca3af" text-anchor="middle">Pulsa una cesta para editar</text>`;
@@ -5668,6 +5613,7 @@ function generarSVGTorre() {
   return `<svg width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}"
     xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto">${s}</svg>`;
 }
+
 
 
 
@@ -5753,179 +5699,20 @@ function renderTorre() {
   if (!wrap) return;
   wrap.innerHTML = generarSVGTorre();
 
-  // Swipe para girar torre (móvil): snap según numCestas
-  try { initTorreGestos(wrap); } catch(e) {}
-
-  bindTorreCestas(wrap);
+  // Event listeners en las cestas SVG (data-n, data-c)
+  wrap.querySelectorAll('.hc-cesta').forEach(el => {
+    el.addEventListener('click', function() {
+      const n = parseInt(this.getAttribute('data-n'));
+      const c = parseInt(this.getAttribute('data-c'));
+      openModal(n, c);
+    });
+  });
 
   // Actualizar stats y rotación
   updateTorreStats();
   calcularRotacion();
   // Actualizar compatibilidad
   setTimeout(renderCompatGrid, 100);
-}
-
-// ── Gestos torre: swipe para rotar con snap ──────────────────────────────────
-let _torreGestosInit = false;
-function initTorreGestos(wrap) {
-  if (_torreGestosInit) return;
-  _torreGestosInit = true;
-
-  let startX = 0;
-  let startRot = 0;
-  let dragging = false;
-  let moved = 0;
-  let raf = 0;
-
-  const getNumCestas = () => {
-    const cfg = state.configTorre || {};
-    return cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS || 5;
-  };
-  const getRot = () => (state.configTorre?._torreRotRad || 0);
-  const setRot = (r) => {
-    if (!state.configTorre) state.configTorre = {};
-    state.configTorre._torreRotRad = r;
-  };
-  const snapRot = (r) => {
-    const k = (2 * Math.PI) / Math.max(3, getNumCestas());
-    return Math.round(r / k) * k;
-  };
-  const normRot = (r) => {
-    const twoPi = 2 * Math.PI;
-    let x = r % twoPi;
-    if (x < 0) x += twoPi;
-    return x;
-  };
-
-  const schedule = () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      wrap.innerHTML = generarSVGTorre();
-      bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
-    });
-  };
-
-  const onDown = (clientX) => {
-    dragging = true;
-    moved = 0;
-    startX = clientX;
-    startRot = getRot();
-  };
-  const onMove = (clientX) => {
-    if (!dragging) return;
-    const dx = clientX - startX;
-    moved = Math.max(moved, Math.abs(dx));
-    const rot = startRot + (dx / 220) * (2 * Math.PI); // 220px ≈ vuelta completa
-    setRot(rot);
-    schedule();
-  };
-  const onUp = () => {
-    if (!dragging) return;
-    dragging = false;
-    if (moved > 10) {
-      setRot(normRot(snapRot(getRot())));
-      saveState();
-      schedule();
-      setTimeout(() => { moved = 0; }, 0);
-    }
-  };
-
-  wrap.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    onDown(e.clientX);
-  }, { passive: true });
-  wrap.addEventListener('pointermove', (e) => onMove(e.clientX), { passive: true });
-  wrap.addEventListener('pointerup', onUp, { passive: true });
-  wrap.addEventListener('pointercancel', onUp, { passive: true });
-}
-
-function bindTorreCestas(wrap, opts = {}) {
-  const shouldSuppressTap = typeof opts.suppressTapIfMoved === 'function'
-    ? opts.suppressTapIfMoved
-    : () => false;
-
-  const tipEl = document.getElementById('torreQuickTip');
-  const hideTip = () => { if (tipEl) tipEl.style.display = 'none'; };
-  const showTip = (html, x, y) => {
-    if (!tipEl) return;
-    tipEl.innerHTML = html;
-    tipEl.style.display = 'block';
-    // Offset y clamp simple
-    const pad = 10;
-    const ww = window.innerWidth || 390;
-    const wh = window.innerHeight || 800;
-    const w = 270;
-    let left = x + 12;
-    let top  = y + 14;
-    if (left + w + pad > ww) left = Math.max(pad, x - w - 12);
-    if (top + 120 + pad > wh) top = Math.max(pad, y - 120);
-    tipEl.style.left = left + 'px';
-    tipEl.style.top  = top + 'px';
-  };
-
-  wrap.querySelectorAll('.hc-cesta').forEach(el => {
-    const n = parseInt(el.getAttribute('data-n'));
-    const c = parseInt(el.getAttribute('data-c'));
-
-    // Tap
-    el.addEventListener('click', () => {
-      if (shouldSuppressTap()) return;
-      hideTip();
-      openModal(n, c);
-    });
-
-    // Long-press preview (móvil)
-    let t = 0;
-    let startX = 0, startY = 0;
-    const clear = () => { if (t) { clearTimeout(t); t = 0; } };
-
-    el.addEventListener('pointerdown', (ev) => {
-      clear();
-      hideTip();
-      startX = ev.clientX; startY = ev.clientY;
-      t = setTimeout(() => {
-        const dat = (state.torre?.[n]?.[c]) || {};
-        const variedad = dat.variedad || 'Cesta vacía';
-        const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
-        const fotos = (dat.fotos || []).length;
-        const notas = (dat.notas || '').trim();
-        const meta = [
-          dias !== null ? `📅 ${dias} días` : '',
-          fotos ? `📸 ${fotos}` : '',
-          notas ? '📝' : ''
-        ].filter(Boolean).join(' · ');
-
-        showTip(
-          `<div style="font-weight:900;font-family:var(--font-display);font-size:13px;margin-bottom:4px">${variedad}</div>` +
-          (meta ? `<div style="opacity:0.9">${meta}</div>` : `<div style="opacity:0.9">Toca para editar</div>`),
-          ev.clientX, ev.clientY
-        );
-      }, 420);
-    }, { passive: true });
-
-    el.addEventListener('pointermove', (ev) => {
-      if (!t) return;
-      const dx = Math.abs(ev.clientX - startX);
-      const dy = Math.abs(ev.clientY - startY);
-      if (dx > 10 || dy > 10) clear();
-    }, { passive: true });
-
-    el.addEventListener('pointerup', () => { clear(); setTimeout(hideTip, 50); }, { passive: true });
-    el.addEventListener('pointercancel', () => { clear(); hideTip(); }, { passive: true });
-    el.addEventListener('pointerleave', () => { clear(); hideTip(); }, { passive: true });
-  });
-}
-
-function rotarTorrePaso(dir = 1) {
-  const cfg = state.configTorre || {};
-  const numCestas = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS || 5;
-  const step = (2 * Math.PI) / Math.max(3, numCestas);
-  if (!state.configTorre) state.configTorre = {};
-  const cur = state.configTorre._torreRotRad || 0;
-  state.configTorre._torreRotRad = cur + step * (dir >= 0 ? 1 : -1);
-  saveState();
-  renderTorre();
 }
 
 
@@ -6191,6 +5978,7 @@ function updateTorreStats() {
 
   // Título torre
   renderTablaVariedades();
+  actualizarInfoBannerTorre();
   const ttEl = document.getElementById('torreTabTitle');
   if (ttEl) ttEl.textContent = torreNombre;
 
@@ -6944,69 +6732,95 @@ function guardarSetupYContinuar() {
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
   const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
 
-  // Guardar configuración en state
-  state.configTorre = {
-    tipoTorre:    setupTipoTorre,
-    numNiveles:   niveles,
-    numCestas:    cestas,
-    volDeposito:  vol,
-    ubicacion:    setupUbicacion,
-    equipamiento: [...setupEquipamiento],
-    nutriente:    setupNutriente,
-    tamanoCesta:  setupTamanoCesta,
-    tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
-    diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
-    antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
-    alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
-    bombaCalculada: window.setupBombaCalculada || null,
-    ciudad:       setupCoordenadas.ciudad,
-    lat:          setupCoordenadas.lat  || 39.9864,
-    lon:          setupCoordenadas.lon  || -0.0495,
-  };
-
-  // Aplicar constantes del nutriente seleccionado
-  const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
-  // Las constantes se usarán dinámicamente en evalEC y checklist
-
-  // Reinicializar torre con nueva configuración
-  state.torre = [];
-  for (let n = 0; n < niveles; n++) {
-    state.torre.push([]);
-    for (let c = 0; c < cestas; c++) {
-      state.torre[n].push({ variedad: '', fecha: '', notas: '' });
-    }
-  }
-
-  // Guardar cultivos seleccionados en el setup
-  state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];
-  state.configTorre.multiplesT = setupNumTorres;
-
   if (setupEsNuevaTorre) {
-    // ── NUEVA TORRE: crear entrada en state.torres ────────────────────────
-    setupEsNuevaTorre = false; // resetear flag
+    // ══ NUEVA TORRE ════════════════════════════════════════════════════════
+    // PASO 1: guardar torre activa ANTES de tocar nada
+    guardarEstadoTorreActual();
+
+    // PASO 2: construir config de la nueva torre
+    const nuevaConfig = {
+      tipoTorre:    setupTipoTorre,
+      numNiveles:   niveles,
+      numCestas:    cestas,
+      volDeposito:  vol,
+      ubicacion:    setupUbicacion,
+      equipamiento: [...setupEquipamiento],
+      nutriente:    setupNutriente,
+      tamanoCesta:  setupTamanoCesta,
+      tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
+      diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
+      antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
+      alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+      bombaCalculada: window.setupBombaCalculada || null,
+      ciudad:       setupCoordenadas.ciudad,
+      lat:          setupCoordenadas.lat  || 39.9864,
+      lon:          setupCoordenadas.lon  || -0.0495,
+      cultivosIniciales: [...setupPlantasSeleccionadas],
+      multiplesT:   setupNumTorres,
+    };
+
+    // PASO 3: crear torre nueva vacía con la nueva config
+    const nuevaTorreArray = [];
+    for (let n = 0; n < niveles; n++) {
+      nuevaTorreArray.push([]);
+      for (let c = 0; c < cestas; c++) {
+        nuevaTorreArray[n].push({ variedad: '', fecha: '', notas: '' });
+      }
+    }
     const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
     const nTorres = (state.torres || []).length;
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre || ('Torre ' + (nTorres + 1)),
       emoji: EMOJIS[nTorres % EMOJIS.length],
-      config: { ...state.configTorre },
-      torre: JSON.parse(JSON.stringify(state.torre)),
+      config: nuevaConfig,
+      torre: nuevaTorreArray,
       modoActual: 'lechugas',
       mediciones: [],
       registro: [],
     };
-    guardarEstadoTorreActual(); // guardar la torre actual antes de cambiar
+
+    // PASO 4: añadir y cambiar a ella
     if (!state.torres) state.torres = [];
     state.torres.push(nuevaTorre);
     const newIdx = state.torres.length - 1;
-    state.torreActiva = newIdx;
-    state.torre       = nuevaTorre.torre;
-    state.mediciones  = [];
-    state.registro    = [];
-    // state.configTorre ya está actualizado arriba
+    state.torreActiva  = newIdx;
+    state.configTorre  = nuevaConfig;
+    state.torre        = nuevaTorreArray;
+    state.mediciones   = [];
+    state.registro     = [];
+    setupEsNuevaTorre  = false;
+
   } else {
-    // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
+    // ══ RECONFIGURAR TORRE EXISTENTE ══════════════════════════════════════
+    state.configTorre = {
+      tipoTorre:    setupTipoTorre,
+      numNiveles:   niveles,
+      numCestas:    cestas,
+      volDeposito:  vol,
+      ubicacion:    setupUbicacion,
+      equipamiento: [...setupEquipamiento],
+      nutriente:    setupNutriente,
+      tamanoCesta:  setupTamanoCesta,
+      tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
+      diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
+      antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
+      alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+      bombaCalculada: window.setupBombaCalculada || null,
+      ciudad:       setupCoordenadas.ciudad,
+      lat:          setupCoordenadas.lat  || 39.9864,
+      lon:          setupCoordenadas.lon  || -0.0495,
+      cultivosIniciales: [...setupPlantasSeleccionadas],
+      multiplesT:   setupNumTorres,
+    };
+    // Reinicializar estructura de cestas (respetando los niveles nuevos)
+    state.torre = [];
+    for (let n = 0; n < niveles; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < cestas; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '' });
+      }
+    }
     const tIdx = state.torreActiva || 0;
     if (state.torres && state.torres[tIdx]) {
       state.torres[tIdx].config = { ...state.configTorre };
@@ -7022,7 +6836,6 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
-  // Mostrar panel checklist PRIMERO, luego cerrar setup
   preguntarIniciarChecklist();
   setTimeout(() => cerrarSetup(), 50);
 }
@@ -7555,23 +7368,17 @@ async function agregarFotoCesta(event) {
         notas:    '',  // se puede editar después
       };
 
-      // Guardar foto en IndexedDB (persistencia real en móvil)
+      // Guardar foto en IndexedDB (sin límite, no ocupa localStorage)
       const torreIdx = state.torreActiva || 0;
       const fotoKey  = 'foto_t' + torreIdx + '_n' + nivel + '_c' + cesta + '_' +
                        now.toISOString().replace(/[:.]/g,'_');
-      // 1) Guardar SIEMPRE en IDB (await para asegurar)
-      await guardarFotoIDB(fotoKey, { ...foto, key: fotoKey });
-      // 2) Guardar la key en state (lo que persiste en localStorage)
+      // Guardar foto directamente en state (con compresión agresiva para caber en localStorage)
       if (!cestaData.fotoKeys) cestaData.fotoKeys = [];
-      cestaData.fotoKeys.push(fotoKey);
-      // 3) Cache ligera en state para UI inmediata (solo últimas 2 con data)
       if (!cestaData.fotos) cestaData.fotos = [];
-      cestaData.fotos.push({ ...foto, key: fotoKey });
-      // Compactar: evita reventar localStorage en móvil
-      while (cestaData.fotos.length > 2) {
-        const old = cestaData.fotos.shift();
-        if (old) old.data = null;
-      }
+      cestaData.fotos.push(foto); // foto.data contiene el base64 comprimido
+
+      // También intentar guardar en IDB como backup (sin bloquear)
+      guardarFotoIDB(fotoKey, foto).catch(() => {});
 
       // También guardar en el registro de la torre para el diario
       addRegistro('foto', {
@@ -7579,7 +7386,7 @@ async function agregarFotoCesta(event) {
         nivel:       nivel + 1,
         cesta:       cesta + 1,
         diasCultivo: diasDesdeTrasplante,
-        fotoKey:     fotoKey,
+        fotoData:    compressed,
         fotoFecha:   foto.fecha,
         icono:       '📸'
       });
@@ -7600,12 +7407,11 @@ function renderFotosCesta() {
   const { nivel, cesta } = editingCesta;
   const cestaData = state.torre[nivel] && state.torre[nivel][cesta];
   const fotos = (cestaData && cestaData.fotos) || [];
-  const keys  = (cestaData && cestaData.fotoKeys) || [];
 
-  if (fotos.length === 0 && keys.length === 0) { preview.innerHTML = ''; return; }
+  if (fotos.length === 0) { preview.innerHTML = ''; return; }
 
   preview.innerHTML = '';
-  const renderOne = (f, i) => {
+  fotos.forEach((f, i) => {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:relative;flex-shrink:0';
 
@@ -7629,36 +7435,7 @@ function renderFotosCesta() {
     wrap.appendChild(btn);
     wrap.appendChild(fecha);
     preview.appendChild(wrap);
-  };
-
-  // Preferir fotos cacheadas (rápido). Si faltan data pero hay keys, cargar desde IDB.
-  const all = fotos.slice();
-  all.forEach((f, i) => {
-    if (f && f.data) renderOne(f, i);
   });
-
-  const missing = keys.filter(k => !all.some(f => f && f.key === k && f.data));
-  if (missing.length > 0) {
-    // Cargar últimas 6 para no saturar
-    missing.slice(-6).forEach(async (k) => {
-      try {
-        const obj = await leerFotoIDB(k);
-        if (!obj || !obj.data) return;
-        // Insertar en cache si no existe
-        if (!cestaData.fotos) cestaData.fotos = [];
-        if (!cestaData.fotos.some(f => f && f.key === k)) {
-          cestaData.fotos.push({ ...obj, key: k });
-          while (cestaData.fotos.length > 2) {
-            const old = cestaData.fotos.shift();
-            if (old) old.data = null;
-          }
-        }
-        saveState();
-        // Rerender (rápido)
-        renderFotosCesta();
-      } catch(_) {}
-    });
-  }
 }
 
 // ══════════════════════════════════════════════════
@@ -8041,6 +7818,161 @@ function borrarFotoCesta(idx) {
   state.torre[nivel][cesta].fotos.splice(idx, 1);
   saveState();
   renderFotosCesta();
+}
+
+
+// ══════════════════════════════════════════════════
+// RELLENAR EN BLOQUE — múltiples cestas a la vez
+// ══════════════════════════════════════════════════
+
+function rellenarBloque(modo) {
+  if (!editingCesta) return;
+  const variedad = document.getElementById('editVariedad').value;
+  const fecha    = document.getElementById('editFecha').value;
+  const notas    = document.getElementById('editNotas').value;
+
+  if (!variedad) {
+    showToast('⚠️ Selecciona una variedad primero', true);
+    return;
+  }
+
+  const { nivel, cesta } = editingCesta;
+  const cfg     = state.configTorre || {};
+  const numCestas = cfg.numCestas || NUM_CESTAS;
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+
+  if (modo === 'nivel') {
+    // Rellenar TODAS las cestas del nivel actual con la misma variedad y fecha
+    let count = 0;
+    for (let c = 0; c < numCestas; c++) {
+      if (!state.torre[nivel]) state.torre[nivel] = [];
+      const cestaActual = state.torre[nivel][c] || {};
+      state.torre[nivel][c] = {
+        ...cestaActual,
+        variedad, fecha, notas,
+        fotos: cestaActual.fotos || [],
+        fotoKeys: cestaActual.fotoKeys || [],
+      };
+      count++;
+    }
+    saveState();
+    renderTorre();
+    updateTorreStats();
+    renderTablaVariedades();
+    closeModal();
+    showToast('✅ ' + count + ' cestas del nivel ' + (nivel+1) + ' rellenadas con ' + variedad);
+
+  } else if (modo === 'seleccion') {
+    // Mostrar selector de cestas para elegir cuáles rellenar
+    const sel = document.getElementById('bloqueCestasSelector');
+    sel.style.display = 'block';
+
+    // Generar checkboxes para cada nivel y sus cestas
+    let html = '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">' +
+      'Selecciona las cestas a rellenar:</div>';
+
+    for (let n = 0; n < numNiveles; n++) {
+      html += '<div style="margin-bottom:8px">' +
+        '<div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;' +
+        'letter-spacing:0.5px;margin-bottom:4px">Nivel ' + (n+1) + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+
+      for (let c = 0; c < numCestas; c++) {
+        const cestaData = (state.torre[n] || [])[c];
+        const ocupada = cestaData && cestaData.variedad;
+        const estaActual = n === nivel && c === cesta;
+        const checked = estaActual ? 'checked' : '';
+        const bgColor = ocupada ? '#fef3c7' : '#f0fdf4';
+        const label   = ocupada ? (cestaData.variedad.slice(0,6) + '…') : 'Vacía';
+
+        html += '<label style="display:flex;flex-direction:column;align-items:center;' +
+          'gap:2px;cursor:pointer;-webkit-tap-highlight-color:transparent">' +
+          '<input type="checkbox" id="blk_' + n + '_' + c + '" ' + checked +
+          ' style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer">' +
+          '<span style="font-size:9px;font-weight:700;color:#374151;' +
+          'background:' + bgColor + ';border-radius:4px;padding:1px 4px;' +
+          'white-space:nowrap">' + 'N' + (n+1) + 'C' + (c+1) + '</span>' +
+          (ocupada ? '<span style="font-size:8px;color:#d97706;max-width:40px;' +
+          'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + label + '</span>' : '') +
+          '</label>';
+      }
+      html += '</div></div>';
+    }
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">' +
+      '<button onclick="seleccionarTodoBloque(true)" ' +
+        'style="padding:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;' +
+        'font-size:11px;font-weight:700;cursor:pointer;color:#374151">✅ Todo</button>' +
+      '<button onclick="seleccionarTodoBloque(false)" ' +
+        'style="padding:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;' +
+        'font-size:11px;font-weight:700;cursor:pointer;color:#374151">⬜ Nada</button>' +
+      '</div>' +
+      '<button onclick="aplicarBloqueSeleccion()" ' +
+        'style="width:100%;margin-top:8px;padding:10px;border-radius:10px;' +
+        'background:#16a34a;color:white;border:none;font-family:var(--font-display);' +
+        'font-size:13px;font-weight:800;cursor:pointer">✅ Aplicar a selección</button>';
+
+    sel.innerHTML = html;
+  }
+}
+
+function seleccionarTodoBloque(marcar) {
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || NUM_CESTAS;
+  for (let n = 0; n < numNiveles; n++) {
+    for (let c = 0; c < numCestas; c++) {
+      const cb = document.getElementById('blk_' + n + '_' + c);
+      if (cb) cb.checked = marcar;
+    }
+  }
+}
+
+function aplicarBloqueSeleccion() {
+  if (!editingCesta) return;
+  const variedad = document.getElementById('editVariedad').value;
+  const fecha    = document.getElementById('editFecha').value;
+  const notas    = document.getElementById('editNotas').value;
+
+  if (!variedad) {
+    showToast('⚠️ Selecciona una variedad primero', true);
+    return;
+  }
+
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const numCestas  = cfg.numCestas  || NUM_CESTAS;
+  let count = 0;
+
+  for (let n = 0; n < numNiveles; n++) {
+    for (let c = 0; c < numCestas; c++) {
+      const cb = document.getElementById('blk_' + n + '_' + c);
+      if (cb && cb.checked) {
+        if (!state.torre[n]) state.torre[n] = [];
+        const cestaActual = state.torre[n][c] || {};
+        state.torre[n][c] = {
+          ...cestaActual,
+          variedad, fecha, notas,
+          fotos: cestaActual.fotos || [],
+          fotoKeys: cestaActual.fotoKeys || [],
+        };
+        count++;
+      }
+    }
+  }
+
+  if (count === 0) {
+    showToast('⚠️ No hay cestas seleccionadas', true);
+    return;
+  }
+
+  saveState();
+  guardarEstadoTorreActual();
+  renderTorre();
+  updateTorreStats();
+  renderTablaVariedades();
+  closeModal();
+  showToast('✅ ' + count + ' cestas rellenadas con ' + variedad);
 }
 
 function poblarSelectVariedades() {
@@ -9796,29 +9728,89 @@ function renderHistMediciones() {
   document.getElementById('histTempActual').textContent = ult.temp || '—';
   document.getElementById('histVolActual').textContent  = ult.vol  || '—';
 
-  // Tabla
+  // Gráficas — orden cronológico (invertir para izq→der)
+  const asc = [...mediciones].reverse();
+  const toData = (arr, key) => arr.filter(m => m[key]).map(m => ({ fecha: m.fecha, val: parseFloat(m[key]) }));
+  renderMiniChart('chartEC',   toData(asc,'ec'),   1300, 1400, '#15803d', '#b91c1c');
+  renderMiniChart('chartPH',   toData(asc,'ph'),   5.7,  6.4,  '#1d4ed8', '#b45309');
+  renderMiniChart('chartTemp', toData(asc,'temp'), 18,   22,   '#b45309', '#b91c1c');
+  renderMiniChart('chartVol',  toData(asc,'vol'),  16,   20,   '#1d4ed8', '#b91c1c');
+
+  // Tabla — filas grandes, fáciles de leer, sin gráficas
   const tabla = document.getElementById('histTabla');
-  tabla.innerHTML = mediciones.map((m, i) => `
-    <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
-      <span class="hist-fecha">${m.fecha}<br>
-        <span style="font-size:10px;color:var(--muted)">${m.hora}</span>
-        ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span style="display:inline-block;margin-top:2px;font-size:9px;
-          font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;
-          border-radius:6px;padding:1px 5px">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
-      </span>
-      <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
-      <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
-      <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
-      <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
-      <span style="display:flex;align-items:center;justify-content:flex-end">
-        <button onclick="borrarMedicion(${i})"
-          style="background:none;border:none;font-size:15px;cursor:pointer;
-                 color:#dc2626;padding:8px;-webkit-tap-highlight-color:transparent;
-                 min-width:44px;min-height:44px" aria-label="Borrar esta medición">🗑</button>
-      </span>
-      ${m.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">📝 ${m.notas}</span>` : ''}
-    </div>
-  `).join('');
+  tabla.innerHTML = mediciones.map((m, i) => {
+    const ecCls   = getClaseVal('ec',   m.ec);
+    const phCls   = getClaseVal('ph',   m.ph);
+    const tmpCls  = getClaseVal('temp', m.temp);
+    const volCls  = getClaseVal('vol',  m.vol);
+    const colorMap = { ok:'#16a34a', warn:'#d97706', bad:'#dc2626', '':'#6b7280' };
+    const ecColor  = colorMap[ecCls]  || '#6b7280';
+    const phColor  = colorMap[phCls]  || '#6b7280';
+    const tmpColor = colorMap[tmpCls] || '#6b7280';
+    const volColor = colorMap[volCls] || '#6b7280';
+    const isFirst  = i === 0;
+
+    return '<div style="background:' + (isFirst ? 'rgba(52,211,153,0.07)' : 'var(--bg2)') + ';' +
+      'border:1.5px solid ' + (isFirst ? '#86efac' : 'var(--border)') + ';' +
+      'border-radius:14px;padding:12px 14px;margin-bottom:8px">' +
+
+      // Cabecera: fecha + hora + torre + borrar
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+        '<div>' +
+          '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;' +
+            'color:var(--white)">' + m.fecha + '</span>' +
+          '<span style="font-size:12px;color:var(--muted);margin-left:8px">' + (m.hora||'') + '</span>' +
+          (m.torreNombre && state.torres && state.torres.length > 1
+            ? '<span style="margin-left:6px;font-size:10px;font-weight:700;color:#15803d;' +
+              'background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:2px 6px">' +
+              (m.torreEmoji||'🌿') + ' ' + m.torreNombre + '</span>'
+            : '') +
+        '</div>' +
+        '<button onclick="borrarMedicion(' + i + ')" aria-label="Borrar medición" ' +
+          'style="background:none;border:none;font-size:18px;cursor:pointer;color:#dc2626;' +
+          'padding:6px;min-width:40px;min-height:40px;-webkit-tap-highlight-color:transparent">🗑</button>' +
+      '</div>' +
+
+      // Valores en grid 2x2 grande y legible
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">' +
+        // EC
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (ecCls==='ok'?'#86efac':ecCls==='warn'?'#fcd34d':ecCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">⚡ EC</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + ecColor + '">' +
+            (m.ec||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">µS/cm</div>' +
+        '</div>' +
+        // pH
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (phCls==='ok'?'#86efac':phCls==='warn'?'#fcd34d':phCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🧪 pH</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + phColor + '">' +
+            (m.ph||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">5.7–6.4</div>' +
+        '</div>' +
+        // Temp
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (tmpCls==='ok'?'#86efac':tmpCls==='warn'?'#fcd34d':tmpCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🌡️ Temp</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + tmpColor + '">' +
+            (m.temp||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">°C</div>' +
+        '</div>' +
+        // Vol
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;' +
+          'border:1.5px solid ' + (volCls==='ok'?'#86efac':volCls==='warn'?'#fcd34d':volCls==='bad'?'#fca5a5':'var(--border)') + '">' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">🪣 Vol</div>' +
+          '<div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:' + volColor + '">' +
+            (m.vol||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--muted)">litros</div>' +
+        '</div>' +
+      '</div>' +
+
+      (m.notas ? '<div style="margin-top:8px;font-size:12px;color:var(--muted);' +
+        'padding:6px 10px;background:var(--bg3);border-radius:8px">📝 ' + m.notas + '</div>' : '') +
+      '</div>';
+  }).join('');
 }
 
 
@@ -10526,15 +10518,11 @@ async function cargarMeteo() {
   const meteoDias = document.getElementById('meteoDias');
   const meteoDetalle = document.getElementById('meteoDetalle');
   const meteoAlertas = document.getElementById('meteoAlertas');
-  const meteoAvisosOficiales = document.getElementById('meteoAvisosOficiales');
   if (meteoDias) meteoDias.style.display = 'none';
   if (meteoDetalle) meteoDetalle.style.display = 'none';
   if (meteoAlertas) meteoAlertas.style.display = 'none';
-  if (meteoAvisosOficiales) meteoAvisosOficiales.style.display = 'none';
 
   try {
-    await ensureMeteoCoordsAuto();
-
     // ECMWF para temp/humedad + modelo default para UV
     const urlM = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
@@ -10561,11 +10549,7 @@ async function cargarMeteo() {
     document.getElementById('meteoLoader').style.display = 'none';
     document.getElementById('meteoDias').style.display = 'flex';
     document.getElementById('meteoDetalle').style.display = 'block';
-    if (document.getElementById('meteoAvisosOficiales')) document.getElementById('meteoAvisosOficiales').style.display = 'flex';
     document.getElementById('meteoAlertas').style.display = 'flex';
-
-    // Avisos meteorológicos (Open‑Meteo, sin clave)
-    renderAvisosMeteoOpenMeteo();
 
   } catch(e) {
     document.getElementById('meteoLoader').innerHTML =
@@ -11363,8 +11347,6 @@ async function fetchMeteoAlert() {
   const textEl    = document.getElementById('meteoAlertText');
 
   try {
-    await ensureMeteoCoordsAuto();
-
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&current=temperature_2m,relative_humidity_2m,windspeed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto&models=ecmwf_ifs';
@@ -11413,6 +11395,8 @@ Las plantas están en condiciones ideales de crecimiento.`;
     // Guardar en estado para uso en riego
     state.meteoActual = { temp, hum, viento, uv, vpd };
     saveState();
+    cargarAlertasWMO();
+    saveState();
 
   } catch(e) {
     alertEl.className = 'meteo-alert warn';
@@ -11420,141 +11404,6 @@ Las plantas están en condiciones ideales de crecimiento.`;
     titleEl.textContent = 'Sin conexión meteorológica';
     textEl.textContent = 'No se pueden obtener datos de Open-Meteo. Verificar conexión.';
   }
-}
-
-// ── Meteo: ubicación automática (GPS) ────────────────────────────────────────
-let _meteoGeoInFlight = null;
-async function ensureMeteoCoordsAuto() {
-  // Evitar pedir GPS si ya se intentó hace poco (para no molestar y no repetir prompts)
-  const now = Date.now();
-  const last = state._meteoGeoLastTry || 0;
-  if (now - last < 10 * 60 * 1000) return; // 10 min
-  state._meteoGeoLastTry = now;
-  saveState();
-
-  if (!navigator.geolocation) return;
-  if (_meteoGeoInFlight) return _meteoGeoInFlight;
-
-  _meteoGeoInFlight = new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          if (!state.configTorre) state.configTorre = {};
-
-          // Guardar solo si cambia de forma apreciable
-          const prevLat = parseFloat(state.configTorre.lat);
-          const prevLon = parseFloat(state.configTorre.lon);
-          const changed = !isFinite(prevLat) || !isFinite(prevLon) ||
-            Math.abs(prevLat - lat) > 0.005 || Math.abs(prevLon - lon) > 0.005;
-
-          state.configTorre.lat = lat;
-          state.configTorre.lon = lon;
-
-          // Intentar nombre (mejora UX), pero no bloqueante
-          if (changed) {
-            try {
-              const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=es`;
-              const res = await fetch(url, { headers: { 'User-Agent': 'Cultiva/1.0' } });
-              const data = await res.json();
-              const ciudad = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
-              const prov = data.address?.state || data.address?.region || '';
-              if (ciudad || prov) {
-                state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación actual') + (prov ? `, ${prov}` : '');
-              }
-            } catch (_) {}
-          }
-
-          saveState();
-        } finally {
-          resolve();
-        }
-      },
-      () => resolve(),
-      { timeout: 8000, maximumAge: 10 * 60 * 1000, enableHighAccuracy: false }
-    );
-  }).finally(() => { _meteoGeoInFlight = null; });
-
-  return _meteoGeoInFlight;
-}
-
-// ── Avisos meteorológicos (Open‑Meteo, sin clave) ────────────────────────────
-function renderAvisosMeteoOpenMeteo() {
-  const wrap = document.getElementById('meteoAvisosOficiales');
-  if (!wrap) return;
-
-  // Evitar recalcular demasiado a menudo
-  const now = Date.now();
-  if (state._openMeteoAvisosLastRender && (now - state._openMeteoAvisosLastRender) < 5 * 60 * 1000) return;
-  state._openMeteoAvisosLastRender = now;
-  saveState();
-
-  if (!meteoData?.daily) {
-    wrap.style.display = 'flex';
-    wrap.innerHTML = `
-      <div class="meteo-alerta-item warn">
-        <span style="font-size:16px">📡</span>
-        <span>Sin datos suficientes para alertas meteorológicas.</span>
-      </div>
-    `;
-    return;
-  }
-
-  const d = meteoData.daily;
-  const tMax = Math.round(d.temperature_2m_max?.[0] ?? NaN);
-  const tMin = Math.round(d.temperature_2m_min?.[0] ?? NaN);
-  const viento = Math.round(d.windspeed_10m_max?.[0] ?? NaN);
-  const uv = Math.round(d.uv_index_max?.[0] ?? 0);
-  const prob = Math.round(d.precipitation_probability_max?.[0] ?? NaN);
-  const mm = Math.round((d.precipitation_sum?.[0] ?? 0) * 10) / 10;
-
-  const alertas = [];
-
-  // Viento
-  if (isFinite(viento)) {
-    if (viento >= 70) alertas.push({ tipo:'bad', icon:'💨', titulo:`Viento muy fuerte (${viento} km/h)`, txt:'Asegura la torre, revisa estabilidad y sujeciones.' });
-    else if (viento >= 50) alertas.push({ tipo:'warn', icon:'💨', titulo:`Viento fuerte (${viento} km/h)`, txt:'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
-  }
-
-  // Lluvia
-  if (isFinite(prob)) {
-    if (prob >= 85 && mm >= 15) alertas.push({ tipo:'warn', icon:'🌧️', titulo:`Lluvia probable (${prob}%)`, txt:`Acumulado estimado ~${mm} mm. Protege nutrientes/electricidad si estás en exterior.` });
-    else if (prob >= 70) alertas.push({ tipo:'warn', icon:'🌦️', titulo:`Chubascos posibles (${prob}%)`, txt:'Planifica toldo/cobertura en horas de lluvia.' });
-  }
-
-  // Calor / frío
-  if (isFinite(tMax)) {
-    if (tMax >= 36) alertas.push({ tipo:'bad', icon:'🌡️', titulo:`Calor extremo (${tMax}°C)`, txt:'Riesgo de bolting y agua muy caliente. Toldo + vigilar temp del depósito.' });
-    else if (tMax >= 32) alertas.push({ tipo:'warn', icon:'🌡️', titulo:`Día muy caluroso (${tMax}°C)`, txt:'Vigila VPD y temperatura del agua. Sombra recomendada.' });
-  }
-  if (isFinite(tMin)) {
-    if (tMin <= 1) alertas.push({ tipo:'warn', icon:'🥶', titulo:`Noche fría (${tMin}°C)`, txt:'Posible estrés en raíces. Revisa calentador/aislamiento.' });
-  }
-
-  // UV
-  if (isFinite(uv) && uv >= 8) {
-    alertas.push({ tipo: (tMax >= 30 ? 'bad' : 'warn'), icon:'☀️', titulo:`UV alto (${uv})`, txt:'Evita sol directo prolongado; toldo recomendado.' });
-  }
-
-  // Render
-  wrap.style.display = 'flex';
-  if (alertas.length === 0) {
-    wrap.innerHTML = `
-      <div class="meteo-alerta-item ok">
-        <span style="font-size:16px">✅</span>
-        <span>Sin alertas meteorológicas destacables para hoy (según Open‑Meteo).</span>
-      </div>
-    `;
-    return;
-  }
-
-  wrap.innerHTML = alertas.slice(0, 4).map(a => `
-    <div class="meteo-alerta-item ${a.tipo}">
-      <span style="font-size:16px">${a.icon}</span>
-      <span><strong>${a.titulo}</strong><br><span style="font-size:11px;opacity:0.9">${a.txt}</span></span>
-    </div>
-  `).join('');
 }
 
 async function guardarMedicion() {
@@ -12702,6 +12551,150 @@ window.addEventListener('appinstalled', () => {
   if (installBtn) installBtn.style.display = 'none';
   showToast('✅ CULTIVA instalada correctamente');
 });
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ALERTAS METEOROLÓGICAS WMO — añadir antes de window.onload
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Códigos WMO de condiciones meteorológicas severas
+// https://open-meteo.com/en/docs — weathercode
+const WMO_ALERTAS = {
+  // Tormentas eléctricas
+  95: { nivel:'bad',  emoji:'⛈️', titulo:'Tormenta eléctrica', desc:'Peligro real. Retirar instrumentos metálicos y desconectar equipos eléctricos de la torre.' },
+  96: { nivel:'bad',  emoji:'⛈️', titulo:'Tormenta con granizo leve', desc:'Granizo puede dañar plántulas tiernas. Cubrir la torre inmediatamente.' },
+  99: { nivel:'bad',  emoji:'🌩️', titulo:'Tormenta con granizo fuerte', desc:'URGENTE: cubrir o trasladar la torre al interior. El granizo destruye las hojas.' },
+  // Precipitaciones extremas
+  65: { nivel:'bad',  emoji:'🌧️', titulo:'Lluvia muy intensa', desc:'Posible encharcamiento y saturación del sustrato. Verificar drenaje del depósito.' },
+  67: { nivel:'bad',  emoji:'🌨️', titulo:'Lluvia engelante intensa', desc:'Temperaturas críticas para las raíces. Activar calentador al máximo.' },
+  75: { nivel:'bad',  emoji:'❄️', titulo:'Nevada intensa', desc:'Proteger la torre del peso de la nieve. Las raíces en riesgo de congelación.' },
+  82: { nivel:'bad',  emoji:'🌧️', titulo:'Chubascos violentos', desc:'Ráfagas fuertes. Asegurar la estructura de la torre.' },
+  // Advertencias moderadas
+  55: { nivel:'warn', emoji:'🌧️', titulo:'Lluvia persistente moderada', desc:'Humedad alta — vigilar aparición de mildiu. Revisar hojas inferiores.' },
+  71: { nivel:'warn', emoji:'🌨️', titulo:'Nevada leve', desc:'Temperatura cerca de 0°C. Calentador imprescindible esta noche.' },
+  61: { nivel:'warn', emoji:'🌦️', titulo:'Lluvia moderada', desc:'Condiciones húmedas favorables para hongos foliares. Buena ventilación.' },
+  85: { nivel:'warn', emoji:'🌨️', titulo:'Chubascos de nieve', desc:'Temperaturas bajas. Verificar temperatura del agua del depósito.' },
+  // Viento
+  77: { nivel:'warn', emoji:'💨', titulo:'Granos de nieve/hielo', desc:'Viento muy frío. Proteger las plantas del nivel superior.' },
+};
+
+// Códigos WMO "normales" sin alerta especial (solo informativos)
+const WMO_INFO = {
+  0: '☀️ Despejado', 1: '🌤️ Mayormente despejado', 2: '⛅ Parcialmente nublado',
+  3: '☁️ Cubierto', 45: '🌫️ Niebla', 48: '🌫️ Niebla engelante',
+  51: '🌦️ Llovizna leve', 53: '🌦️ Llovizna moderada', 56: '🌦️ Llovizna engelante',
+  63: '🌧️ Lluvia moderada', 80: '🌦️ Chubascos leves', 81: '🌧️ Chubascos moderados',
+};
+
+// Variable global para el banner WMO
+let wmoAlertaActiva = null;
+
+async function cargarAlertasWMO() {
+  try {
+    const coords = getCoordsActivas();
+    const url = `https://api.open-meteo.com/v1/forecast?` +
+      `latitude=${coords.lat}&longitude=${coords.lon}` +
+      `&current=weathercode,temperature_2m,windspeed_10m` +
+      `&hourly=weathercode&forecast_days=2&timezone=auto`;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    const codigoActual  = data.current?.weathercode ?? 0;
+    const tempActual    = data.current?.temperature_2m ?? 20;
+    const vientoActual  = data.current?.windspeed_10m ?? 0;
+
+    // Buscar alertas en las próximas 12 horas
+    const horasProximas = (data.hourly?.weathercode || []).slice(0, 12);
+    const codigosConAlerta = horasProximas.filter(c => WMO_ALERTAS[c]);
+    const codigoMasSevero = codigosConAlerta.reduce((max, c) => {
+      const nivelMap = { bad: 2, warn: 1, ok: 0 };
+      const nivelActual = nivelMap[WMO_ALERTAS[c]?.nivel] || 0;
+      const nivelMax    = nivelMap[WMO_ALERTAS[max]?.nivel] || 0;
+      return nivelActual > nivelMax ? c : max;
+    }, codigoActual);
+
+    // Verificar también alertas por temperatura
+    let alertaTemp = null;
+    if (tempActual > 35) {
+      alertaTemp = { nivel:'bad', emoji:'🌡️', titulo:'Calor extremo', desc:`Temperatura ${tempActual}°C. Agua del depósito puede calentarse rápidamente. Añadir hielo o cubrir el depósito con aislante.` };
+    } else if (tempActual < 2) {
+      alertaTemp = { nivel:'bad', emoji:'🥶', titulo:'Riesgo de helada', desc:`${tempActual}°C — riesgo de daño en raíces y plántulas. El agua del depósito puede acercarse a 0°C sin calentador.` };
+    }
+
+    // Alerta por viento fuerte
+    let alertaViento = null;
+    if (vientoActual > 60) {
+      alertaViento = { nivel:'bad', emoji:'💨', titulo:`Viento muy fuerte ${vientoActual} km/h`, desc:'Peligro de voltear la torre. Asegurarla a una pared o trasladarla al interior.' };
+    } else if (vientoActual > 40) {
+      alertaViento = { nivel:'warn', emoji:'💨', titulo:`Viento fuerte ${vientoActual} km/h`, desc:'Posible estrés hídrico severo. El cálculo de riego se ajusta automáticamente.' };
+    }
+
+    // Determinar la alerta más prioritaria
+    const alertaWMO = WMO_ALERTAS[codigoMasSevero];
+    const alertaPrioritaria = alertaTemp || (alertaWMO?.nivel === 'bad' ? alertaWMO : alertaViento) || alertaWMO || null;
+
+    wmoAlertaActiva = alertaPrioritaria;
+    renderAlertasBanner(alertaPrioritaria, codigoActual);
+
+    // Guardar en state para uso en otros módulos
+    state.wmoActual = { codigo: codigoActual, temp: tempActual, viento: vientoActual, alerta: alertaPrioritaria };
+
+  } catch(e) {
+    console.warn('[WMO] Error fetching alerts:', e);
+  }
+}
+
+function renderAlertasBanner(alerta, codigoActual) {
+  // Banner urgente en pestaña Meteo
+  const banner = document.getElementById('meteoBannerAlerta');
+  const bannerIcon  = document.getElementById('meteoBannerIcon');
+  const bannerTitulo = document.getElementById('meteoBannerTitulo');
+  const bannerTexto  = document.getElementById('meteoBannerTexto');
+
+  if (banner) {
+    if (alerta && alerta.nivel === 'bad') {
+      banner.style.display = 'block';
+      if (bannerIcon)   bannerIcon.textContent   = alerta.emoji;
+      if (bannerTitulo) bannerTitulo.textContent  = alerta.titulo;
+      if (bannerTexto)  bannerTexto.textContent   = alerta.desc;
+      // Añadir animación pulse al keyframe CSS
+      banner.style.animation = 'pulse-alert 1.5s ease-in-out infinite';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  // Toast de alerta si es crítica (solo una vez al abrir la app)
+  if (alerta && alerta.nivel === 'bad' && !window._wmoToastShown) {
+    window._wmoToastShown = true;
+    setTimeout(() => {
+      showToast(`${alerta.emoji} ${alerta.titulo} — ver Meteo`, true);
+      // Notificación push si está permitida
+      enviarNotificacion(
+        `⚠️ CULTIVA — ${alerta.titulo}`,
+        alerta.desc,
+        ''
+      ).catch(() => {});
+    }, 2000);
+  }
+
+  // Badge alerta en tab Meteo
+  const tabMeteo = document.getElementById('btn-meteo');
+  if (tabMeteo) {
+    const badge = tabMeteo.querySelector('.tab-badge') || (() => {
+      const b = document.createElement('div');
+      b.className = 'tab-badge';
+      tabMeteo.appendChild(b);
+      return b;
+    })();
+    badge.style.display = (alerta && alerta.nivel === 'bad') ? 'block' : 'none';
+  }
+}
+
+// CSS extra para la animación del banner (añadir al <style> existente)
+// @keyframes pulse-alert { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); } 50% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } }
 
 window.onload = () => {
   // Ocultar splash tras la animación (1.0s + 0.4s fadeout = 1.4s total)
