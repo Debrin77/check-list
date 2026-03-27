@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -60,6 +60,12 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* Enfoque visible teclado / WCAG 2.4.7 */
+:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
 
 html {
   height: 100%;
@@ -1034,6 +1040,52 @@ body::before { display: none; }
   gap: 6px;
 }
 
+/* Inicio: controles nativos accesibles por teclado */
+.dash-torre-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.dash-sistema-info[role="button"] {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  text-align: left;
+}
+button.param-tile {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.torre-summary {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  font: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.quick-btn {
+  margin: 0;
+}
+
 /* Tarjetas de parámetros 2x2 */
 .params-grid {
   display: grid;
@@ -1484,7 +1536,6 @@ body::before { display: none; }
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 10px;
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .toldo-toggle-label {
@@ -1803,6 +1854,28 @@ body::before { display: none; }
 .cal-dia.selected.tiene-evento::after { background: var(--bg); }
 .cal-dia.otro-mes { opacity: 0.25; }
 
+button.cal-day-btn {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+
+button.dia-card {
+  font-family: inherit;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+  color: inherit;
+}
+
 /* Eventos del día */
 .eventos-lista {
   display: flex;
@@ -1848,12 +1921,16 @@ body::before { display: none; }
   border: 1px solid var(--border);
   background: var(--bg2);
   color: var(--muted);
+  font: inherit;
   font-family: var(--font-mono);
   font-size: 11px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .hist-tab.active {
   background: rgba(52,211,153,0.12);
@@ -1987,6 +2064,14 @@ body::before { display: none; }
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 16px; color: var(--muted);
   -webkit-tap-highlight-color: transparent;
+}
+button.checklist-close {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 .checklist-progress-bar {
   height: 6px;
@@ -2296,7 +2381,16 @@ body::before { display: none; }
   border-radius: 50%;
   background: white;
 }
-.config-option-body { flex: 1; }
+.config-option-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  text-align: left;
+}
+.config-option-body .config-option-title,
+.config-option-body .config-option-desc { display: block; max-width: 100%; }
 .config-option-title {
   font-family: var(--font-display);
   font-size: 14px;
@@ -2312,6 +2406,42 @@ body::before { display: none; }
 .config-option.disabled {
   opacity: 0.5;
   cursor: default;
+}
+button.config-option {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  font: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.medir-torre-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.toggle-switch {
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
 }
 .config-warning {
   margin-top: 8px;
@@ -2614,6 +2744,8 @@ body::before { display: none; }
   color: #111827;
 }
 .nutriente-detalle { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.nutriente-card .nutriente-nombre,
+.nutriente-card .nutriente-detalle { display: block; }
 .nutriente-buffer {
   font-size: 10px;
   padding: 2px 7px;
@@ -2700,6 +2832,62 @@ body::before { display: none; }
   padding: 3px 10px;
   border-radius: 20px;
 }
+
+button.equip-card,
+button.welcome-card {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-sizing: border-box;
+}
+.equip-grid > button.equip-card,
+.equip-grid > .equip-card { width: 100%; }
+
+button.equip-card-block-btn {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.nutriente-card {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+button.cl-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+}
+button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 /* ══ RESPONSIVE — tablet y escritorio ══ */
 @media (min-width: 430px) {
@@ -2831,8 +3019,8 @@ body::before { display: none; }
 </div>
 
 <!-- ══ PIN SCREEN ══ -->
-<div class="pin-screen" id="pinScreen">
-  <div class="pin-logo">CULTI<span>VA</span></div>
+<div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo">
+  <div class="pin-logo" id="pinTitulo">CULTI<span>VA</span></div>
   <div class="pin-sub">Hidroponía fácil e inteligente</div>
   <div class="pin-dots">
     <div class="pin-dot" id="d0"></div>
@@ -2840,7 +3028,7 @@ body::before { display: none; }
     <div class="pin-dot" id="d2"></div>
     <div class="pin-dot" id="d3"></div>
   </div>
-  <div class="pin-err" id="pinErr"></div>
+  <div class="pin-err" id="pinErr" role="alert" aria-live="assertive"></div>
   <div class="pin-pad" id="pinPad">
     <div class="pin-key" data-digit="1">1</div>
     <div class="pin-key" data-digit="2">2</div>
@@ -2888,20 +3076,17 @@ body::before { display: none; }
   </div>
 
   <!-- CONTENT -->
-  <div class="content">
+  <div class="content" role="main" id="main-content">
 
     <!-- TAB 1: INICIO ══════════════════════════════════ -->
-    <div class="tab-panel active" id="tab-inicio">
+    <div class="tab-panel active" id="tab-inicio" role="tabpanel" aria-labelledby="btn-inicio" aria-hidden="false">
 
       <!-- Torre activa — banner prominente -->
-      <div id="dashTorreBanner"
+      <button type="button" id="dashTorreBanner" class="dash-torre-banner"
         onclick="abrirSelectorTorres()"
-        style="display:flex;align-items:center;justify-content:space-between;
-               background:#f0fdf4;border:2px solid #86efac;border-radius:14px;
-               padding:10px 14px;margin-bottom:12px;cursor:pointer;
-               -webkit-tap-highlight-color:transparent">
+        aria-label="Cambiar torre activa">
         <div style="display:flex;align-items:center;gap:10px">
-          <span id="dashTorreEmoji" style="font-size:24px">🌿</span>
+          <span id="dashTorreEmoji" style="font-size:24px" aria-hidden="true">🌿</span>
           <div>
             <div id="dashTorreNombre"
               style="font-family:var(--font-display);font-size:14px;font-weight:900;color:#15803d">
@@ -2910,11 +3095,11 @@ body::before { display: none; }
               style="font-size:10px;color:#4b5563;margin-top:1px">—</div>
           </div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:#15803d;
+        <span style="font-size:11px;font-weight:700;color:#15803d;
                     background:#dcfce7;border-radius:8px;padding:3px 8px">
           Cambiar ›
-        </div>
-      </div>
+        </span>
+      </button>
 
       <!-- Saludo -->
       <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
@@ -2924,13 +3109,16 @@ body::before { display: none; }
         <span id="dashUltimaMedicion">Sin mediciones aún</span>
       </div>
 
-      <!-- Info sistema activo -->
-      <div id="dashSistemaInfo" style="display:flex;align-items:center;justify-content:space-between;
+      <!-- Info sistema activo: div role=button (no puede ser button con el botón Cambiar dentro) -->
+      <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
+        aria-label="Ir a mediciones: nutriente, sistema y ubicación"
+        style="display:flex;align-items:center;justify-content:space-between;
         background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;
-        padding:10px 14px;margin-bottom:10px;cursor:pointer"
-        onclick="goTab('mediciones')">
+        padding:10px 14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent"
+        onclick="goTab('mediciones')"
+        onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">🧪</span>
+          <span style="font-size:18px" aria-hidden="true">🧪</span>
           <div>
             <div id="dashNutrienteNombre" style="font-family:var(--font-display);font-size:12px;
               font-weight:800;color:#111827">—</div>
@@ -2939,7 +3127,7 @@ body::before { display: none; }
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div id="dashUbicacionBadge" style="font-size:11px;color:#6b7280"></div>
-          <button onclick="event.stopPropagation();cambiarNutriente()"
+          <button type="button" onclick="event.stopPropagation();cambiarNutriente()"
             aria-label="Cambiar nutriente"
             style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;
                    padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
@@ -2950,30 +3138,30 @@ body::before { display: none; }
 
       <!-- Tarjetas parámetros 2x2 -->
       <div class="params-grid">
-        <div class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
-          <div class="tile-icon">⚡</div>
+        <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
+          <div class="tile-icon" aria-hidden="true">⚡</div>
           <div class="tile-value empty" id="tileECVal">—</div>
           <div class="tile-label">EC µS/cm</div>
           <div class="tile-status empty" id="tileECStatus">Sin datos</div>
-        </div>
-        <div class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
-          <div class="tile-icon">🧪</div>
+        </button>
+        <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
+          <div class="tile-icon" aria-hidden="true">🧪</div>
           <div class="tile-value empty" id="tilePHVal">—</div>
           <div class="tile-label">pH</div>
           <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
-        </div>
-        <div class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
-          <div class="tile-icon">🌡️</div>
+        </button>
+        <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
+          <div class="tile-icon" aria-hidden="true">🌡️</div>
           <div class="tile-value empty" id="tileTempVal">—</div>
           <div class="tile-label">Temp agua °C</div>
           <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
-        </div>
-        <div class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
-          <div class="tile-icon">🪣</div>
+        </button>
+        <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
+          <div class="tile-icon" aria-hidden="true">🪣</div>
           <div class="tile-value empty" id="tileVolVal">—</div>
           <div class="tile-label">Volumen L</div>
           <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
-        </div>
+        </button>
       </div>
 
       <!-- Barra recarga depósito -->
@@ -2998,7 +3186,7 @@ body::before { display: none; }
       </div>
 
       <!-- Resumen torre -->
-      <div class="torre-summary" onclick="goTab('torre')" aria-label="Ir a Torre">
+      <button type="button" class="torre-summary" onclick="goTab('torre')" aria-label="Ir a la vista Torre hidropónica">
         <div class="card-title">🌿 Torre hidropónica</div>
         <div class="torre-summary-row">
           <div class="torre-mini-stat">
@@ -3018,51 +3206,52 @@ body::before { display: none; }
             <div class="torre-mini-label">Días cosecha</div>
           </div>
         </div>
-      </div>
+      </button>
 
       <!-- Acciones rápidas -->
       <div class="quick-actions">
-        <div class="quick-btn" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
-          <div class="quick-btn-icon">📊</div>
+        <button type="button" class="quick-btn" onclick="goTab('mediciones')" aria-label="Nueva medición">
+          <span class="quick-btn-icon" aria-hidden="true">📊</span>
           <span>Nueva medición</span>
-        </div>
-        <div class="quick-btn" onclick="goTab('riego')" aria-label="Ir a Riego">
-          <div class="quick-btn-icon">💧</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="goTab('riego')" aria-label="Ver riego">
+          <span class="quick-btn-icon" aria-hidden="true">💧</span>
           <span>Ver riego</span>
-        </div>
-        <div class="quick-btn" onclick="goTab('meteo')" aria-label="Ir a Meteorología">
-          <div class="quick-btn-icon">🌤️</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="goTab('meteo')" aria-label="Ver meteorología">
+          <span class="quick-btn-icon" aria-hidden="true">🌤️</span>
           <span>Meteorología</span>
-        </div>
-        <div class="quick-btn" onclick="goTab('historial')" aria-label="Ir a Historial">
-          <div class="quick-btn-icon">📈</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="goTab('historial')" aria-label="Ver historial">
+          <span class="quick-btn-icon" aria-hidden="true">📈</span>
           <span>Historial</span>
-        </div>
-        <div class="quick-btn" onclick="abrirChecklist(false)" style="border-color:rgba(251,191,36,0.3)">
-          <div class="quick-btn-icon">🔄</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="abrirChecklist(false)" aria-label="Iniciar recarga del depósito" style="border-color:rgba(251,191,36,0.3)">
+          <span class="quick-btn-icon" aria-hidden="true">🔄</span>
           <span>Iniciar recarga</span>
-        </div>
-        <div class="quick-btn" onclick="abrirSetup()" style="border-color:rgba(37,99,235,0.3)">
-          <div class="quick-btn-icon">⚙️</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="abrirSetup()" aria-label="Configurar torre" style="border-color:rgba(37,99,235,0.3)">
+          <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Configurar torre</span>
-        </div>
-        <div class="quick-btn" id="btnActivarNotif"
-          onclick="pedirPermisoNotificaciones().then(ok => { if(ok){ showToast('🔔 Notificaciones activadas'); this.style.display='none'; } else { showToast('Actívalas en Ajustes del navegador', true); } })"
+        </button>
+        <button type="button" class="quick-btn" id="btnActivarNotif"
+          onclick="activarNotificacionesDesdeInicio(event)"
+          aria-label="Activar notificaciones y alertas"
           style="border-color:rgba(59,130,246,0.3);display:none">
-          <div class="quick-btn-icon">🔔</div>
+          <span class="quick-btn-icon" aria-hidden="true">🔔</span>
           <span>Activar alertas</span>
-        </div>
-        <div class="quick-btn" onclick="resetApp()" style="border-color:rgba(248,113,113,0.3)">
-          <div class="quick-btn-icon">🗑️</div>
+        </button>
+        <button type="button" class="quick-btn" onclick="resetApp()" aria-label="Borrar todos los datos del sistema" style="border-color:rgba(248,113,113,0.3)">
+          <span class="quick-btn-icon" aria-hidden="true">🗑️</span>
           <span style="color:var(--red)">Reset sistema</span>
-        </div>
+        </button>
       </div>
 
     </div>
     <!-- FIN TAB INICIO -->
 
     <!-- TAB 2: MEDICIONES ══════════════════════════════ -->
-    <div class="tab-panel" id="tab-mediciones">
+    <div class="tab-panel" id="tab-mediciones" role="tabpanel" aria-labelledby="btn-mediciones" aria-hidden="true">
 
       <div class="section-title">
         📊 <span class="accent">Mediciones</span> diarias
@@ -3072,30 +3261,33 @@ body::before { display: none; }
       <div id="configPanel">
 
         <div class="config-section">
-          <div class="config-section-title">💧 Tipo de agua</div>
-          <div class="config-options">
-            <div class="config-option selected" id="opt-destilada" onclick="setAgua('destilada')">
-              <div class="config-option-radio"></div>
-              <div class="config-option-body">
-                <div class="config-option-title">Agua destilada</div>
-                <div class="config-option-desc">EC base: 0 µS/cm · CalMag: ~6.7 ml → EC 0.4</div>
-              </div>
-            </div>
-            <div class="config-option" id="opt-osmosis" onclick="setAgua('osmosis')">
-              <div class="config-option-radio"></div>
-              <div class="config-option-body">
-                <div class="config-option-title">Agua de ósmosis</div>
-                <div class="config-option-desc">EC base: 20-50 µS/cm · CalMag: ~6.0 ml → EC 0.4</div>
-              </div>
-            </div>
-            <div class="config-option" id="opt-grifo" onclick="setAgua('grifo')">
-              <div class="config-option-radio"></div>
-              <div class="config-option-body">
-                <div class="config-option-title">Agua del grifo</div>
-                <div class="config-option-desc">EC base variable según municipio</div>
-              </div>
-              <span style="font-size:18px">⚠️</span>
-            </div>
+          <div class="config-section-title" id="labelConfigAgua">💧 Tipo de agua</div>
+          <div class="config-options" role="radiogroup" aria-labelledby="labelConfigAgua">
+            <button type="button" class="config-option selected" id="opt-destilada" role="radio" aria-checked="true"
+              onclick="setAgua('destilada')" aria-label="Agua destilada. EC base 0 microsiemens">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Agua destilada</span>
+                <span class="config-option-desc">EC base: 0 µS/cm · CalMag: ~6.7 ml → EC 0.4</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-osmosis" role="radio" aria-checked="false"
+              onclick="setAgua('osmosis')" aria-label="Agua de ósmosis">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Agua de ósmosis</span>
+                <span class="config-option-desc">EC base: 20-50 µS/cm · CalMag: ~6.0 ml → EC 0.4</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-grifo" role="radio" aria-checked="false"
+              onclick="setAgua('grifo')" aria-label="Agua del grifo. Requiere comprobar dureza">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Agua del grifo</span>
+                <span class="config-option-desc">EC base variable según municipio</span>
+              </span>
+              <span style="font-size:18px" aria-hidden="true">⚠️</span>
+            </button>
           </div>
           <div class="config-warning" id="warningGrifo">
             ⚠️ <strong>Castelló de la Plana:</strong> El agua del grifo tiene EC ~850 µS/cm (agua muy dura). Solo quedarían ~550 µS/cm de margen para nutrientes, insuficiente para lechugas. Se recomienda encarecidamente usar agua destilada u ósmosis.
@@ -3103,7 +3295,7 @@ body::before { display: none; }
           <div class="config-ec-base" id="ecBaseGrifo">
 
             <!-- Botón geolocalización -->
-            <button id="btnGeolocalizacion" onclick="detectarMunicipio()"
+            <button type="button" id="btnGeolocalizacion" onclick="detectarMunicipio()"
               style="width:100%;padding:12px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;
                      font-family:var(--font-display);font-size:14px;font-weight:700;color:#1d4ed8;
                      cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;
@@ -3124,7 +3316,8 @@ body::before { display: none; }
             <!-- Buscador de municipio -->
             <div style="margin-bottom:10px">
               <input type="text" id="inputBuscarMunicipio" placeholder="Escribe tu municipio..."
-                inputmode="search"
+                inputmode="search" autocomplete="address-level2"
+                aria-label="Buscar municipio para datos de calidad del agua"
                 style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:10px 12px;outline:none;box-sizing:border-box"
                 oninput="onBuscarMunicipio(this.value)">
               <div id="municipioResultados" style="display:none;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;margin-top:4px;overflow:hidden"></div>
@@ -3134,7 +3327,7 @@ body::before { display: none; }
                     <div style="font-size:13px;font-weight:700;color:#14532d" id="municipioNombre">—</div>
                     <div style="font-size:12px;color:#166534;margin-top:2px" id="municipioInfo">—</div>
                   </div>
-                  <button onclick="resetMunicipio()"
+                  <button type="button" onclick="resetMunicipio()" aria-label="Cambiar municipio seleccionado"
                     style="background:none;border:none;font-size:11px;color:#16a34a;cursor:pointer;
                            font-weight:600;white-space:nowrap;padding:2px 0 0 8px;-webkit-tap-highlight-color:transparent">
                     ✏️ Cambiar
@@ -3144,9 +3337,10 @@ body::before { display: none; }
             </div>
             <!-- Fallback manual -->
             <div style="margin-bottom:10px">
-              <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600">O introduce la EC manualmente:</label>
+              <label for="inputECBaseGrifo" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600">O introduce la EC manualmente:</label>
               <div style="display:flex;align-items:center;gap:8px">
                 <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
+                  aria-label="Conductividad base del agua del grifo en microsiemens"
                   style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:110px;outline:none"
                   oninput="actualizarECBase()">
                 <span style="font-size:13px;color:var(--muted)">µS/cm</span>
@@ -3173,22 +3367,24 @@ body::before { display: none; }
         </div>
 
         <div class="config-section">
-          <div class="config-section-title">🌱 Sustrato</div>
-          <div class="config-options">
-            <div class="config-option selected" id="opt-esponja" onclick="setSustrato('esponja')">
-              <div class="config-option-radio"></div>
-              <div class="config-option-body">
-                <div class="config-option-title">Esponja hidropónica</div>
-                <div class="config-option-desc">Retención 40-60% · MinOFF base: 25 min</div>
-              </div>
-            </div>
-            <div class="config-option" id="opt-lana" onclick="setSustrato('lana')">
-              <div class="config-option-radio"></div>
-              <div class="config-option-body">
-                <div class="config-option-title">Lana de roca</div>
-                <div class="config-option-desc">Retención 70-80% · MinOFF base: 32 min (+28%)</div>
-              </div>
-            </div>
+          <div class="config-section-title" id="labelConfigSustrato">🌱 Sustrato</div>
+          <div class="config-options" role="radiogroup" aria-labelledby="labelConfigSustrato">
+            <button type="button" class="config-option selected" id="opt-esponja" role="radio" aria-checked="true"
+              onclick="setSustrato('esponja')" aria-label="Esponja hidropónica">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Esponja hidropónica</span>
+                <span class="config-option-desc">Retención 40-60% · MinOFF base: 25 min</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-lana" role="radio" aria-checked="false"
+              onclick="setSustrato('lana')" aria-label="Lana de roca">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Lana de roca</span>
+                <span class="config-option-desc">Retención 70-80% · MinOFF base: 32 min (+28%)</span>
+              </span>
+            </button>
           </div>
         </div>
 
@@ -3201,14 +3397,11 @@ body::before { display: none; }
       </div>
 
       <!-- Torre activa en Medir — selector -->
-      <div id="medirTorreBanner"
+      <button type="button" id="medirTorreBanner" class="medir-torre-banner"
         onclick="abrirSelectorTorres()"
-        style="display:flex;align-items:center;justify-content:space-between;
-               background:#fff;border:2px solid #e5e7eb;border-radius:14px;
-               padding:8px 12px;margin-bottom:8px;cursor:pointer;
-               -webkit-tap-highlight-color:transparent">
+        aria-label="Cambiar torre en la que se registra la medición">
         <div style="display:flex;align-items:center;gap:8px">
-          <span id="medirTorreEmoji" style="font-size:20px">🌿</span>
+          <span id="medirTorreEmoji" style="font-size:20px" aria-hidden="true">🌿</span>
           <div>
             <div style="font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;
                         letter-spacing:0.5px">Registrando en</div>
@@ -3219,7 +3412,7 @@ body::before { display: none; }
         </div>
         <span style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb;
                      border-radius:8px;padding:3px 8px">Cambiar ›</span>
-      </div>
+      </button>
 
       <!-- Nutriente activo — selector visible en Medir -->
       <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;
@@ -3236,7 +3429,7 @@ body::before { display: none; }
                  style="font-size:10px;color:#4b5563;margin-top:2px">—</div>
           </div>
         </div>
-        <button onclick="cambiarNutriente()"
+        <button type="button" onclick="cambiarNutriente()"
           aria-label="Cambiar nutriente activo"
           style="background:#fff;border:1.5px solid #86efac;border-radius:10px;
                  padding:6px 12px;font-family:var(--font-display);font-size:12px;
@@ -3311,9 +3504,11 @@ body::before { display: none; }
         <div class="card-title">🔄 ¿Es día de recarga?</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:13px;color:var(--muted)">Marcar fecha de recarga del depósito</span>
-          <div class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()" style="cursor:pointer">
-            <div class="toggle-knob"></div>
-          </div>
+          <button type="button" class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()"
+            role="switch" aria-checked="false"
+            aria-label="Marcar si hoy es día de recarga del depósito">
+            <span class="toggle-knob" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
 
@@ -3327,7 +3522,7 @@ body::before { display: none; }
 
       <!-- BOTÓN GUARDAR -->
       <div class="guardar-medicion-bar">
-        <button class="btn btn-primary" onclick="guardarMedicion()">
+        <button type="button" class="btn btn-primary" onclick="guardarMedicion()">
           💾 Guardar medición
         </button>
       </div>
@@ -3336,7 +3531,7 @@ body::before { display: none; }
     <!-- FIN TAB MEDICIONES -->
 
     <!-- TAB 3: TORRE ══════════════════════════════════ -->
-    <div class="tab-panel" id="tab-torre">
+    <div class="tab-panel" id="tab-torre" role="tabpanel" aria-labelledby="btn-torre" aria-hidden="true">
 
       <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <span>🌿 Torre <span class="accent" id="torreTabTitle">—</span></span>
@@ -3368,10 +3563,10 @@ body::before { display: none; }
 
       <!-- Selector modo cultivo -->
       <div class="modo-selector" id="modoSelector">
-        <button class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga">🥬 Lechugas</button>
-        <button class="modo-btn" onclick="setModo('mixto')" id="modo-mixto">🌿 Mixto</button>
-        <button class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo">⚡ Intensivo</button>
-        <button class="modo-btn" onclick="setModo('mini')" id="modo-mini">🌱 Mini</button>
+        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">🥬 Lechugas</button>
+        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">🌿 Mixto</button>
+        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">⚡ Intensivo</button>
+        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">🌱 Mini</button>
       </div>
 
       <!-- Info modo actual -->
@@ -3388,9 +3583,11 @@ body::before { display: none; }
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
           <button type="button" id="torreModoEditar" onclick="setTorreInteraccionModo('editar')"
-            class="modo-btn active" style="padding:8px 12px;font-size:12px;border-radius:10px">✏️ Editar ficha</button>
+            class="modo-btn active" style="padding:8px 12px;font-size:12px;border-radius:10px"
+            aria-pressed="true">✏️ Editar ficha</button>
           <button type="button" id="torreModoAsignar" onclick="setTorreInteraccionModo('asignar')"
-            class="modo-btn" style="padding:8px 12px;font-size:12px;border-radius:10px">🌱 Asignar cultivo</button>
+            class="modo-btn" style="padding:8px 12px;font-size:12px;border-radius:10px"
+            aria-pressed="false">🌱 Asignar cultivo</button>
         </div>
         <div id="torreEditarExtra" style="display:block;margin-bottom:10px">
           <div id="torreEditarAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
@@ -3405,17 +3602,17 @@ body::before { display: none; }
           <select id="torreAssignVariedad" class="form-select" style="margin-bottom:8px;font-size:13px" aria-label="Cultivo para asignar"></select>
           <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px">
             <div>
-              <label class="form-label" style="font-size:10px">Fecha de trasplante (nuevas)</label>
-              <input type="date" id="torreAssignFecha" class="form-input">
+              <label class="form-label" style="font-size:10px" for="torreAssignFecha">Fecha de trasplante (nuevas)</label>
+              <input type="date" id="torreAssignFecha" class="form-input" autocomplete="off">
             </div>
             <label style="display:flex;align-items:center;gap:10px;font-size:12px;cursor:pointer;color:#374151">
-              <input type="checkbox" id="torreAssignInstant" checked onchange="onTorreInstantToggle(this)">
-              Aplicar al tocar (una a una)
+              <input type="checkbox" id="torreAssignInstant" onchange="onTorreInstantToggle(this)">
+              Modo rápido: un toque = asignar esa cesta al instante
             </label>
           </div>
           <div id="torreAssignMultiBar" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
             <span id="torreAssignCount" style="font-size:12px;font-weight:800;color:#b45309"></span>
-            <button type="button" class="btn btn-primary" style="padding:6px 14px;font-size:12px;border-radius:10px"
+            <button type="button" id="torreBtnAplicarSeleccion" class="btn btn-primary" style="padding:6px 14px;font-size:12px;border-radius:10px"
               onclick="aplicarCultivoSeleccionMultiple()">Aplicar a selección</button>
             <button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;border-radius:10px"
               onclick="limpiarSeleccionCestas()">Limpiar selección</button>
@@ -3452,13 +3649,13 @@ body::before { display: none; }
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button onclick="rotarTorrePaso(1)"
+            <button type="button" onclick="rotarTorrePaso(1)"
               aria-label="Girar torre (una posición)"
               style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
                      padding:4px 8px;font-size:14px;font-weight:800;color:#15803d;cursor:pointer;min-width:38px">
               ⟲
             </button>
-            <button onclick="cambiarNutriente()"
+            <button type="button" onclick="cambiarNutriente()"
               aria-label="Cambiar nutriente de esta torre"
               style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
                      padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
@@ -3489,10 +3686,12 @@ body::before { display: none; }
             </div>
           </div>
           <!-- Nutriente activo de esta torre -->
-          <div id="torreBadgeNutriente"
+          <button type="button" id="torreBadgeNutriente"
             style="display:flex;align-items:center;gap:8px;background:#f0fdf4;
               border:1.5px solid #86efac;border-radius:10px;padding:8px 12px;
-              cursor:pointer" onclick="cambiarNutriente()">
+              cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
+              appearance:none;-webkit-appearance:none;box-sizing:border-box"
+            onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
             <span id="torreBadgeFlag" style="font-size:18px">🧪</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:10px;font-weight:700;color:#6b7280;
@@ -3504,7 +3703,7 @@ body::before { display: none; }
             </div>
             <span style="font-size:11px;color:#15803d;font-weight:700;
               white-space:nowrap">Cambiar ›</span>
-          </div>
+          </button>
         </div>
 
         <!-- Leyenda -->
@@ -3521,7 +3720,7 @@ body::before { display: none; }
 
       <!-- Compatibilidad de cultivos — panel expansible -->
       <div class="card" style="padding:0;overflow:hidden">
-        <button onclick="toggleCompatPanel()" 
+        <button type="button" onclick="toggleCompatPanel()" 
           aria-expanded="false" id="btnCompatToggle"
           style="width:100%;display:flex;align-items:center;justify-content:space-between;
                  padding:14px 16px;background:none;border:none;cursor:pointer;
@@ -3539,15 +3738,10 @@ body::before { display: none; }
         </div>
       </div>
 
-      <!-- Botón guardar en Sheets -->
-      <button class="btn btn-primary" onclick="guardarTorre()">
-        💾 Guardar torre en Google Sheets
-      </button>
-
       <!-- Acciones de torre: actualizar + añadir -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0">
 
-        <button onclick="actualizarTorreActual()"
+        <button type="button" onclick="actualizarTorreActual()"
           style="padding:12px;border-radius:14px;
                  border:2px solid #3b82f6;background:#eff6ff;
                  font-family:var(--font-display);font-size:13px;font-weight:800;
@@ -3555,7 +3749,7 @@ body::before { display: none; }
           🔄 Actualizar torre
         </button>
 
-        <button onclick="abrirSetupNuevaTorre()"
+        <button type="button" onclick="abrirSetupNuevaTorre()"
           style="padding:12px;border-radius:14px;
                  border:2px dashed #86efac;background:#f0fdf4;
                  font-family:var(--font-display);font-size:13px;font-weight:800;
@@ -3571,15 +3765,15 @@ body::before { display: none; }
     <!-- FIN TAB TORRE -->
 
     <!-- TAB 4: CALENDARIO ══════════════════════════════ -->
-    <div class="tab-panel" id="tab-calendario">
+    <div class="tab-panel" id="tab-calendario" role="tabpanel" aria-labelledby="btn-calendario" aria-hidden="true">
 
       <div class="section-title">📅 <span class="accent">Calendario</span></div>
 
       <!-- Navegación mes -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <button onclick="calNavMes(-1)" style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">‹</button>
+        <button type="button" onclick="calNavMes(-1)" aria-label="Mes anterior" style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">‹</button>
         <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--white)" id="calMesLabel">—</div>
-        <button onclick="calNavMes(1)"  style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">›</button>
+        <button type="button" onclick="calNavMes(1)" aria-label="Mes siguiente" style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">›</button>
       </div>
 
       <!-- Cabecera días semana -->
@@ -3616,19 +3810,21 @@ body::before { display: none; }
     <!-- FIN TAB CALENDARIO -->
 
     <!-- TAB 5: RIEGO ══════════════════════════════════ -->
-    <div class="tab-panel" id="tab-riego">
+    <div class="tab-panel" id="tab-riego" role="tabpanel" aria-labelledby="btn-riego" aria-hidden="true">
 
       <div class="section-title">💧 Cálculo de <span class="accent">Riego</span></div>
 
       <!-- Selector Hoy / Mañana -->
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button id="btnRiegoHoy" onclick="setDiaRiego('hoy')"
+      <div style="display:flex;gap:8px;margin-bottom:12px" role="group" aria-label="Día para el cálculo de riego">
+        <button type="button" id="btnRiegoHoy" onclick="setDiaRiego('hoy')"
+          aria-pressed="true" aria-label="Calcular riego para hoy"
           style="flex:1;padding:12px;border-radius:12px;border:2px solid #16a34a;background:#f0fdf4;
                  font-family:var(--font-display);font-size:14px;font-weight:700;color:#15803d;
                  cursor:pointer;-webkit-tap-highlight-color:transparent">
           ☀️ Hoy
         </button>
-        <button id="btnRiegoManana" onclick="setDiaRiego('manana')"
+        <button type="button" id="btnRiegoManana" onclick="setDiaRiego('manana')"
+          aria-pressed="false" aria-label="Calcular riego para mañana con previsión meteorológica"
           style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg2);
                  font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--muted);
                  cursor:pointer;-webkit-tap-highlight-color:transparent">
@@ -3640,14 +3836,15 @@ body::before { display: none; }
       <!-- Inputs plantas y edad -->
       <div class="riego-input-grid">
         <div class="riego-field">
-          <label>🌱 Nº plantas</label>
+          <label for="riegoNPlantas">🌱 Nº plantas</label>
           <input type="number" id="riegoNPlantas" value="15"
             inputmode="numeric" min="1" max="15" oninput="calcularRiego()">
         </div>
         <div class="riego-field">
-          <label>📆 Edad (semanas)</label>
+          <label for="riegoEdad">📆 Edad (semanas)</label>
           <input type="number" id="riegoEdad" value="4"
-            inputmode="decimal" step="0.1" min="0.1" max="20" oninput="calcularRiego()">
+            inputmode="decimal" step="0.1" min="0.1" max="20" oninput="calcularRiego()"
+            aria-describedby="riegoEdadInfo">
           <div id="riegoEdadInfo" style="font-size:10px;color:var(--muted);margin-top:4px">
             Auto: calculando...
           </div>
@@ -3655,14 +3852,15 @@ body::before { display: none; }
       </div>
 
       <!-- Toldo toggle -->
-      <div class="toldo-toggle" id="toldoToggle" onclick="toggleToldo()">
-        <div class="toldo-toggle-label">
-          <span>⛱️</span>
+      <div class="toldo-toggle" id="toldoToggle">
+        <div class="toldo-toggle-label" id="labelToldoRiego">
+          <span aria-hidden="true">⛱️</span>
           <span>Toldo desplegado</span>
         </div>
-        <div class="toggle-switch" id="toldoSwitch">
-          <div class="toggle-knob"></div>
-        </div>
+        <button type="button" class="toggle-switch" id="toldoSwitch" onclick="toggleToldo()"
+          role="switch" aria-checked="false" aria-labelledby="labelToldoRiego">
+          <span class="toggle-knob" aria-hidden="true"></span>
+        </button>
       </div>
 
       <!-- Loader -->
@@ -3758,7 +3956,7 @@ body::before { display: none; }
       </div>
 
       <!-- Botón recalcular -->
-      <button class="btn btn-primary" onclick="calcularRiego()" id="btnCalcRiego">
+      <button type="button" class="btn btn-primary" onclick="calcularRiego()" id="btnCalcRiego">
         🔄 Calcular riego ahora
       </button>
 
@@ -3766,7 +3964,7 @@ body::before { display: none; }
     <!-- FIN TAB RIEGO -->
 
     <!-- TAB 6: METEOROLOGÍA ════════════════════════════ -->
-    <div class="tab-panel" id="tab-meteo">
+    <div class="tab-panel" id="tab-meteo" role="tabpanel" aria-labelledby="btn-meteo" aria-hidden="true">
 
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
 
@@ -3851,7 +4049,7 @@ body::before { display: none; }
     <!-- FIN TAB METEO -->
 
     <!-- TAB 8: CONSEJOS ════════════════════════════════ -->
-    <div class="tab-panel" id="tab-consejos">
+    <div class="tab-panel" id="tab-consejos" role="tabpanel" aria-labelledby="btn-consejos" aria-hidden="true">
 
       <div class="section-title">💡 <span class="accent">Consejos</span></div>
 
@@ -3865,30 +4063,25 @@ body::before { display: none; }
     <!-- FIN TAB CONSEJOS -->
 
     <!-- TAB 7: HISTORIAL ════════════════════════════════ -->
-    <div class="tab-panel" id="tab-historial">
+    <div class="tab-panel" id="tab-historial" role="tabpanel" aria-labelledby="btn-historial" aria-hidden="true">
 
       <div class="section-title">📈 <span class="accent">Historial</span></div>
 
       <!-- Sub-tabs -->
       <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
-        <div class="hist-tabs" style="flex:1;margin-bottom:0;min-width:200px">
-          <div class="hist-tab active" id="htab-mediciones" onclick="histTab('mediciones')">📊 Mediciones</div>
-          <div class="hist-tab" id="htab-recargas" onclick="histTab('recargas')">🔄 Recargas</div>
-          <div class="hist-tab" id="htab-registro" onclick="histTab('registro')">📋 Registro</div>
-          <div class="hist-tab" id="htab-diario" onclick="histTab('diario')">📸 Diario</div>
+        <div class="hist-tabs" role="tablist" aria-label="Apartados del historial" style="flex:1;margin-bottom:0;min-width:200px">
+          <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" onclick="histTab('mediciones')">📊 Mediciones</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" onclick="histTab('recargas')">🔄 Recargas</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" onclick="histTab('registro')">📋 Registro</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" onclick="histTab('diario')">📸 Diario</button>
         </div>
-        <button onclick="abrirChecklist(false)"
+        <button type="button" onclick="abrirChecklist(false)"
           style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--green);
                  background:#f0fdf4;color:#15803d;font-family:var(--font-display);
                  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
                  -webkit-tap-highlight-color:transparent">
           📋 Checklist
         </button>
-      </div>
-
-      <!-- Registro completo -->
-      <div id="histRegistro" style="display:none">
-        <div id="registroLista"></div>
       </div>
 
       <!-- Loader -->
@@ -3980,69 +4173,69 @@ body::before { display: none; }
   <!-- FIN CONTENT -->
 
   <!-- TAB BAR -->
-  <div class="tab-bar">
-    <button class="tab-btn active" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
+    <button class="tab-btn active" type="button" role="tab" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio" aria-selected="true" aria-controls="tab-inicio">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       Inicio
     </button>
-    <button class="tab-btn" role="tab" id="btn-mediciones" onclick="goTab('mediciones')" aria-label="Ir a Mediciones">
+    <button class="tab-btn" type="button" role="tab" id="btn-mediciones" onclick="goTab('mediciones')" aria-label="Ir a Mediciones" aria-selected="false" aria-controls="tab-mediciones">
       <div class="tab-badge" id="alertBadge" style="display:none"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
       Medir
     </button>
-    <button class="tab-btn" role="tab" id="btn-torre" onclick="goTab('torre')" aria-label="Ir a Torre">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-torre" onclick="goTab('torre')" aria-label="Ir a Torre" aria-selected="false" aria-controls="tab-torre">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="6.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="12" y1="14" x2="12" y2="14.01"/>
       </svg>
       Torre
     </button>
-    <button class="tab-btn" role="tab" id="btn-calendario" onclick="goTab('calendario')" aria-label="Ir a Calendario">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-calendario" onclick="goTab('calendario')" aria-label="Ir a Calendario" aria-selected="false" aria-controls="tab-calendario">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
       </svg>
       Calendario
     </button>
-    <button class="tab-btn" role="tab" id="btn-riego" onclick="goTab('riego')" aria-label="Ir a Riego">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-riego" onclick="goTab('riego')" aria-label="Ir a Riego" aria-selected="false" aria-controls="tab-riego">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2C6 2 2 8 2 13a10 10 0 0020 0c0-5-4-11-10-11z"/>
       </svg>
       Riego
     </button>
-    <button class="tab-btn" role="tab" id="btn-meteo" onclick="goTab('meteo')" aria-label="Ir a Meteorología">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-meteo" onclick="goTab('meteo')" aria-label="Ir a Meteorología" aria-selected="false" aria-controls="tab-meteo">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/>
       </svg>
       Meteo
     </button>
-    <button class="tab-btn" role="tab" id="btn-historial" onclick="goTab('historial')" aria-label="Ir a Historial">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-historial" onclick="goTab('historial')" aria-label="Ir a Historial" aria-selected="false" aria-controls="tab-historial">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
       Historial
     </button>
-    <button class="tab-btn" role="tab" id="btn-consejos" onclick="goTab('consejos')" aria-label="Ir a Consejos">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="tab-btn" type="button" role="tab" id="btn-consejos" onclick="goTab('consejos')" aria-label="Ir a Consejos" aria-selected="false" aria-controls="tab-consejos">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
       </svg>
       Consejos
     </button>
-  </div>
+  </nav>
 
 </div>
 <!-- FIN APP -->
 
 <!-- ══ ASISTENTE DE CONFIGURACIÓN ══ -->
-<div class="setup-overlay" id="setupOverlay">
+<div class="setup-overlay" id="setupOverlay" role="dialog" aria-modal="true" aria-label="Asistente de configuración de la torre">
 
   <!-- Header con progreso -->
   <div class="setup-header">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div class="setup-logo">CULTI<span>VA</span></div>
-      <button onclick="cerrarSetup()"
+      <button type="button" onclick="cerrarSetup()"
         style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e5e7eb;
                background:#fff;font-size:18px;color:#6b7280;cursor:pointer;
                display:flex;align-items:center;justify-content:center;
@@ -4068,19 +4261,21 @@ body::before { display: none; }
       <div class="setup-title">👋 Bienvenido</div>
       <div class="setup-subtitle">¿Tienes una torre VEVOR vertical de 5 niveles o quieres configurar tu propio sistema?</div>
 
-      <div class="welcome-card vevor" onclick="elegirTipoTorre('vevor')">
-        <div class="welcome-card-icon">🏭</div>
+      <button type="button" class="welcome-card vevor" onclick="elegirTipoTorre('vevor')"
+        aria-label="Torre VEVOR vertical: configuración precalibrada y lista">
+        <div class="welcome-card-icon" aria-hidden="true">🏭</div>
         <div class="welcome-card-title">Torre VEVOR</div>
         <div class="welcome-card-desc">Torre vertical VEVOR de 6 niveles × 5 cestas con depósito de 20L. Configuración precalibrada y optimizada.</div>
         <div class="welcome-card-badge">✅ Configuración lista</div>
-      </div>
+      </button>
 
-      <div class="welcome-card custom" onclick="elegirTipoTorre('custom')">
-        <div class="welcome-card-icon">⚙️</div>
+      <button type="button" class="welcome-card custom" onclick="elegirTipoTorre('custom')"
+        aria-label="Configurar torre personalizada paso a paso">
+        <div class="welcome-card-icon" aria-hidden="true">⚙️</div>
         <div class="welcome-card-title">Configurar mi torre</div>
         <div class="welcome-card-desc">Personaliza niveles, cestas, volumen del depósito y equipamiento para cualquier sistema hidropónico.</div>
         <div class="welcome-card-badge" style="background:#2563eb">🔧 Asistente paso a paso</div>
-      </div>
+      </button>
     </div>
 
     <div class="setup-page" id="spage1">
@@ -4136,30 +4331,30 @@ body::before { display: none; }
             Diámetro interior del tubo central
           </div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
-            <div class="equip-card" id="tubo50"  onclick="seleccionarTubo(50)"  style="padding:8px;text-align:center">
+            <button type="button" class="equip-card" id="tubo50"  onclick="seleccionarTubo(50)"  style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">50mm</div>
               <div style="font-size:9px;color:#6b7280">VEVOR estándar</div>
-            </div>
-            <div class="equip-card" id="tubo75"  onclick="seleccionarTubo(75)"  style="padding:8px;text-align:center">
+            </button>
+            <button type="button" class="equip-card" id="tubo75"  onclick="seleccionarTubo(75)"  style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">75mm</div>
               <div style="font-size:9px;color:#6b7280">Torres domésticas</div>
-            </div>
-            <div class="equip-card" id="tubo110" onclick="seleccionarTubo(110)" style="padding:8px;text-align:center">
+            </button>
+            <button type="button" class="equip-card" id="tubo110" onclick="seleccionarTubo(110)" style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">110mm</div>
               <div style="font-size:9px;color:#6b7280">PVC estándar</div>
-            </div>
-            <div class="equip-card" id="tubo125" onclick="seleccionarTubo(125)" style="padding:8px;text-align:center">
+            </button>
+            <button type="button" class="equip-card" id="tubo125" onclick="seleccionarTubo(125)" style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">125mm</div>
               <div style="font-size:9px;color:#f97316;font-weight:700">⚠️ Riesgo raíces</div>
-            </div>
-            <div class="equip-card" id="tubo160" onclick="seleccionarTubo(160)" style="padding:8px;text-align:center">
+            </button>
+            <button type="button" class="equip-card" id="tubo160" onclick="seleccionarTubo(160)" style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">160mm</div>
               <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Tubo interior</div>
-            </div>
-            <div class="equip-card" id="tubo200" onclick="seleccionarTubo(200)" style="padding:8px;text-align:center">
+            </button>
+            <button type="button" class="equip-card" id="tubo200" onclick="seleccionarTubo(200)" style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">200mm</div>
               <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Profesional</div>
-            </div>
+            </button>
           </div>
           <!-- Aviso anti-raíces dinámico -->
           <div id="avisoAntiRaices" style="display:none;border-radius:10px;
@@ -4173,26 +4368,26 @@ body::before { display: none; }
             🌿 Sistema anti-obstrucción de raíces
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="equip-card" id="antiTuboInt" onclick="seleccionarAntiRaices('tubo_interior')" style="padding:10px">
+            <button type="button" class="equip-card" id="antiTuboInt" onclick="seleccionarAntiRaices('tubo_interior')" style="padding:10px">
               <div style="font-size:18px;margin-bottom:4px">🔩</div>
               <div style="font-size:11px;font-weight:700;color:#374151">Tubo interior perforado</div>
               <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Tubo fino dentro del central con tela filtrante. Solución más eficaz.</div>
-            </div>
-            <div class="equip-card" id="antiSeparadores" onclick="seleccionarAntiRaices('separadores')" style="padding:10px">
+            </button>
+            <button type="button" class="equip-card" id="antiSeparadores" onclick="seleccionarAntiRaices('separadores')" style="padding:10px">
               <div style="font-size:18px;margin-bottom:4px">🔲</div>
               <div style="font-size:11px;font-weight:700;color:#374151">Separadores de nivel</div>
               <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Bandejas perforadas entre niveles que retienen las raíces.</div>
-            </div>
-            <div class="equip-card" id="antiCanal" onclick="seleccionarAntiRaices('canal_lateral')" style="padding:10px">
+            </button>
+            <button type="button" class="equip-card" id="antiCanal" onclick="seleccionarAntiRaices('canal_lateral')" style="padding:10px">
               <div style="font-size:18px;margin-bottom:4px">↕️</div>
               <div style="font-size:11px;font-weight:700;color:#374151">Tubo lateral de bajada</div>
               <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Subida y bajada separadas. Las raíces no interfieren.</div>
-            </div>
-            <div class="equip-card" id="antiNinguno" onclick="seleccionarAntiRaices('ninguno')" style="padding:10px">
+            </button>
+            <button type="button" class="equip-card" id="antiNinguno" onclick="seleccionarAntiRaices('ninguno')" style="padding:10px">
               <div style="font-size:18px;margin-bottom:4px">❌</div>
               <div style="font-size:11px;font-weight:700;color:#dc2626">Sin protección</div>
               <div style="font-size:9px;color:#dc2626;margin-top:2px;line-height:1.4">No recomendado con ≥125mm.</div>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -4226,40 +4421,46 @@ body::before { display: none; }
         🧺 Tamaño de cestas
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-        <div class="equip-card" id="cesta38" onclick="seleccionarCesta('38')" style="padding:10px 6px;text-align:center">
+        <button type="button" class="equip-card" id="cesta38" onclick="seleccionarCesta('38')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">⚪</div>
           <div style="font-size:12px;font-weight:800;color:#374151">3.8 cm</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">Mini · Microgreens<br>Germinación</div>
-        </div>
-        <div class="equip-card" id="cesta40" onclick="seleccionarCesta('40')" style="padding:10px 6px;text-align:center">
+        </button>
+        <button type="button" class="equip-card" id="cesta40" onclick="seleccionarCesta('40')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">🌿</div>
           <div style="font-size:12px;font-weight:800;color:#374151">4.0 cm</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">Torre VEVOR ✅<br>Lechugas perfectas</div>
-        </div>
-        <div class="equip-card selected" id="cesta50" onclick="seleccionarCesta('50')" style="padding:10px 6px;text-align:center">
+        </button>
+        <button type="button" class="equip-card selected" id="cesta50" onclick="seleccionarCesta('50')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">🟢</div>
           <div style="font-size:12px;font-weight:800;color:#374151">5.0 cm</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">Estándar · Mayor<br>estabilidad</div>
-        </div>
-        <div class="equip-card" id="cesta75" onclick="seleccionarCesta('75')" style="padding:10px 6px;text-align:center">
+        </button>
+        <button type="button" class="equip-card" id="cesta75" onclick="seleccionarCesta('75')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">🔵</div>
           <div style="font-size:12px;font-weight:800;color:#374151">7.5 cm</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">Grande · Tomates<br>Frutos y hierbas</div>
-        </div>
-        <div class="equip-card" id="cesta100" onclick="seleccionarCesta('100')" style="padding:10px 6px;text-align:center">
+        </button>
+        <button type="button" class="equip-card" id="cesta100" onclick="seleccionarCesta('100')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">⭕</div>
           <div style="font-size:12px;font-weight:800;color:#374151">10 cm</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">XL · Plantas grandes<br>Máxima producción</div>
-        </div>
-        <div class="equip-card" id="cestaPersonalizada" onclick="seleccionarCesta('custom')" style="padding:10px 6px;text-align:center;grid-column:span 2">
-          <div style="font-size:22px;margin-bottom:4px">✏️</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">Personalizada</div>
+        </button>
+        <div class="equip-card" id="cestaPersonalizada" role="group"
+          aria-label="Cesta personalizada: elige diámetro en centímetros"
+          style="padding:10px 6px;text-align:center;grid-column:span 2">
+          <button type="button" class="equip-card-block-btn" onclick="seleccionarCesta('custom')"
+            aria-label="Seleccionar modo cesta personalizada">
+            <div style="font-size:22px;margin-bottom:4px" aria-hidden="true">✏️</div>
+            <div style="font-size:12px;font-weight:800;color:#374151">Personalizada</div>
+          </button>
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:center">
             <input type="number" id="cestaCmCustom" placeholder="ej: 6.3" step="0.1" min="1" max="20"
               aria-label="Diámetro personalizado de cesta en centímetros"
               style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;
                      font-size:13px;font-weight:700;text-align:center;outline:none"
-              oninput="seleccionarCesta('custom')">
+              oninput="seleccionarCesta('custom')"
+              onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">
             <span style="font-size:11px;color:#6b7280">cm</span>
           </div>
         </div>
@@ -4273,16 +4474,16 @@ body::before { display: none; }
         ¿Dónde está tu torre?
       </div>
       <div class="equip-grid">
-        <div class="equip-card selected" id="eqExterior" onclick="toggleUbic('exterior')">
+        <button type="button" class="equip-card selected" id="eqExterior" onclick="toggleUbic('exterior')">
           <div class="equip-icon">☀️</div>
           <div class="equip-titulo">Exterior</div>
           <div class="equip-desc">Terraza, balcón o jardín con luz solar</div>
-        </div>
-        <div class="equip-card" id="eqInterior" onclick="toggleUbic('interior')">
+        </button>
+        <button type="button" class="equip-card" id="eqInterior" onclick="toggleUbic('interior')">
           <div class="equip-icon">🏠</div>
           <div class="equip-titulo">Interior</div>
           <div class="equip-desc">Dentro de casa con luz artificial</div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -4291,36 +4492,36 @@ body::before { display: none; }
       <div class="setup-subtitle">Selecciona los dispositivos que tienes en tu sistema</div>
 
       <div class="equip-grid">
-        <div class="equip-card" id="eqDifusor" onclick="toggleEquip('difusor')">
+        <button type="button" class="equip-card" id="eqDifusor" onclick="toggleEquip('difusor')">
           <div class="equip-icon">💨</div>
           <div class="equip-titulo">Difusor de aire</div>
           <div class="equip-desc">Oxigena el agua del depósito 24h</div>
-        </div>
-        <div class="equip-card" id="eqCalentador" onclick="toggleEquip('calentador')">
+        </button>
+        <button type="button" class="equip-card" id="eqCalentador" onclick="toggleEquip('calentador')">
           <div class="equip-icon">🌡️</div>
           <div class="equip-titulo">Calentador</div>
           <div class="equip-desc">Mantiene temp. óptima 20°C</div>
-        </div>
-        <div class="equip-card" id="eqBomba" onclick="toggleEquip('bomba')">
+        </button>
+        <button type="button" class="equip-card" id="eqBomba" onclick="toggleEquip('bomba')">
           <div class="equip-icon">⚡</div>
           <div class="equip-titulo">Bomba sumergible</div>
           <div class="equip-desc">Circula el agua por la torre</div>
-        </div>
-        <div class="equip-card" id="eqTimer" onclick="toggleEquip('timer')">
+        </button>
+        <button type="button" class="equip-card" id="eqTimer" onclick="toggleEquip('timer')">
           <div class="equip-icon">⏱️</div>
           <div class="equip-titulo">Temporizador</div>
           <div class="equip-desc">Programa automática del riego</div>
-        </div>
-        <div class="equip-card" id="eqMedidorEC" onclick="toggleEquip('medidorEC')">
+        </button>
+        <button type="button" class="equip-card" id="eqMedidorEC" onclick="toggleEquip('medidorEC')">
           <div class="equip-icon">⚗️</div>
           <div class="equip-titulo">Medidor EC/pH</div>
           <div class="equip-desc">Pen digital de medición</div>
-        </div>
-        <div class="equip-card" id="eqToldo" onclick="toggleEquip('toldo')">
+        </button>
+        <button type="button" class="equip-card" id="eqToldo" onclick="toggleEquip('toldo')">
           <div class="equip-icon">⛱️</div>
           <div class="equip-titulo">Toldo / malla</div>
           <div class="equip-desc">Protección solar en verano</div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -4332,55 +4533,55 @@ body::before { display: none; }
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:10px">💧 Tipo de agua</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-        <div class="equip-card" id="aguaDestilada" onclick="seleccionarAgua('destilada')" style="padding:12px 8px">
+        <button type="button" class="equip-card" id="aguaDestilada" onclick="seleccionarAgua('destilada')" style="padding:12px 8px">
           <div style="font-size:20px;margin-bottom:4px">🫧</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Destilada</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC 0 · Necesita CalMag</div>
-        </div>
-        <div class="equip-card" id="aguaOsmosis" onclick="seleccionarAgua('osmosis')" style="padding:12px 8px">
+        </button>
+        <button type="button" class="equip-card" id="aguaOsmosis" onclick="seleccionarAgua('osmosis')" style="padding:12px 8px">
           <div style="font-size:20px;margin-bottom:4px">💎</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Ósmosis</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC 10-50 · Necesita CalMag</div>
-        </div>
-        <div class="equip-card" id="aguaGrifo" onclick="seleccionarAgua('grifo')" style="padding:12px 8px">
+        </button>
+        <button type="button" class="equip-card" id="aguaGrifo" onclick="seleccionarAgua('grifo')" style="padding:12px 8px">
           <div style="font-size:20px;margin-bottom:4px">🚿</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Grifo</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC variable · Revisar dureza</div>
-        </div>
+        </button>
       </div>
 
       <!-- Tipo de sustrato/fijación -->
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:10px">🌱 Fijación de plantas en cestas</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div class="equip-card" id="sustratoLana" onclick="seleccionarSustrato('lana')" style="padding:12px">
+        <button type="button" class="equip-card" id="sustratoLana" onclick="seleccionarSustrato('lana')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🧶</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Lana de roca</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Mejor estabilización · Recomendada para plántulas · Neutro pH · Reutilizable
           </div>
-        </div>
-        <div class="equip-card" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')" style="padding:12px">
+        </button>
+        <button type="button" class="equip-card" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🟫</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Esponja hidropónica</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Económica · Fácil usar · Absorbe bien · Descartable
           </div>
-        </div>
-        <div class="equip-card" id="sustratoArca" onclick="seleccionarSustrato('arcilla')" style="padding:12px">
+        </button>
+        <button type="button" class="equip-card" id="sustratoArca" onclick="seleccionarSustrato('arcilla')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🟠</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Arcilla expandida</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Muy duradera · Lavable · Buena drenaje · Solo para esquejes
           </div>
-        </div>
-        <div class="equip-card" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')" style="padding:12px">
+        </button>
+        <button type="button" class="equip-card" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🔀</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Mixto</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Esponja base + arcilla encima · Mayor estabilidad
           </div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -4409,20 +4610,20 @@ body::before { display: none; }
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:10px">📍 ¿Dónde estará tu torre?</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div class="equip-card" id="locExterior" onclick="seleccionarUbicacion('exterior')" style="padding:14px">
+        <button type="button" class="equip-card" id="locExterior" onclick="seleccionarUbicacion('exterior')" style="padding:14px">
           <div style="font-size:28px;margin-bottom:6px">☀️</div>
           <div style="font-size:13px;font-weight:800;color:#374151">Exterior</div>
           <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5">
             Terraza, balcón, jardín · Luz solar natural · Más VPD en verano · Alerta Pythium por temperatura
           </div>
-        </div>
-        <div class="equip-card" id="locInterior" onclick="seleccionarUbicacion('interior')" style="padding:14px">
+        </button>
+        <button type="button" class="equip-card" id="locInterior" onclick="seleccionarUbicacion('interior')" style="padding:14px">
           <div style="font-size:28px;margin-bottom:6px">🏠</div>
           <div style="font-size:13px;font-weight:800;color:#374151">Interior</div>
           <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5">
             Casa, local · Temperatura estable · Necesita iluminación artificial · Sin variaciones estacionales
           </div>
-        </div>
+        </button>
       </div>
 
       <!-- Iluminación si es interior -->
@@ -4435,26 +4636,26 @@ body::before { display: none; }
           Sin suficiente luz las plantas se etiolizan (tallos largos y débiles).
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="equip-card" id="luzLED" onclick="seleccionarLuz('led')" style="padding:12px">
+          <button type="button" class="equip-card" id="luzLED" onclick="seleccionarLuz('led')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">💡</div>
             <div style="font-size:12px;font-weight:700;color:#374151">LED Full Spectrum</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Recomendado · Bajo consumo · Sin calor</div>
-          </div>
-          <div class="equip-card" id="luzFluorescent" onclick="seleccionarLuz('fluorescente')" style="padding:12px">
+          </button>
+          <button type="button" class="equip-card" id="luzFluorescent" onclick="seleccionarLuz('fluorescente')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🔦</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Fluorescente T5</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Económico · Válido para lechugas</div>
-          </div>
-          <div class="equip-card" id="luzHPS" onclick="seleccionarLuz('hps')" style="padding:12px">
+          </button>
+          <button type="button" class="equip-card" id="luzHPS" onclick="seleccionarLuz('hps')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🔆</div>
             <div style="font-size:12px;font-weight:700;color:#374151">HPS / HM</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Alto rendimiento · Genera calor · Coste alto</div>
-          </div>
-          <div class="equip-card" id="luzSinLuz" onclick="seleccionarLuz('sin_luz')" style="padding:12px">
+          </button>
+          <button type="button" class="equip-card" id="luzSinLuz" onclick="seleccionarLuz('sin_luz')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🚫</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Sin iluminación</div>
             <div style="font-size:10px;color:#dc2626;margin-top:2px;font-weight:700">⚠️ No recomendado</div>
-          </div>
+          </button>
         </div>
         <!-- Horas de luz -->
         <div style="margin-top:12px">
@@ -4515,16 +4716,16 @@ body::before { display: none; }
       <div class="setup-subtitle">Cultiva puede gestionar hasta 10 torres independientes, cada una con su propio nutriente, plantas e historial.</div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div class="equip-card selected" id="torreSolo" onclick="seleccionarNumTorres('una')" style="padding:14px;text-align:center">
+        <button type="button" class="equip-card selected" id="torreSolo" onclick="seleccionarNumTorres('una')" style="padding:14px;text-align:center">
           <div style="font-size:32px;margin-bottom:8px">🌿</div>
           <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Una torre</div>
           <div style="font-size:10px;color:#6b7280;margin-top:4px">Empezar sencillo.<br>Siempre puedes añadir más.</div>
-        </div>
-        <div class="equip-card" id="torreVarias" onclick="seleccionarNumTorres('varias')" style="padding:14px;text-align:center">
+        </button>
+        <button type="button" class="equip-card" id="torreVarias" onclick="seleccionarNumTorres('varias')" style="padding:14px;text-align:center">
           <div style="font-size:32px;margin-bottom:8px">🌿🌿</div>
           <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Varias torres</div>
           <div style="font-size:10px;color:#6b7280;margin-top:4px">Cultivos diferentes.<br>EC independiente por torre.</div>
-        </div>
+        </button>
       </div>
 
       <div id="infoVarTorres" style="display:none;background:#fffbeb;border:1.5px solid #fcd34d;
@@ -4547,12 +4748,12 @@ body::before { display: none; }
 
   <!-- Footer con botones navegación -->
   <div class="setup-footer">
-    <button class="setup-btn-back" id="setupBtnBack"
+    <button type="button" class="setup-btn-back" id="setupBtnBack"
       onclick="setupBack()" style="display:none"
       aria-label="Volver al paso anterior">
       ← Atrás
     </button>
-    <button class="setup-btn-next" id="setupBtnNext"
+    <button type="button" class="setup-btn-next" id="setupBtnNext"
       onclick="setupNext()"
       aria-label="Continuar al siguiente paso">
       Siguiente →
@@ -4562,28 +4763,28 @@ body::before { display: none; }
 </div>
 
 <!-- ══ MODAL SELECTOR TORRES ══ -->
-<div class="modal-overlay" id="modalTorres" onclick="cerrarModalTorres(event)">
+<div class="modal-overlay" id="modalTorres" onclick="cerrarModalTorres(event)" role="dialog" aria-modal="true" aria-label="Selector de torres">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">🌿 Mis Torres</div>
 
     <div id="listaTorres" style="margin-bottom:14px"></div>
 
-    <button class="btn btn-primary" onclick="crearNuevaTorre()"
+    <button type="button" class="btn btn-primary" onclick="crearNuevaTorre()"
       id="btnCrearTorre" style="margin-bottom:8px">
       ➕ Añadir nueva torre
     </button>
-    <button class="btn btn-ghost" onclick="cerrarModalTorres()">Cerrar</button>
+    <button type="button" class="btn btn-ghost" onclick="cerrarModalTorres()">Cerrar</button>
   </div>
 </div>
 
 <!-- ══ CHECKLIST INTEGRADO ══ -->
-<div class="checklist-overlay" id="checklistOverlay">
+<div class="checklist-overlay" id="checklistOverlay" role="dialog" aria-modal="true" aria-labelledby="checklistTitle">
 
   <div class="checklist-header">
     <div class="checklist-header-row">
-      <div class="checklist-title">🌿 CULTIVA — Recarga</div>
-      <div class="checklist-close" id="checklistCloseBtn" onclick="cerrarChecklist()">✕</div>
+      <div class="checklist-title" id="checklistTitle">🌿 CULTIVA — Recarga</div>
+      <button type="button" class="checklist-close" id="checklistCloseBtn" onclick="cerrarChecklist()" aria-label="Cerrar checklist">✕</button>
     </div>
     <div class="checklist-progress-bar">
       <div class="checklist-progress-fill" id="clProgressFill" style="width:0%"></div>
@@ -4596,8 +4797,8 @@ body::before { display: none; }
   </div>
 
   <div class="checklist-footer">
-    <button class="btn btn-ghost" style="flex:0.4;font-size:13px" onclick="cerrarChecklist()">Cancelar</button>
-    <button class="btn btn-primary" id="clBtnFinalizar" onclick="finalizarChecklist()" disabled style="flex:1;opacity:0.5">
+    <button type="button" class="btn btn-ghost" style="flex:0.4;font-size:13px" onclick="cerrarChecklist()">Cancelar</button>
+    <button type="button" class="btn btn-primary" id="clBtnFinalizar" onclick="finalizarChecklist()" disabled style="flex:1;opacity:0.5">
       ✅ Completar recarga
     </button>
   </div>
@@ -4605,7 +4806,7 @@ body::before { display: none; }
 </div>
 
 <!-- ══ MODAL FUENTES AGUA ══ -->
-<div class="modal-overlay" id="modalAgua" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal-overlay" id="modalAgua" onclick="if(event.target===this)this.classList.remove('open')" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">📋 Consulta la calidad del agua</div>
@@ -4677,14 +4878,14 @@ body::before { display: none; }
       </div>
     </div>
 
-    <button class="btn btn-ghost" onclick="document.getElementById('modalAgua').classList.remove('open')">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalAgua').classList.remove('open')">
       Cerrar
     </button>
   </div>
 </div>
 
 <!-- ══ MODAL EDITAR CESTA ══ -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal" id="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">Editar cesta</div>
@@ -5099,7 +5300,8 @@ let currentTab = 'inicio';
 let editingCesta = null;
 /** 'editar' = abrir ficha · 'asignar' = colocar cultivo en cestas (tras elegirlo) */
 let torreInteraccionModo = 'editar';
-let torreAsignarInstantaneo = true;
+/** false = por defecto: marcar varias cestas y «Aplicar a selección». true = cada toque aplica ya. */
+let torreAsignarInstantaneo = false;
 let torreCestasMultiSel = new Set();
 let modoActual = 'lechuga';
 let state = null; // se inicializa después
@@ -5325,14 +5527,45 @@ function updateClock() {
 // ══════════════════════════════════════════════════
 // NAVEGACIÓN
 // ══════════════════════════════════════════════════
+/** Enter/Espacio en elementos role="button" con tabindex */
+function a11yKeyActivate(ev, fn) {
+  if (ev.key === 'Enter' || ev.key === ' ') {
+    ev.preventDefault();
+    if (typeof fn === 'function') fn();
+  }
+}
+
+function activarNotificacionesDesdeInicio(ev) {
+  const el = ev.currentTarget;
+  pedirPermisoNotificaciones().then(ok => {
+    if (ok) {
+      showToast('🔔 Notificaciones activadas');
+      el.style.display = 'none';
+    } else {
+      showToast('Actívalas en Ajustes del navegador', true);
+    }
+  });
+}
+
 function goTab(tab) {
   // Guardar estado torre antes de navegar
   guardarEstadoTorreActual();
   saveState();
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.remove('active');
+    p.setAttribute('aria-hidden', 'true');
+  });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
+  const panel = document.getElementById('tab-' + tab);
+  if (panel) {
+    panel.classList.add('active');
+    panel.setAttribute('aria-hidden', 'false');
+  }
   document.getElementById('btn-' + tab).classList.add('active');
+  ['inicio','mediciones','torre','calendario','riego','meteo','historial','consejos'].forEach(t => {
+    const b = document.getElementById('btn-' + t);
+    if (b) b.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+  });
   currentTab = tab;
   if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
@@ -5382,9 +5615,15 @@ function setModo(modo) {
   modoActual = modo;
   state.modo = modo;
   saveState();
-  // Update buttons
-  document.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('modo-' + modo).classList.add('active');
+  document.querySelectorAll('#modoSelector .modo-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  const active = document.getElementById('modo-' + modo);
+  if (active) {
+    active.classList.add('active');
+    active.setAttribute('aria-pressed', 'true');
+  }
   // Update info
   const m = MODOS_CULTIVO[modo];
   document.getElementById('modoInfoText').textContent =
@@ -5558,8 +5797,17 @@ function generarSVGTorre() {
       s += `<ellipse cx="${b.cx2.toFixed(1)}" cy="${(b.cy2 + 3.5).toFixed(1)}" rx="${(r*1.05).toFixed(1)}" ry="${(r*0.65).toFixed(1)}"
         fill="rgba(0,0,0,${(0.06 + 0.10*b.z).toFixed(3)})" opacity="${b.opacity.toFixed(2)}"/>`;
 
+      const datAria = (state.torre[b.n] && state.torre[b.n][b.c]) ? state.torre[b.n][b.c] : {};
+      const varTxt = datAria.variedad ? String(datAria.variedad) : 'vacía';
+      const ariaCesta = caraFrontal
+        ? escAriaAttr(`Cesta nivel ${b.n + 1} número ${b.c + 1}, ${varTxt}` +
+            (b.dias ? ', día ' + b.dias + ' de cultivo' : '') + '. Pulsa para abrir ficha o asignar cultivo.')
+        : '';
+      const a11yAttrs = caraFrontal
+        ? ` role="button" tabindex="0" aria-label="${ariaCesta}"`
+        : ' aria-hidden="true" focusable="false"';
       // Cesta pulsable (pointer-events en cara trasera off — gira la torre para editarlas)
-      s += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta"
+      s += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta"${a11yAttrs}
         style="cursor:${caraFrontal ? 'pointer' : 'default'};pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
 
       // Base
@@ -5880,11 +6128,25 @@ function onTorreInstantToggle(cb) {
 function actualizarBarraMultiSel() {
   const bar = document.getElementById('torreAssignMultiBar');
   const cnt = document.getElementById('torreAssignCount');
+  const btnAplicar = document.getElementById('torreBtnAplicarSeleccion');
+  const btnLimpiar = bar ? bar.querySelector('button.btn-ghost') : null;
   if (!bar || !cnt) return;
   const n = torreCestasMultiSel.size;
-  const show = torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo && n > 0;
-  bar.style.display = show ? 'flex' : 'none';
-  cnt.textContent = n === 1 ? '1 cesta seleccionada' : n + ' cestas seleccionadas';
+  const multiMode = torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo;
+  bar.style.display = multiMode ? 'flex' : 'none';
+  cnt.textContent =
+    n === 0 ? 'Toca cestas en la torre para marcarlas (anillo ámbar)' :
+    n === 1 ? '1 cesta seleccionada' :
+    n + ' cestas seleccionadas';
+  if (btnAplicar) {
+    btnAplicar.disabled = n === 0;
+    btnAplicar.style.opacity = n === 0 ? '0.55' : '1';
+    btnAplicar.style.pointerEvents = n === 0 ? 'none' : 'auto';
+  }
+  if (btnLimpiar) {
+    btnLimpiar.disabled = n === 0;
+    btnLimpiar.style.opacity = n === 0 ? '0.45' : '1';
+  }
 }
 
 function actualizarTorreAssignAyuda() {
@@ -5895,9 +6157,9 @@ function actualizarTorreAssignAyuda() {
     return;
   }
   if (torreAsignarInstantaneo) {
-    el.innerHTML = 'Paso 1: cultivo y fecha. Paso 2: toca cada cesta <strong>visible</strong> (cara frontal). Gira la torre para las de atrás.';
+    el.innerHTML = 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera.';
   } else {
-    el.innerHTML = 'Marca varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Desmarca tocando de nuevo.';
+    el.innerHTML = 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla.';
   }
 }
 
@@ -5968,8 +6230,8 @@ function abrirTutorialAsignarCultivo(opts) {
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fffbeb;' +
           'border-radius:12px;border:1px solid #fde68a">' +
           '<span style="font-size:20px;flex-shrink:0">3</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#b45309">Modo rápido ON</strong> (por defecto): cada toque <strong>aplica ya</strong> el cultivo. ' +
-          '<strong>O desactiva</strong> la casilla para marcar varias cestas (anillo ámbar) y pulsar <em>Aplicar a selección</em>.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#b45309">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. ' +
+          '<strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#f9fafb;' +
           'border-radius:12px;border:1px solid #e5e7eb">' +
           '<span style="font-size:20px;flex-shrink:0">4</span>' +
@@ -5996,7 +6258,7 @@ function abrirTutorialAsignarCultivo(opts) {
     e.stopPropagation();
     const chk = overlay.querySelector('#tutorialAsignarNoMas');
     cerrarTutorialAsignarCultivo(chk && chk.checked);
-    showToast('💡 Elige cultivo arriba y toca la torre');
+    showToast('💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección');
   });
   overlay.querySelector('#tutorialAsignarBtnSoloCerrar').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -6502,6 +6764,14 @@ function bindTorreCestas(wrap, opts = {}) {
     el.addEventListener('pointerup', () => { clear(); setTimeout(hideTip, 50); }, { passive: true });
     el.addEventListener('pointercancel', () => { clear(); hideTip(); }, { passive: true });
     el.addEventListener('pointerleave', () => { clear(); hideTip(); }, { passive: true });
+
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      const pe = window.getComputedStyle(el).pointerEvents;
+      if (pe === 'none') return;
+      ev.preventDefault();
+      el.click();
+    });
   });
 }
 
@@ -7267,17 +7537,18 @@ function renderNutrientesGrid() {
   const grid = document.getElementById('nutrientesGrid');
   if (!grid) return;
   grid.innerHTML = NUTRIENTES_DB.map(n => `
-    <div class="nutriente-card ${n.id === setupNutriente ? 'selected' : ''}"
-      id="nut-${n.id}" onclick="selNutriente('${n.id}')">
-      <div class="nutriente-bandera">${n.bandera}</div>
-      <div class="nutriente-info">
-        <div class="nutriente-nombre">${n.nombre}</div>
-        <div class="nutriente-detalle">${n.detalle}</div>
-      </div>
-      <div class="nutriente-buffer ${n.buffer ? 'si' : 'no'}">
+    <button type="button" class="nutriente-card ${n.id === setupNutriente ? 'selected' : ''}"
+      id="nut-${n.id}" onclick="selNutriente('${n.id}')" aria-pressed="${n.id === setupNutriente ? 'true' : 'false'}"
+      aria-label="Nutriente ${n.nombre}${n.buffer ? ', con buffer de pH' : ''}">
+      <span class="nutriente-bandera" aria-hidden="true">${n.bandera}</span>
+      <span class="nutriente-info">
+        <span class="nutriente-nombre">${n.nombre}</span>
+        <span class="nutriente-detalle">${n.detalle}</span>
+      </span>
+      <span class="nutriente-buffer ${n.buffer ? 'si' : 'no'}" aria-hidden="true">
         ${n.buffer ? 'pH buffer' : 'Sin buffer'}
-      </div>
-    </div>
+      </span>
+    </button>
   `).join('');
 }
 
@@ -7469,7 +7740,10 @@ function renderDosisSetup() {
 
 function selNutriente(id) {
   setupNutriente = id;
-  document.querySelectorAll('.nutriente-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.nutriente-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-pressed', c.id === 'nut-' + id ? 'true' : 'false');
+  });
   document.getElementById('nut-' + id)?.classList.add('selected');
   // Recalcular dosis con volumen actual y cultivos seleccionados
   renderDosisSetup();
@@ -7484,15 +7758,15 @@ function buscarCiudadSetup(query) {
   }
   el.style.display = 'block';
   el.innerHTML = res.map(([nombre, data], idx) => `
-    <div onclick="selCiudadSetup(${idx})"
-      style="padding:10px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;
-             display:flex;justify-content:space-between;font-size:13px">
-      <div>
-        <div style="font-weight:700;color:#111827">${nombre}</div>
-        <div style="font-size:11px;color:#6b7280">${data.nota}</div>
-      </div>
-      <div style="font-weight:800;color:#1d4ed8;font-size:13px">${data.ec} µS</div>
-    </div>`).join('');
+    <button type="button" onclick="selCiudadSetup(${idx})"
+      style="width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid #f3f4f6;cursor:pointer;
+             display:flex;justify-content:space-between;font-size:13px;background:#fff;font:inherit;color:inherit">
+      <span>
+        <span style="display:block;font-weight:700;color:#111827">${nombre}</span>
+        <span style="display:block;font-size:11px;color:#6b7280">${data.nota}</span>
+      </span>
+      <span style="font-weight:800;color:#1d4ed8;font-size:13px">${data.ec} µS</span>
+    </button>`).join('');
 }
 
 function selCiudadSetup(idx) {
@@ -9165,14 +9439,14 @@ function onBuscarMunicipio(query) {
   window._municipioResultados = resultados;
   resEl.innerHTML = resultados.map(([nombre, data], idx) => {
     const color = data.ec < 300 ? '#15803d' : data.ec < 500 ? '#b45309' : data.ec < 700 ? '#d97706' : '#dc2626';
-    return `<div onclick="seleccionarMunicipioPorIdx(${idx})"
-      style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;-webkit-tap-highlight-color:transparent">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--white)">${nombre}</div>
-        <div style="font-size:11px;color:var(--muted)">${data.nota}</div>
-      </div>
-      <div style="font-size:14px;font-weight:800;color:${color};margin-left:8px">${data.ec} µS</div>
-    </div>`;
+    return `<button type="button" onclick="seleccionarMunicipioPorIdx(${idx})"
+      style="width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;-webkit-tap-highlight-color:transparent;background:transparent;font:inherit;color:inherit">
+      <span>
+        <span style="display:block;font-size:13px;font-weight:700;color:var(--white)">${nombre}</span>
+        <span style="display:block;font-size:11px;color:var(--muted)">${data.nota}</span>
+      </span>
+      <span style="font-size:14px;font-weight:800;color:${color};margin-left:8px">${data.ec} µS</span>
+    </button>`;
   }).join('');
 }
 
@@ -9242,7 +9516,11 @@ function setAgua(tipo) {
 
   // Actualizar UI radio buttons
   ['destilada','osmosis','grifo'].forEach(t => {
-    document.getElementById('opt-' + t)?.classList.toggle('selected', t === tipo);
+    const el = document.getElementById('opt-' + t);
+    if (!el) return;
+    const sel = t === tipo;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
 
   // Mostrar/ocultar advertencia grifo
@@ -9264,7 +9542,11 @@ function setSustrato(tipo) {
   saveState();
 
   ['esponja','lana'].forEach(t => {
-    document.getElementById('opt-' + t)?.classList.toggle('selected', t === tipo);
+    const el = document.getElementById('opt-' + t);
+    if (!el) return;
+    const sel = t === tipo;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
 }
 
@@ -9297,10 +9579,18 @@ function initConfigUI() {
   const sustrato = state.configSustrato || 'esponja';
 
   ['destilada','osmosis','grifo'].forEach(t => {
-    document.getElementById('opt-' + t)?.classList.toggle('selected', t === agua);
+    const el = document.getElementById('opt-' + t);
+    if (!el) return;
+    const sel = t === agua;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
   ['esponja','lana'].forEach(t => {
-    document.getElementById('opt-' + t)?.classList.toggle('selected', t === sustrato);
+    const el = document.getElementById('opt-' + t);
+    if (!el) return;
+    const sel = t === sustrato;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
 
   if (agua === 'grifo') {
@@ -10053,11 +10343,12 @@ function renderChecklist() {
 
     html += `
       <div class="cl-item${p.alert ? ' alert-item' : ''}" id="clItem-${p.id}">
-        <div class="cl-checkbox" id="clCb-${p.id}" onclick="clToggle('${p.id}')">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <button type="button" class="cl-checkbox" id="clCb-${p.id}" onclick="clToggle('${p.id}')"
+          aria-pressed="false" aria-label="Marcar paso: ${escAriaAttr(p.paso)}">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        </div>
+        </button>
         <div class="cl-body">
           ${p.alert ? '<div class="cl-alert-tag">⚠️ Crítico</div>' : ''}
           <div class="cl-step${p.alert ? ' alert' : ''}">${p.paso}</div>
@@ -10078,10 +10369,12 @@ function clToggle(id) {
     clChecked.delete(id);
     cb.classList.remove('checked');
     item.classList.remove('checked');
+    cb.setAttribute('aria-pressed', 'false');
   } else {
     clChecked.add(id);
     cb.classList.add('checked');
     item.classList.add('checked');
+    cb.setAttribute('aria-pressed', 'true');
   }
   updateClProgress();
 }
@@ -10240,9 +10533,15 @@ let histRecargasDatos = [];
 
 function histTab(tab) {
   histTabActiva = tab;
-  document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.hist-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
   const btn = document.getElementById('htab-' + tab);
-  if (btn) btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+  }
 
   // Ocultar todos los paneles
   ['histMediciones','histRecargas','histRegistroPanel','histDiarioPanel'].forEach(id => {
@@ -10431,13 +10730,78 @@ function formatHora(v) {
   return s.slice(0, 5);
 }
 
+/** Rellena el registro unificado desde mediciones ya guardadas (solo si registro vacío). */
+function importarMedicionesAlRegistro() {
+  initRegistro();
+  const meds = state.mediciones || [];
+  if (meds.length === 0) {
+    showToast('No hay mediciones guardadas para importar', true);
+    return;
+  }
+  if ((state.registro || []).length > 0) {
+    showToast('El registro ya tiene datos. Esta acción solo aplica con registro vacío.', true);
+    return;
+  }
+  if (!confirm('¿Añadir ' + meds.length + ' entradas desde «Mediciones» al registro unificado? No borra el historial de mediciones.')) return;
+
+  const tActiva = getTorreActiva();
+  const base = {
+    torreNombre: tActiva.nombre || 'Torre 1',
+    torreEmoji: tActiva.emoji || '🌿',
+  };
+
+  for (const m of [...meds].reverse()) {
+    const notas = String(m.notas || '');
+    const esRecarga = /recarga completa/i.test(notas);
+    let entry;
+    if (m.tipo === 'cosecha') {
+      entry = {
+        tipo: 'cosecha', fecha: m.fecha, hora: m.hora, ...base,
+        variedad: '', notas, icono: '✂️',
+      };
+    } else if (esRecarga) {
+      entry = {
+        tipo: 'recarga', fecha: m.fecha, hora: m.hora, ...base,
+        ecFinal: m.ec || '', phFinal: m.ph || '', tempAgua: m.temp || '', volFinal: m.vol || '',
+        calmagMl: '', vegaAMl: '', phMasMl: '',
+        notas, icono: '🔄',
+      };
+    } else {
+      entry = {
+        tipo: 'medicion', fecha: m.fecha, hora: m.hora, ...base,
+        ec: m.ec, ph: m.ph, temp: m.temp, vol: m.vol, notas, icono: '📊',
+      };
+    }
+    state.registro.unshift(entry);
+  }
+  if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
+  saveState();
+  guardarEstadoTorreActual();
+  renderRegistro();
+  showToast('✅ ' + meds.length + ' entradas importadas al registro');
+}
+
 function renderRegistro() {
   const lista   = document.getElementById('registroLista');
   const entries = (state.registro || []).slice(0, 100);
+  const nMeds   = (state.mediciones || []).length;
 
   if (entries.length === 0) {
-    lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
-      '📋 El registro se irá llenando con mediciones, recargas y cosechas.</div>';
+    let extra = '';
+    if (nMeds > 0) {
+      extra =
+        '<div style="margin-top:14px">' +
+        '<button type="button" onclick="importarMedicionesAlRegistro()" ' +
+        'class="btn btn-primary" style="width:100%;padding:12px;border-radius:12px;font-family:var(--font-display);' +
+        'font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent">' +
+        '↓ Importar ' + nMeds + ' mediciones al registro</button>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">' +
+        'Útil si empezaste a medir antes de usar esta lista. Las nuevas acciones se añaden solas.</div></div>';
+    }
+    lista.innerHTML =
+      '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
+      '📋 El registro agrupa mediciones, recargas del checklist y cosechas en una sola línea de tiempo.' +
+      extra + '</div>';
     return;
   }
 
@@ -10875,16 +11239,23 @@ function mostrarTabConsejos(tab) {
 function renderConsejos() {
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
+  cats.setAttribute('role', 'tablist');
+  cats.setAttribute('aria-label', 'Categorías de consejos');
 
-  // Render categorías
   cats.innerHTML = Object.entries(CONSEJOS_DATA).map(([key, cat]) => `
-    <button class="consejo-cat-btn ${key === consejoCatActiva ? 'active' : ''}"
+    <button type="button" class="consejo-cat-btn ${key === consejoCatActiva ? 'active' : ''}"
+      role="tab"
+      aria-selected="${key === consejoCatActiva ? 'true' : 'false'}"
       id="catBtn-${key}"
       onclick="selConsejoCat('${key}')"
+      aria-label="Consejos: ${cat.nombre}"
       style="${key === consejoCatActiva ? `background:${cat.color};border-color:${cat.color};` : ''}">
       ${cat.nombre}
     </button>
   `).join('');
+
+  lista.setAttribute('role', 'tabpanel');
+  lista.setAttribute('aria-labelledby', 'catBtn-' + consejoCatActiva);
 
   renderConsejosLista();
 }
@@ -11049,6 +11420,10 @@ function tieneEventos(fecha) {
   return eventos.some(e => e.tipo !== 'control');
 }
 
+function escAriaAttr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
 function renderCalendario() {
   try {
   const calMesLabel = document.getElementById('calMesLabel');
@@ -11124,16 +11499,27 @@ function renderCalendario() {
       '<div style="width:5px;height:5px;border-radius:50%;background:' + e.color + '"></div>'
     ).join('');
 
-    grid.innerHTML += '<div style="' +
+    const baseStyle =
       'background:' + (esHoy ? '#16a34a' : evs.length > 0 ? 'var(--bg2)' : 'var(--bg3)') + ';' +
       'border:1.5px solid ' + (esHoy ? '#16a34a' : evs.length > 0 ? '#86efac' : 'var(--border)') + ';' +
       'border-radius:8px;padding:4px 2px;text-align:center;min-height:42px;' +
-      'cursor:' + (evs.length > 0 ? 'pointer' : 'default') + '" ' +
-      (evs.length > 0 ? 'onclick="mostrarEventosDiaHC(' + d + ',' + mes + ',' + año + ')"' : '') + '>' +
+      (evs.length > 0 ? 'cursor:pointer;' : 'cursor:default;');
+    const numInner =
       '<div style="font-family:var(--font-display);font-size:12px;font-weight:700;' +
       'color:' + (esHoy ? 'white' : 'var(--white)') + '">' + d + '</div>' +
-      '<div style="display:flex;justify-content:center;gap:2px;margin-top:3px;flex-wrap:wrap">' + dots + '</div>' +
-      '</div>';
+      '<div style="display:flex;justify-content:center;gap:2px;margin-top:3px;flex-wrap:wrap">' + dots + '</div>';
+    const ariaToday = esHoy ? ' aria-current="date"' : '';
+
+    if (evs.length > 0) {
+      const ariaLbl = escAriaAttr(
+        d + ' de ' + MESES_LARGO[mes] + ' ' + año + '. ' + evs.map(e => e.label).join('. ')
+      );
+      grid.innerHTML +=
+        '<button type="button" class="cal-day-btn" style="' + baseStyle + '" aria-label="' + ariaLbl + '"' + ariaToday +
+        ' onclick="mostrarEventosDiaHC(' + d + ',' + mes + ',' + año + ')">' + numInner + '</button>';
+    } else {
+      grid.innerHTML += '<div style="' + baseStyle + '"' + ariaToday + '>' + numInner + '</div>';
+    }
   }
 
   // ── Próximos eventos ─────────────────────────────────────────────────────
@@ -11327,9 +11713,16 @@ function renderMeteoDias() {
     const viento = meteoData.daily.windspeed_10m_max[i];
     const emoji = condEmoji(prob, tMax, uv);
 
-    const card = document.createElement('div');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'dia-card' + (i === 0 ? ' selected' : '');
     card.id = 'diaCard' + i;
+    card.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    const lluviaTxt = prob > 20 ? ', lluvia ' + prob + ' por ciento' : '';
+    card.setAttribute(
+      'aria-label',
+      nombre + ', temperatura máxima ' + tMax + ' grados, mínima ' + tMin + ' grados' + lluviaTxt
+    );
     card.innerHTML = `
       <div class="dia-nombre">${nombre}</div>
       <div class="dia-emoji">${emoji}</div>
@@ -11344,7 +11737,9 @@ function renderMeteoDias() {
 function seleccionarDia(idx) {
   diaSeleccionado = idx;
   document.querySelectorAll('.dia-card').forEach((c, i) => {
-    c.classList.toggle('selected', i === idx);
+    const on = i === idx;
+    c.classList.toggle('selected', on);
+    c.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 
   const d     = new Date(meteoData.daily.time[idx]);
@@ -11539,6 +11934,8 @@ function setDiaRiego(dia) {
     btnManana.style.background  = 'var(--bg2)';
     btnManana.style.color       = 'var(--muted)';
     infoEl.textContent = '';
+    btnHoy.setAttribute('aria-pressed', 'true');
+    btnManana.setAttribute('aria-pressed', 'false');
   } else {
     btnManana.style.borderColor = '#7c3aed';
     btnManana.style.background  = '#f5f3ff';
@@ -11552,6 +11949,8 @@ function setDiaRiego(dia) {
     const nombreDia = manana.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     infoEl.textContent = `Previsión para ${nombreDia}`;
     infoEl.style.color = '#6d28d9';
+    btnHoy.setAttribute('aria-pressed', 'false');
+    btnManana.setAttribute('aria-pressed', 'true');
   }
 
   calcularRiego();
@@ -11562,12 +11961,14 @@ function toggleRecarga() {
   esRecarga = !esRecarga;
   const sw = document.getElementById('recargaSwitch');
   sw.className = 'toggle-switch' + (esRecarga ? ' on' : '');
+  sw.setAttribute('aria-checked', esRecarga ? 'true' : 'false');
 }
 
 function toggleToldo() {
   toldoDesplegado = !toldoDesplegado;
   const sw = document.getElementById('toldoSwitch');
   sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+  sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
   calcularRiego();
 }
 
@@ -11646,7 +12047,10 @@ function sincronizarInputsRiego() {
   if (toldoGuardado !== undefined) {
     toldoDesplegado = toldoGuardado;
     const sw = document.getElementById('toldoSwitch');
-    if (sw) sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+    if (sw) {
+      sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+      sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
+    }
   }
 }
 
@@ -12323,14 +12727,16 @@ async function guardarMedicion() {
   if (state.mediciones.length > 200)
     state.mediciones = state.mediciones.slice(0, 200);
 
-  // También al registro general
-  addRegistro('medicion', { ec, ph, temp, vol, notas, icono:'📊' });
+  // Línea única en el registro unificado (Historial → Registro)
+  addRegistro('medicion', { ec, ph, temp, vol, notas, icono: '📊' });
 
   // Si es una recarga marcada
   if (esRecarga) {
     state.ultimaRecarga = now.toISOString().split('T')[0];
     esRecarga = false;
-    document.getElementById('recargaSwitch').className = 'toggle-switch';
+    const rsw = document.getElementById('recargaSwitch');
+    rsw.className = 'toggle-switch';
+    rsw.setAttribute('aria-checked', 'false');
     if (!state.recargasLocal) state.recargasLocal = [];
     state.recargasLocal.unshift({
       fecha, hora, ecFinal: ec, phFinal: ph, tempFinal: temp, volFinal: vol,
@@ -12338,9 +12744,6 @@ async function guardarMedicion() {
       phMasMl: '', notas
     });
   }
-
-  // Guardar también en registro unificado
-  addRegistro('medicion', { ec, ph, temp, vol, notas });
 
   saveState(); // Guardar en localStorage SIEMPRE
 
@@ -12401,10 +12804,14 @@ function showToast(msg, error=false) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.setAttribute('aria-atomic', 'true');
     t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:9000;white-space:nowrap;';
     document.body.appendChild(t);
   }
   t.textContent = msg;
+  t.setAttribute('aria-live', error ? 'assertive' : 'polite');
   t.style.background = error ? 'var(--red)' : 'var(--green)';
   t.style.color = error ? 'white' : 'var(--bg)';
   t.style.opacity = '1';
@@ -12448,19 +12855,21 @@ function renderSetupPlantasGrid() {
 
   grid.innerHTML = grupos.map(g => {
     const sel = setupPlantasSeleccionadas.has(g.key);
-    return '<div class="spc" data-gkey="' + g.key + '" ' +
-      'style="background:' + (sel ? '#f0fdf4' : '#fff') + ';border:2px solid ' +
+    return '<button type="button" class="spc" data-gkey="' + g.key + '" ' +
+      'aria-pressed="' + (sel ? 'true' : 'false') + '" ' +
+      'aria-label="' + escAriaAttr(g.label + '. ' + g.desc) + '" ' +
+      'style="width:100%;background:' + (sel ? '#f0fdf4' : '#fff') + ';border:2px solid ' +
       (sel ? '#16a34a' : '#e5e7eb') + ';border-radius:14px;padding:14px 10px;' +
-      'text-align:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent">' +
-      '<div style="font-size:28px;margin-bottom:6px">' + g.emoji + '</div>' +
-      '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' +
-        (sel ? '#15803d' : '#374151') + '">' + g.label + '</div>' +
-      '<div style="font-size:10px;color:#6b7280;margin-top:3px">' + g.desc + '</div>' +
-      (sel ? '<div style="font-size:16px;margin-top:4px">✅</div>' : '') +
-      '</div>';
+      'text-align:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent;' +
+      'font:inherit;color:inherit;appearance:none;-webkit-appearance:none;margin:0;box-sizing:border-box">' +
+      '<span style="font-size:28px;margin-bottom:6px;display:block" aria-hidden="true">' + g.emoji + '</span>' +
+      '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' +
+        (sel ? '#15803d' : '#374151') + ';display:block">' + g.label + '</span>' +
+      '<span style="font-size:10px;color:#6b7280;margin-top:3px;display:block">' + g.desc + '</span>' +
+      (sel ? '<span style="font-size:16px;margin-top:4px;display:block" aria-hidden="true">✅</span>' : '') +
+      '</button>';
   }).join('');
 
-  // Event delegation for plant group cards
   grid.querySelectorAll('.spc').forEach(el => {
     el.addEventListener('click', function() {
       toggleSetupPlanta(this.getAttribute('data-gkey'));
@@ -12943,8 +13352,8 @@ function cambiarTorreActiva(idx) {
   const _bE = document.getElementById('torreModoEditar');
   const _bA = document.getElementById('torreModoAsignar');
   const _pA = document.getElementById('torreAssignPanel');
-  if (_bE) { _bE.classList.add('active'); }
-  if (_bA) { _bA.classList.remove('active'); }
+  if (_bE) { _bE.classList.add('active'); _bE.setAttribute('aria-pressed', 'true'); }
+  if (_bA) { _bA.classList.remove('active'); _bA.setAttribute('aria-pressed', 'false'); }
   if (_pA) _pA.style.display = 'none';
   actualizarBarraMultiSel();
   // Recalcular plantas para la nueva torre en el input de riego
@@ -13021,9 +13430,16 @@ function cargarEstadoTorre(idx) {
   if (riegoData.toldo !== undefined) {
     toldoDesplegado = riegoData.toldo;
     const sw = document.getElementById('toldoSwitch');
-    if (sw) sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+    if (sw) {
+      sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+      sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
+    }
   }
-  if (riegoData.diaRiego) diaRiego = riegoData.diaRiego;
+  if (riegoData.diaRiego === 'hoy' || riegoData.diaRiego === 'manana') {
+    setDiaRiego(riegoData.diaRiego);
+  } else {
+    setDiaRiego('hoy');
+  }
   // Aplicar constantes de la config de esta torre
   aplicarConfigTorre();
 }
@@ -13061,24 +13477,29 @@ function renderListaTorres() {
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
       border-radius:14px;border:2px solid ${isActiva ? '#16a34a' : '#e5e7eb'};
-      background:${isActiva ? '#f0fdf4' : '#fff'};margin-bottom:8px;cursor:pointer"
-      onclick="cambiarTorreActiva(${i})">
-      <!-- Emoji editable -->
-      <div style="font-size:28px">${t.emoji || '🌿'}</div>
-      <div style="flex:1">
-        <div style="font-family:var(--font-display);font-size:14px;font-weight:800;
-          color:${isActiva ? '#15803d' : '#111827'}">${t.nombre}</div>
-        <div style="font-size:11px;color:#6b7280;margin-top:2px">
+      background:${isActiva ? '#f0fdf4' : '#fff'};margin-bottom:8px">
+      <button type="button" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;
+        background:transparent;border:none;padding:0;margin:0;font:inherit;text-align:left;color:inherit;
+        appearance:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;min-width:0"
+        onclick="cambiarTorreActiva(${i})"
+        aria-pressed="${isActiva ? 'true' : 'false'}"
+        aria-label="Activar ${String(t.nombre || 'torre').replace(/"/g, '&quot;')}${isActiva ? ', torre actual' : ''}">
+      <span style="font-size:28px" aria-hidden="true">${t.emoji || '🌿'}</span>
+      <span style="flex:1;min-width:0">
+        <span style="display:block;font-family:var(--font-display);font-size:14px;font-weight:800;
+          color:${isActiva ? '#15803d' : '#111827'}">${t.nombre}</span>
+        <span style="display:block;font-size:11px;color:#6b7280;margin-top:2px">
           ${plantasCount} plantas · ${t.config ? (t.config.numNiveles||5)+'N × '+(t.config.numCestas||5)+'C' : '5N × 5C'}
           ${isActiva ? ' · <strong style="color:#15803d">Activa</strong>' : ''}
-        </div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button onclick="event.stopPropagation();editarNombreTorre(${i})"
+        </span>
+      </span>
+      </button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button type="button" onclick="editarNombreTorre(${i})"
           style="background:none;border:1.5px solid #e5e7eb;border-radius:8px;
                  padding:6px 8px;font-size:12px;cursor:pointer;color:#374151" aria-label="Editar nombre de torre">✏️</button>
         ${state.torres.length > 1 && !isActiva ? `
-        <button onclick="event.stopPropagation();borrarTorre(${i})"
+        <button type="button" onclick="borrarTorre(${i})"
           style="background:none;border:1.5px solid #fca5a5;border-radius:8px;
                  padding:6px 8px;font-size:12px;cursor:pointer;color:#dc2626" aria-label="Borrar torre">🗑</button>` : ''}
       </div>
