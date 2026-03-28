@@ -2049,7 +2049,7 @@ button.dia-card {
 }
 .hist-tabla-header {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr;
+  grid-template-columns: 64px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 34px;
   gap: 0;
   background: var(--bg3);
   padding: 8px 10px;
@@ -2060,7 +2060,7 @@ button.dia-card {
 }
 .hist-row {
   display: grid;
-  grid-template-columns: 70px 1fr 1fr 1fr 1fr 34px;
+  grid-template-columns: 64px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 34px;
   gap: 0;
   padding: 10px 10px;
   border-top: 1px solid var(--border);
@@ -3425,7 +3425,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Esponja hidropónica</span>
-                <span class="config-option-desc">Retención 40-60% · MinOFF base: 25 min</span>
+                <span class="config-option-desc">WHC ~45–60% · Poros aire ~35–50% · OFF ref. 25 min</span>
               </span>
             </button>
             <button type="button" class="config-option" id="opt-lana" role="radio" aria-checked="false"
@@ -3433,7 +3433,104 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Lana de roca</span>
-                <span class="config-option-desc">Retención 70-80% · MinOFF base: 32 min (+28%)</span>
+                <span class="config-option-desc">WHC alta (cubo) · Poros aire bajos · OFF ref. 32 min</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-arcilla" role="radio" aria-checked="false"
+              onclick="setSustrato('arcilla')" aria-label="Arcilla expandida">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Arcilla expandida</span>
+                <span class="config-option-desc">Secado rápido · OFF ref. 18 min · Uso típico esquejes</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-mixto" role="radio" aria-checked="false"
+              onclick="setSustrato('mixto')" aria-label="Mixto esponja y arcilla">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Mixto</span>
+                <span class="config-option-desc">Esponja + arcilla · Valores intermedios · OFF ref. 28 min</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="config-section" id="panelSensorHumedadSustrato">
+          <div class="config-section-title" id="labelSensorSustrato">📡 Humedad del sustrato (opcional)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+            Válido para cualquier sustrato de torre (lana, esponja, arcilla, mixto u otro comercial con escala 0–100%).
+            Si usas sonda VWC, tensiómetro calibrado o tu propia escala, el riego ajusta la demanda mientras esté activo.
+            También puedes registrar el % al guardar la medición diaria del depósito.
+          </div>
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="sensorSustratoActivo" onchange="persistSensorSustrato()"
+              aria-describedby="labelSensorSustrato">
+            <span>Usar lectura manual / sensor en el cálculo de riego</span>
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label for="sensorSustratoLectura" style="font-size:11px;color:var(--muted)">Lectura actual (%)</label>
+              <input type="number" id="sensorSustratoLectura" inputmode="decimal" min="0" max="100" step="0.5"
+                placeholder="p. ej. 42" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
+                style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
+            </div>
+            <div>
+              <label for="sensorSustratoObj" style="font-size:11px;color:var(--muted)">Objetivo confort (%)</label>
+              <input type="number" id="sensorSustratoObj" inputmode="numeric" min="30" max="80" step="1"
+                value="58" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
+                style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section" id="panelConfigInteriorGrow" style="display:none">
+          <div class="config-section-title">🏠 Sala interior (riego)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+            Sin datos de exterior, el riego usa un VPD aproximado (Magnus–Tetens) con temperatura y humedad relativa del aire,
+            como en muchas apps de invernadero. Ajusta ventilación e intensidad de luz para acercarte a tu sala real.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label for="interiorTempC" style="font-size:11px;color:var(--muted)">Temp. aire (°C)</label>
+              <input type="number" id="interiorTempC" inputmode="decimal" min="14" max="34" step="0.5"
+                placeholder="22" onchange="persistInteriorGrow()" onblur="persistInteriorGrow()"
+                style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
+            </div>
+            <div>
+              <label for="interiorHumedadAmb" style="font-size:11px;color:var(--muted)">HR aire (%)</label>
+              <input type="number" id="interiorHumedadAmb" inputmode="numeric" min="25" max="95" step="1"
+                placeholder="55" onchange="persistInteriorGrow()" onblur="persistInteriorGrow()"
+                style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
+            </div>
+          </div>
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="interiorCircAire" onchange="persistInteriorGrow()">
+            <span>Ventilador o circulación de aire en la sala</span>
+          </label>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Intensidad efectiva de la luz (PPFD aprox.)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <button type="button" class="config-option" id="opt-int-luz-baja" role="radio" aria-checked="false"
+              onclick="setInteriorIntensidadLuz('baja')" aria-label="Luz baja">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Baja</span>
+                <span class="config-option-desc">Poca potencia / lejos</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-int-luz-media" role="radio" aria-checked="false"
+              onclick="setInteriorIntensidadLuz('media')" aria-label="Luz media">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Media</span>
+                <span class="config-option-desc">Uso típico lechuga</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-int-luz-alta" role="radio" aria-checked="false"
+              onclick="setInteriorIntensidadLuz('alta')" aria-label="Luz alta">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Alta</span>
+                <span class="config-option-desc">Cerca del dosel</span>
               </span>
             </button>
           </div>
@@ -3548,6 +3645,23 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </div>
         <div class="param-status empty" id="statusVol"></div>
         <div class="correccion-box" id="correccionVol"></div>
+      </div>
+
+      <!-- HUMEDAD SUSTRATO (medición + riego) -->
+      <div class="param-card" id="cardHumSustrato">
+        <div class="param-header">
+          <div class="param-label">💧 Humedad del sustrato</div>
+          <div class="param-range">0 – 100% · opcional</div>
+        </div>
+        <div class="param-input-row">
+          <input type="number" class="param-input" id="inputHumSustratoMedicion" placeholder="—"
+            aria-label="Humedad del sustrato en porcentaje"
+            inputmode="decimal" step="0.5" min="0" max="100">
+          <div class="param-unit">%</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px">
+          Si rellenas este campo al guardar, queda en el historial y se sincroniza con el ajuste de riego (sensor activo).
+        </div>
       </div>
 
       <!-- RECARGA TOGGLE -->
@@ -3954,20 +4068,24 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="card-title">⚙️ Factores aplicados</div>
         <div class="factores-grid">
           <div class="factor-item">
-            <span class="factor-nombre">🌡️ Factor ON</span>
+            <span class="factor-nombre">🌡️ Demanda clima</span>
             <span class="factor-valor" id="resFactorON" style="color:var(--green)">—</span>
           </div>
           <div class="factor-item">
-            <span class="factor-nombre">💧 Factor OFF</span>
+            <span class="factor-nombre">💧 OFF vs ref. sustrato</span>
             <span class="factor-valor" id="resFactorOFF" style="color:var(--gold)">—</span>
           </div>
           <div class="factor-item">
-            <span class="factor-nombre">🌞 VPD general</span>
+            <span class="factor-nombre">🌞 VPD (kPa)</span>
             <span class="factor-valor" id="resVPD" style="color:var(--blue)">—</span>
           </div>
           <div class="factor-item">
             <span class="factor-nombre">☀️ Índice UV</span>
             <span class="factor-valor" id="resUV" style="color:var(--gold)">—</span>
+          </div>
+          <div class="factor-item">
+            <span class="factor-nombre">🌱 Kc cultivo</span>
+            <span class="factor-valor" id="resKcRiego" style="color:var(--green)">—</span>
           </div>
         </div>
 
@@ -4149,7 +4267,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                       text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">
             Última medición
           </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
             <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
               <div style="font-size:10px;color:var(--muted);font-weight:700">⚡ EC</div>
               <div id="histECActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--green)">—</div>
@@ -4170,13 +4288,18 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <div id="histVolActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--blue)">—</div>
               <div style="font-size:10px;color:var(--muted);font-weight:700">L</div>
             </div>
+            <div style="background:var(--bg3);border-radius:12px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);font-weight:700">💧 Sustr.</div>
+              <div id="histHumSustratoActual" style="font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--green)">—</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700">%</div>
+            </div>
           </div>
         </div>
 
         <!-- Tabla últimas mediciones -->
         <div class="hist-tabla">
           <div class="hist-tabla-header">
-            <span>Fecha</span><span>EC</span><span>pH</span><span>°C</span><span>Vol</span>
+            <span>Fecha</span><span>EC</span><span>pH</span><span>°C</span><span>Vol</span><span>%</span>
           </div>
           <div id="histTabla"></div>
         </div>
@@ -8002,6 +8125,9 @@ function guardarSetupYContinuar() {
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0495,
   };
+  const su = ['esponja', 'lana', 'arcilla', 'mixto'].includes(setupData.sustrato) ? setupData.sustrato : 'esponja';
+  state.configTorre.sustrato = su;
+  state.configSustrato = su;
 
   // Aplicar constantes del nutriente seleccionado
   const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
@@ -8301,6 +8427,7 @@ function aplicarConfigTorre() {
   if (nut && nut.ecPorMl != null) {
     window.EC_POR_ML_AB_ACTIVO = nut.ecPorMl;
   }
+  actualizarVisibilidadPanelInteriorGrow();
 }
 
 // ── Detectar si hay plántulas nuevas (< 5 días) en la torre ─────────────────
@@ -9497,21 +9624,95 @@ const CONFIG_AGUA = {
   }
 };
 
-// Constantes por sustrato
+// Constantes por sustrato — valores orientativos de biblioteca / fichas técnicas (WHC, porosidad)
+// onRef / minOFFRef: referencia demanda climática ≈1.0, 15 plantas lechuga, torre cíclica
 const CONFIG_SUSTRATO = {
   esponja: {
     nombre: 'Esponja hidropónica',
-    retencion: 0.50,      // 40-60% media
-    minOFFBase: 25,       // minutos base
-    nota: 'Drenaje rápido — ciclos más frecuentes'
+    retencion: 0.48,
+    onRef: 10.5,
+    minOFFRef: 25,
+    objetivoHumedadDefault: 58,
+    whcPct: '≈45–60%',
+    poroAire: '≈35–50%',
+    dryBack: 'Ligero secado entre pulsos; evitar encharcamiento continuo',
+    nota: 'PU/fenólica: retención media-baja, drenaje rápido vs lana'
   },
   lana: {
     nombre: 'Lana de roca',
-    retencion: 0.75,      // 70-80% media
-    minOFFBase: 32,       // minutos base (+28%)
-    nota: 'Alta retención — ciclos más espaciados'
+    retencion: 0.78,
+    onRef: 11.2,
+    minOFFRef: 32,
+    objetivoHumedadDefault: 62,
+    whcPct: '≈68–96% agua fácilmente disponible (cubo típico)',
+    poroAire: '≈6–18%',
+    dryBack: 'Pulso frecuente o dry-back moderado según fase (cultivo comercial)',
+    nota: 'Alta inercia hídrica — OFF más largo entre ciclos'
+  },
+  arcilla: {
+    nombre: 'Arcilla expandida',
+    retencion: 0.32,
+    onRef: 9.0,
+    minOFFRef: 18,
+    objetivoHumedadDefault: 48,
+    whcPct: 'Baja — macroporos',
+    poroAire: '≈45–55%',
+    dryBack: 'Seca muy rápido; solo esquejes / apoyo, no sustento principal',
+    nota: 'Torre: uso típico auxiliar — ciclos cortos si riega el cubo'
+  },
+  mixto: {
+    nombre: 'Mixto (esponja + arcilla)',
+    retencion: 0.58,
+    onRef: 10.2,
+    minOFFRef: 28,
+    objetivoHumedadDefault: 54,
+    whcPct: 'Intermedia',
+    poroAire: '—',
+    dryBack: 'Entre esponja pura y solo arcilla',
+    nota: 'Compromiso estabilidad / retención'
   }
 };
+
+function riegoSustratoKey() {
+  const k = state.configTorre?.sustrato || state.configSustrato || 'esponja';
+  return CONFIG_SUSTRATO[k] ? k : 'esponja';
+}
+
+/** Migra sensorHumedadEsponja → sensorHumedadSustrato y devuelve el objeto activo */
+function ensureSensorHumedadSustrato() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  if (!cfg.sensorHumedadSustrato || typeof cfg.sensorHumedadSustrato !== 'object') {
+    const leg = cfg.sensorHumedadEsponja;
+    cfg.sensorHumedadSustrato = leg && typeof leg === 'object'
+      ? { activo: !!leg.activo, lecturaPct: leg.lecturaPct, objetivoPct: leg.objetivoPct }
+      : { activo: false, lecturaPct: null, objetivoPct: null };
+  }
+  return cfg.sensorHumedadSustrato;
+}
+
+/** Multiplicador demanda si hay lectura manual / VWC u otra escala 0–100% (cualquier sustrato de torre) */
+function riegoMultSensorSustrato() {
+  const key = riegoSustratoKey();
+  const sh = ensureSensorHumedadSustrato();
+  if (!sh?.activo || sh.lecturaPct == null || String(sh.lecturaPct) === '') {
+    return { mult: 1, etiqueta: '' };
+  }
+  const defObj = CONFIG_SUSTRATO[key]?.objetivoHumedadDefault ?? 58;
+  const lec = Math.max(0, Math.min(100, parseFloat(sh.lecturaPct)));
+  const objRaw = sh.objetivoPct;
+  const obj = Math.max(28, Math.min(82, parseFloat(objRaw) || defObj));
+  const ratio = lec / obj;
+  let m = 1;
+  if (ratio < 0.78) m = 1 + (0.78 - ratio) * 0.42;
+  else if (ratio > 1.18) m = 1 - Math.min(0.2, (ratio - 1.18) * 0.45);
+  m = Math.max(0.84, Math.min(1.26, m));
+  return {
+    mult: m,
+    etiqueta: ' · Sustrato %: ' + (m > 1.02 ? 'más riego' : m < 0.98 ? 'menos riego' : 'OK') +
+      ' (' + Math.round(lec) + '% / obj. ' + Math.round(obj) + '%)'
+  };
+}
 
 // ── Geolocalización — detectar municipio más cercano ────────────────────────
 async function detectarMunicipio() {
@@ -9744,16 +9945,104 @@ function setAgua(tipo) {
 }
 
 function setSustrato(tipo) {
-  state.configSustrato = tipo;
+  const t = ['esponja', 'lana', 'arcilla', 'mixto'].includes(tipo) ? tipo : 'esponja';
+  state.configSustrato = t;
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.sustrato = t;
+  initTorres();
+  const tIdx = state.torreActiva || 0;
+  if (state.torres?.[tIdx]) {
+    if (!state.torres[tIdx].config) state.torres[tIdx].config = {};
+    state.torres[tIdx].config.sustrato = t;
+  }
   saveState();
 
-  ['esponja','lana'].forEach(t => {
-    const el = document.getElementById('opt-' + t);
+  ['esponja', 'lana', 'arcilla', 'mixto'].forEach(id => {
+    const el = document.getElementById('opt-' + id);
     if (!el) return;
-    const sel = t === tipo;
+    const sel = id === t;
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
+  cargarSensorSustratoUI();
+}
+
+function actualizarVisibilidadPanelInteriorGrow() {
+  const p = document.getElementById('panelConfigInteriorGrow');
+  if (!p) return;
+  const int = (state.configTorre || {}).ubicacion === 'interior';
+  p.style.display = int ? 'block' : 'none';
+}
+
+function cargarSensorSustratoUI() {
+  const sh = ensureSensorHumedadSustrato();
+  const def = CONFIG_SUSTRATO[riegoSustratoKey()]?.objetivoHumedadDefault ?? 58;
+  const cb = document.getElementById('sensorSustratoActivo');
+  const inL = document.getElementById('sensorSustratoLectura');
+  const inO = document.getElementById('sensorSustratoObj');
+  if (cb) cb.checked = !!sh.activo;
+  if (inL) inL.value = sh.lecturaPct != null && sh.lecturaPct !== '' ? sh.lecturaPct : '';
+  if (inO) {
+    inO.value = sh.objetivoPct != null && sh.objetivoPct !== '' && !isNaN(parseFloat(sh.objetivoPct))
+      ? sh.objetivoPct
+      : def;
+  }
+}
+
+function persistSensorSustrato() {
+  if (!state.configTorre) state.configTorre = {};
+  const sh = ensureSensorHumedadSustrato();
+  sh.activo = !!document.getElementById('sensorSustratoActivo')?.checked;
+  const raw = document.getElementById('sensorSustratoLectura')?.value;
+  sh.lecturaPct = raw === '' || raw == null ? null : parseFloat(raw);
+  const oRaw = document.getElementById('sensorSustratoObj')?.value;
+  const def = CONFIG_SUSTRATO[riegoSustratoKey()]?.objetivoHumedadDefault ?? 58;
+  sh.objetivoPct = oRaw === '' || oRaw == null ? null : parseFloat(oRaw);
+  if (sh.objetivoPct == null || isNaN(sh.objetivoPct)) sh.objetivoPct = def;
+  delete state.configTorre.sensorHumedadEsponja;
+  guardarEstadoTorreActual();
+  saveState();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+}
+
+function cargarInteriorGrowUI() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const tEl = document.getElementById('interiorTempC');
+  const hEl = document.getElementById('interiorHumedadAmb');
+  const cEl = document.getElementById('interiorCircAire');
+  if (tEl) tEl.value = cfg.interiorTempC != null && cfg.interiorTempC !== '' ? cfg.interiorTempC : '';
+  if (hEl) hEl.value = cfg.interiorHumedadAmbPct != null && cfg.interiorHumedadAmbPct !== '' ? cfg.interiorHumedadAmbPct : '';
+  if (cEl) cEl.checked = !!cfg.interiorCirculacionAire;
+  const v = cfg.interiorIntensidadLuz || 'media';
+  ['baja', 'media', 'alta'].forEach(k => {
+    const el = document.getElementById('opt-int-luz-' + k);
+    if (!el) return;
+    const sel = k === v;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
+  });
+}
+
+function setInteriorIntensidadLuz(v) {
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.interiorIntensidadLuz = v;
+  cargarInteriorGrowUI();
+  persistInteriorGrow();
+}
+
+function persistInteriorGrow() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const tRaw = document.getElementById('interiorTempC')?.value;
+  const hRaw = document.getElementById('interiorHumedadAmb')?.value;
+  cfg.interiorTempC = tRaw === '' || tRaw == null ? null : parseFloat(String(tRaw).replace(',', '.'));
+  cfg.interiorHumedadAmbPct = hRaw === '' || hRaw == null ? null : parseFloat(String(hRaw).replace(',', '.'));
+  cfg.interiorCirculacionAire = !!document.getElementById('interiorCircAire')?.checked;
+  if (!cfg.interiorIntensidadLuz) cfg.interiorIntensidadLuz = 'media';
+  guardarEstadoTorreActual();
+  saveState();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
 function actualizarECBase() {
@@ -9782,7 +10071,7 @@ function actualizarRangoEC() {
 
 function initConfigUI() {
   const agua = state.configAgua || 'destilada';
-  const sustrato = state.configSustrato || 'esponja';
+  const sustrato = state.configTorre?.sustrato || state.configSustrato || 'esponja';
 
   ['destilada','osmosis','grifo'].forEach(t => {
     const el = document.getElementById('opt-' + t);
@@ -9791,13 +10080,16 @@ function initConfigUI() {
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
-  ['esponja','lana'].forEach(t => {
+  ['esponja', 'lana', 'arcilla', 'mixto'].forEach(t => {
     const el = document.getElementById('opt-' + t);
     if (!el) return;
     const sel = t === sustrato;
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
+  cargarSensorSustratoUI();
+  actualizarVisibilidadPanelInteriorGrow();
+  cargarInteriorGrowUI();
 
   if (agua === 'grifo') {
     document.getElementById('warningGrifo')?.classList.add('show');
@@ -10204,12 +10496,14 @@ function cargarUltimaMedicion() {
   const card = document.getElementById('ultimaMedicionCard');
   const info = document.getElementById('ultimaMedicionInfo');
   card.style.display = 'block';
+  const humLine = (m.humSustrato != null && String(m.humSustrato).trim() !== '')
+    ? ` &nbsp; 💧 sustrato: <strong>${m.humSustrato}%</strong>` : '';
   info.innerHTML = `
     <span style="color:var(--muted)">📅 ${m.fecha} a las ${m.hora}</span><br>
     ⚡ EC: <strong>${m.ec} µS/cm</strong> &nbsp;
     🧪 pH: <strong>${m.ph}</strong> &nbsp;
     🌡️ <strong>${m.temp}°C</strong> &nbsp;
-    🪣 <strong>${m.vol}L</strong>
+    🪣 <strong>${m.vol}L</strong>${humLine}
   `;
 }
 
@@ -10623,12 +10917,14 @@ async function finalizarChecklist() {
 
   // Actualizar estado del sistema
   state.ultimaRecarga = now.toISOString().split('T')[0];
+  const prevHum = state.ultimaMedicion?.humSustrato;
   state.ultimaMedicion = {
     fecha, hora,
     ec: ecFinalNum,
     ph: phFinal,
     temp: tempAgua,
-    vol: volFinal
+    vol: volFinal,
+    humSustrato: prevHum != null && String(prevHum).trim() !== '' ? prevHum : ''
   };
 
   // Guardar recarga completa en historial local
@@ -10679,7 +10975,9 @@ async function finalizarChecklist() {
   if (!state.mediciones) state.mediciones = [];
   state.mediciones.unshift({
     fecha, hora, ec: String(ecFinalNum), ph: phFinal,
-    temp: tempAgua, vol: volFinal, notas: 'Recarga completa'
+    temp: tempAgua, vol: volFinal,
+    humSustrato: prevHum != null && String(prevHum).trim() !== '' ? prevHum : '',
+    notas: 'Recarga completa'
   });
 
   saveState();
@@ -10980,7 +11278,8 @@ function importarMedicionesAlRegistro() {
     } else {
       entry = {
         tipo: 'medicion', fecha: m.fecha, hora: m.hora, ...base,
-        ec: m.ec, ph: m.ph, temp: m.temp, vol: m.vol, notas, icono: '📊',
+        ec: m.ec, ph: m.ph, temp: m.temp, vol: m.vol,
+        humSustrato: m.humSustrato || '', notas, icono: '📊',
       };
     }
     state.registro.unshift(entry);
@@ -11040,6 +11339,7 @@ function renderRegistro() {
           e.ph   ? '🧪 ' + e.ph         : '',
           e.temp ? '🌡️ ' + e.temp + '°C'  : '',
           e.vol  ? '🪣 ' + e.vol + 'L'   : '',
+          (e.humSustrato != null && String(e.humSustrato).trim() !== '') ? '💧 sustr. ' + e.humSustrato + '%' : '',
         ].filter(Boolean).join(' · ');
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'recarga') {
@@ -11109,6 +11409,8 @@ function renderHistMediciones() {
   document.getElementById('histPHActual').textContent   = ult.ph   || '—';
   document.getElementById('histTempActual').textContent = ult.temp || '—';
   document.getElementById('histVolActual').textContent  = ult.vol  || '—';
+  const hAct = document.getElementById('histHumSustratoActual');
+  if (hAct) hAct.textContent = (ult.humSustrato != null && String(ult.humSustrato).trim() !== '') ? ult.humSustrato : '—';
 
   // Tabla
   const tabla = document.getElementById('histTabla');
@@ -11124,6 +11426,7 @@ function renderHistMediciones() {
       <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
       <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
+      <span class="hist-val">${(m.humSustrato != null && String(m.humSustrato).trim() !== '') ? m.humSustrato : '—'}</span>
       <span style="display:flex;align-items:center;justify-content:flex-end">
         <button onclick="borrarMedicion(${i})"
           style="background:none;border:none;font-size:15px;cursor:pointer;
@@ -12208,8 +12511,15 @@ function toggleRecarga() {
 function toggleToldo() {
   toldoDesplegado = !toldoDesplegado;
   const sw = document.getElementById('toldoSwitch');
-  sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
-  sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
+  if (sw) {
+    sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+    sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
+  }
+  const tIdx = state.torreActiva || 0;
+  if (!state.torres[tIdx]) state.torres[tIdx] = {};
+  if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
+  state.torres[tIdx].riego.toldo = toldoDesplegado;
+  saveState();
   calcularRiego();
 }
 
@@ -12283,16 +12593,8 @@ function sincronizarInputsRiego() {
     }
   }
 
-  // Toldo
-  const toldoGuardado = state.torres?.[state.torreActiva || 0]?.riego?.toldo;
-  if (toldoGuardado !== undefined) {
-    toldoDesplegado = toldoGuardado;
-    const sw = document.getElementById('toldoSwitch');
-    if (sw) {
-      sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
-      sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
-    }
-  }
+  // Nota: el toldo NO se sincroniza aquí — si no, cada calcularRiego() machacaba el interruptor
+  // con el valor guardado antes del último toggle. Se carga solo en cargarEstadoTorre() y tras toggleToldo().
 }
 
 
@@ -12339,6 +12641,132 @@ function calcularFactorEdad() {
   return nPlantas > 0 ? sumaFactores / nPlantas : 1.0;
 }
 
+/** VPD en kPa (Magnus–Tetens, uso habitual en cultivo / apps de invernadero) */
+function riegoVPDkPa(tempC, rhPct) {
+  const T = Math.max(-5, Math.min(50, Number(tempC) || 0));
+  const rh = Math.max(5, Math.min(100, Number(rhPct) || 50));
+  const es = 0.6108 * Math.exp((17.27 * T) / (T + 237.3));
+  return Math.round(es * (1 - rh / 100) * 1000) / 1000;
+}
+
+/**
+ * Demanda hídrica relativa (≈0.5–1.55) coherente con transpiración:
+ * VPD principal; viento y sol como refuerzos; lluvia/humedad ambiental suave.
+ * Similar filosofía a ajustes por ET₀/VPD en riego por pulso (no hay app pública con fórmula única).
+ */
+function riegoIndiceDemanda(params) {
+  const vpd = Math.max(0.08, Math.min(2.4, params.vpdKpa || 0.5));
+  const viento = Math.max(0, params.vientoKmh || 0);
+  const uv = Math.max(0, params.uvIdx || 0);
+  const toldo = !!params.toldo;
+  const probLluvia = Math.max(0, Math.min(100, params.probLluvia ?? 0));
+  let d = 0.52 + vpd * 0.48;
+  if (viento >= 10) d *= 1 + Math.min(0.22, (viento - 10) * 0.0055);
+  if (!toldo && uv >= 3) d *= 1 + Math.min(0.14, (uv - 3) * 0.016);
+  if (probLluvia >= 45) d *= 1 - 0.05 * ((probLluvia - 45) / 55);
+  // ET₀ acumulado del día (mm/d, FAO-56 en Open-Meteo) — ref. ~4–5 mm/d clima templado
+  const et0 = params.et0DayMm;
+  if (et0 != null && et0 > 0.05) {
+    const r = et0 / 4.6;
+    d *= Math.max(0.9, Math.min(1.14, 0.8 + 0.2 * Math.min(1.65, r)));
+  }
+  return Math.max(0.48, Math.min(1.58, d));
+}
+
+/** Edad: prioriza medias por fechas en torre; si faltan, usa semanas del formulario */
+function calcularFactorEdadRiego(edadSemManual) {
+  const facTorre = calcularFactorEdad();
+  let nFecha = 0;
+  getNivelesActivos().forEach(n => {
+    (state.torre[n] || []).forEach(c => {
+      if (c && c.variedad && c.fecha) nFecha++;
+    });
+  });
+  const s = Math.max(0.1, Math.min(24, Number(edadSemManual) || 4));
+  let facIn;
+  if (s < 1) facIn = 0.56 + s * 0.22;
+  else if (s < 3) facIn = 0.74 + (s - 1) * 0.1;
+  else if (s < 8) facIn = 0.94 + (s - 3) * 0.038;
+  else facIn = Math.min(1.45, 1.13 + (s - 8) * 0.022);
+  if (nFecha === 0) return facIn;
+  if (nFecha >= 4) return facTorre;
+  return Math.round((facTorre * 0.55 + facIn * 0.45) * 100) / 100;
+}
+
+/** Avance del ciclo 0–1+ (trasplante → cosecha) por planta */
+function riegoPctCicloPlanta(cesta, edadSemManual) {
+  const cult = getCultivoDB(cesta.variedad) || { dias: 45, grupo: 'lechugas' };
+  const diasTot = Math.max(18, cult.dias || 45);
+  const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
+  let pct;
+  if (cesta.fecha) {
+    pct = getDias(cesta.fecha) / diasTot;
+  } else {
+    pct = (s * 7) / diasTot;
+  }
+  return Math.max(0, Math.min(1.2, pct));
+}
+
+/**
+ * Kc operativo (FAO-56 simplificado): tramos inicio / desarrollo / mediados / final
+ * sobre cultivo de referencia tipo hortaliza de hoja; ajuste por grupo.
+ */
+function riegoKcDesdePctYGrupo(pct, grupo) {
+  const g = grupo || 'lechugas';
+  let k;
+  if (pct < 0.12) k = 0.32 + (pct / 0.12) * (0.62 - 0.32);
+  else if (pct < 0.35) k = 0.62 + ((pct - 0.12) / 0.23) * (0.95 - 0.62);
+  else if (pct < 0.85) k = 0.95 + ((pct - 0.35) / 0.5) * (1.06 - 0.95);
+  else k = 1.06 - Math.min(0.22, ((pct - 0.85) / 0.2) * 0.22);
+  k = Math.max(0.3, Math.min(1.1, k));
+  const mult = {
+    lechugas: 1.0, hojas: 1.02, asiaticas: 0.98, hierbas: 0.84,
+    frutos: 1.16, fresas: 1.06, raices: 0.76, microgreens: 0.64, otros: 0.94
+  };
+  k *= mult[g] ?? 1;
+  return Math.max(0.28, Math.min(1.32, k));
+}
+
+/** Kc medio en torre (ponderado por planta); sin plantas → lechuga y edad del formulario */
+function calcularKcMedioRiego(edadSemManual) {
+  let sum = 0;
+  let n = 0;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!c || !c.variedad) return;
+      const cult = getCultivoDB(c.variedad) || { dias: 45, grupo: 'lechugas' };
+      const pct = riegoPctCicloPlanta(c, edadSemManual);
+      sum += riegoKcDesdePctYGrupo(pct, cult.grupo || 'lechugas');
+      n++;
+    });
+  });
+  const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
+  if (n === 0) {
+    const pct = Math.max(0, Math.min(1.15, (s * 7) / 45));
+    const kc = riegoKcDesdePctYGrupo(pct, 'lechugas');
+    return { kc: Math.round(kc * 1000) / 1000, nPlantasKc: 0 };
+  }
+  return { kc: Math.round((sum / n) * 1000) / 1000, nPlantasKc: n };
+}
+
+function riegoMinutosDesdeDemanda(demanda, nPlantas, kc, sustrato, esInterior) {
+  const { onRef, minOFFRef, retencion } = sustrato;
+  const k = Math.max(0.28, Math.min(1.35, kc));
+  const carga = Math.max(0.35, Math.min(1.35, nPlantas / 15)) * k;
+  const sPulso = 0.9 + retencion * 0.16;
+  const raizDem = Math.sqrt(demanda);
+  let minON = onRef * carga * sPulso * (0.78 + 0.38 * raizDem);
+  let minOFF = minOFFRef * (1.48 - 0.48 * raizDem) * (0.88 + retencion * 0.2);
+  if (esInterior) {
+    minOFF *= 1.06;
+    minON *= 0.94;
+  }
+  return {
+    minON: Math.max(3, Math.round(minON)),
+    minOFF: Math.max(5, Math.round(minOFF))
+  };
+}
+
 async function calcularRiego() {
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
@@ -12371,9 +12799,24 @@ async function calcularRiego() {
       '&daily=uv_index_max' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
+    const urlET0 = 'https://api.open-meteo.com/v1/forecast?' +
+      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      '&hourly=et0_fao_evapotranspiration' +
+      `&forecast_days=${diasForecast}&timezone=auto`;
+
     const [resECMWF, resUV] = await Promise.all([fetch(urlECMWF), fetch(urlUV)]);
     const data   = await resECMWF.json();
     const dataUV = await resUV.json();
+    let et0Day = null;
+    try {
+      const resET0 = await fetch(urlET0);
+      const dEt0 = await resET0.json();
+      const etArr = dEt0.hourly?.et0_fao_evapotranspiration;
+      if (Array.isArray(etArr) && etArr.length >= offsetHoras + 24) {
+        const sl = etArr.slice(offsetHoras, offsetHoras + 24);
+        et0Day = sl.reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+      }
+    } catch (_) { /* ET₀ opcional (FAO-56 Open-Meteo) */ }
 
     const tempMax  = data.daily.temperature_2m_max[idx];
     const tempMin  = data.daily.temperature_2m_min[idx];
@@ -12391,97 +12834,60 @@ async function calcularRiego() {
     const temp1315 = Math.round((tempHoras[13] + tempHoras[14] + tempHoras[15]) / 3);
     const hum1315  = Math.round((humHoras[13] + humHoras[14] + humHoras[15]) / 3);
 
-    // ── Calcular VPD general ──────────────────────────────────────────────
-    const calcVPD = (t, h) => {
-      const pvs = 0.6108 * Math.pow(1 + t/100, 8.827);
-      return Math.round(pvs * (1 - h/100) * 1000) / 1000;
-    };
+    // ── VPD (kPa) Magnus–Tetens; demanda = índice único (VPD + viento + UV + lluvia) ──
+    const vpd = riegoVPDkPa(tempMedia, humMedia);
+    const deltaTMedio = uvMax >= 6 ? 1.2 : uvMax >= 4 ? 0.7 : uvMax >= 3 ? 0.35 : 0;
+    const vpdMediodia = riegoVPDkPa(temp1315 + deltaTMedio, hum1315);
 
-    const vpd     = calcVPD(tempMedia, humMedia);
-    const vpd13h  = calcVPD(temp1315, hum1315);
+    const esInterior = (state.configTorre?.ubicacion === 'interior');
+    const { kc: kcMedio, nPlantasKc: nKc } = calcularKcMedioRiego(edadSem);
 
-    // ── Ajuste foliar UV para VPD mediodía ───────────────────────────────
-    let ajusteFoliar = 0;
-    if (uvMax >= 6) ajusteFoliar = 4;
-    else if (uvMax >= 3) ajusteFoliar = 2;
-    const temp13hAjustada = temp1315 + ajusteFoliar;
-    const vpdMediodia = calcVPD(temp13hAjustada, hum1315);
+    const sustrato = CONFIG_SUSTRATO[riegoSustratoKey()];
 
-    // ── Sección A: calcular MinON ─────────────────────────────────────────
-    // ── Factores específicos de la torre activa ─────────────────────────
-    const esInterior   = (state.configTorre?.ubicacion === 'interior');
-    const factorCultivo = calcularFactorCultivo();  // 0.6-1.5 según tipo planta
-    const factorEdadReal = calcularFactorEdad();    // 0.4-1.7 según madurez
-
-    // BASE minON: depende de nPlantas, tipo cultivo y madurez
-    // Torre con 15 lechugas maduras: mucho más ON que 5 plántulas de hierbas
-    const basePorPlanta = 0.6; // minutos por planta (mucho más significativo que 0.12)
-    const minONBase = Math.max(3,
-      (4 + nPlantas * basePorPlanta) * factorCultivo * factorEdadReal
-    );
-
-    let factorON, factorOFF, minONRaw, minON, minOFF;
-    const sustrato = CONFIG_SUSTRATO[state.configTorre?.sustrato || state.configSustrato || 'esponja'];
-    const minOFFBase = sustrato.minOFFBase;
-
+    let demandaDia;
+    let vpdInterior = null;
     if (esInterior) {
-      // ── INTERIOR: sin VPD solar, ciclo constante por horasLuz ───────────
       const horasLuz = state.configTorre?.horasLuz || 16;
-      // Interior con LED: menos transpiración → ciclos más largos OFF
-      factorON  = 0.85;   // menos calor que exterior
-      factorOFF = 1.30;   // más OFF porque no hay viento ni sol directo
-      // Ajuste por horas de luz (más horas = más transpiración acumulada)
-      if (horasLuz >= 18) { factorON += 0.10; factorOFF -= 0.10; }
-      else if (horasLuz <= 14) { factorON -= 0.10; factorOFF += 0.15; }
-      minONRaw = minONBase * factorON;
-      minON    = Math.max(3, Math.round(minONRaw));
-      minOFF   = Math.max(10, Math.round(minOFFBase * factorOFF));
-
+      const cfgIn = state.configTorre || {};
+      const tIn = parseFloat(cfgIn.interiorTempC);
+      const hIn = parseFloat(cfgIn.interiorHumedadAmbPct);
+      const T = Number.isFinite(tIn) ? tIn : 22;
+      const H = Number.isFinite(hIn) ? hIn : 55;
+      vpdInterior = riegoVPDkPa(T, H);
+      demandaDia = 0.48 + vpdInterior * 0.38 + (horasLuz - 14) * 0.028;
+      const luzTipo = cfgIn.luz || 'led';
+      const multLuz = { led: 1, fluorescente: 0.92, hps: 1.12, sin_luz: 0.62 }[luzTipo] ?? 1;
+      const inten = cfgIn.interiorIntensidadLuz || 'media';
+      const multInt = { baja: 0.9, media: 1, alta: 1.1 }[inten] ?? 1;
+      demandaDia *= multLuz * multInt;
+      if (cfgIn.interiorCirculacionAire) demandaDia *= 1.065;
+      demandaDia = Math.max(0.52, Math.min(1.22, demandaDia));
     } else {
-      // ── EXTERIOR: VPD real + UV + viento ────────────────────────────────
-      // Factor ON por VPD
-      if      (vpd >= 1.6) factorON = 1.35;
-      else if (vpd >= 1.2) factorON = 1.20;
-      else if (vpd >= 0.8) factorON = 1.05;
-      else if (vpd >= 0.4) factorON = 0.90;
-      else                 factorON = 0.75;
-
-      // Ajuste viento ON
-      if      (viento > 30) factorON += 0.25;
-      else if (viento > 20) factorON += 0.10;
-      else if (viento < 10) factorON -= 0.05;
-
-      // Ajuste UV ON (reducido si toldo)
-      if (!toldoDesplegado) {
-        if      (uvMax >= 9) factorON += 0.20;
-        else if (uvMax >= 7) factorON += 0.15;
-        else if (uvMax >= 5) factorON += 0.10;
-        else if (uvMax >= 3) factorON += 0.05;
-      }
-
-      minONRaw = minONBase * factorON;
-      minON    = Math.max(3, Math.round(minONRaw));
-
-      // Factor OFF por VPD
-      if      (vpd >= 1.6) factorOFF = 0.70;
-      else if (vpd >= 1.2) factorOFF = 0.85;
-      else if (vpd >= 0.8) factorOFF = 1.00;
-      else if (vpd >= 0.4) factorOFF = 1.20;
-      else                 factorOFF = 1.40;
-
-      if      (viento > 30) factorOFF -= 0.20;
-      else if (viento > 20) factorOFF -= 0.10;
-      else if (viento < 10) factorOFF += 0.10;
-
-      if (!toldoDesplegado) {
-        if      (uvMax >= 9) factorOFF -= 0.20;
-        else if (uvMax >= 7) factorOFF -= 0.15;
-        else if (uvMax >= 5) factorOFF -= 0.10;
-        else if (uvMax >= 3) factorOFF -= 0.05;
-      }
-
-      minOFF = Math.max(5, Math.round(minOFFBase * factorOFF));
+      demandaDia = riegoIndiceDemanda({
+        vpdKpa: vpd,
+        vientoKmh: viento,
+        uvIdx: uvMax,
+        toldo: toldoDesplegado,
+        probLluvia,
+        et0DayMm: et0Day
+      });
     }
+    const sensRiego = riegoMultSensorSustrato();
+    let etiquetaSensorRiego = sensRiego.etiqueta;
+    if (sensRiego.mult !== 1) {
+      demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * sensRiego.mult));
+    }
+
+    const ciclo = riegoMinutosDesdeDemanda(
+      demandaDia, nPlantas, kcMedio, sustrato, esInterior
+    );
+    let minON = ciclo.minON;
+    let minOFF = esInterior ? Math.max(10, ciclo.minOFF) : ciclo.minOFF;
+
+    const factorON = Math.round(demandaDia * 100) / 100;
+    const factorOFF = Math.round((minOFF / sustrato.minOFFRef) * 100) / 100;
+
+    const minONBase = sustrato.onRef * Math.max(0.35, Math.min(1.35, nPlantas / 15)) * kcMedio;
 
     // ── Sección C: ciclos ─────────────────────────────────────────────────
     const minCiclo    = minON + minOFF;
@@ -12489,27 +12895,29 @@ async function calcularRiego() {
     const espaciado   = Math.round(840 / ciclos);
     const totalON     = minON * ciclos;
 
-    // ── Programa mediodía ─────────────────────────────────────────────────
-    let factorONMedio, factorOFFMedio;
+    // ── Programa mediodía (13–15 h): misma función que el día con VPD de esas horas (+ ligero efecto radiativo)
+    let demandaMed;
     if (esInterior) {
-      factorONMedio  = factorON;   // igual que general para interior
-      factorOFFMedio = factorOFF;
+      demandaMed = demandaDia;
     } else {
-      if      (vpdMediodia >= 1.6) factorONMedio = 1.60;
-      else if (vpdMediodia >= 1.2) factorONMedio = 1.40;
-      else if (vpdMediodia >= 0.8) factorONMedio = 1.20;
-      else if (vpdMediodia >= 0.4) factorONMedio = 1.00;
-      else                          factorONMedio = 0.75;
-
-      if      (vpdMediodia >= 1.6) factorOFFMedio = 0.50;
-      else if (vpdMediodia >= 1.2) factorOFFMedio = 0.65;
-      else if (vpdMediodia >= 0.8) factorOFFMedio = 0.80;
-      else if (vpdMediodia >= 0.4) factorOFFMedio = 1.00;
-      else                          factorOFFMedio = 1.40;
+      demandaMed = riegoIndiceDemanda({
+        vpdKpa: vpdMediodia,
+        vientoKmh: viento,
+        uvIdx: uvMax,
+        toldo: toldoDesplegado,
+        probLluvia,
+        et0DayMm: et0Day
+      });
+    }
+    if (sensRiego.mult !== 1) {
+      demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * sensRiego.mult));
     }
 
-    const minONMedio   = Math.max(3, Math.round(minONBase * factorONMedio));
-    const minOFFMedio  = Math.max(5, Math.round(minOFFBase * factorOFFMedio));
+    const cicloMed = riegoMinutosDesdeDemanda(
+      demandaMed, nPlantas, kcMedio, sustrato, esInterior
+    );
+    const minONMedio = cicloMed.minON;
+    const minOFFMedio = esInterior ? Math.max(10, cicloMed.minOFF) : cicloMed.minOFF;
     const ciclosMedio  = Math.floor(240 / (minONMedio + minOFFMedio));
     const totalONMedio = minONMedio * ciclosMedio;
 
@@ -12524,23 +12932,29 @@ async function calcularRiego() {
     document.getElementById('resFactorON').textContent  = Math.round(factorON * 100) / 100;
     document.getElementById('resFactorON').style.color  = fONcolor;
     document.getElementById('resFactorOFF').textContent = Math.round(factorOFF * 100) / 100;
-    document.getElementById('resVPD').textContent       = esInterior ? 'Interior' : vpd;
+    document.getElementById('resVPD').textContent       = esInterior && vpdInterior != null
+      ? Math.round(vpdInterior * 1000) / 1000
+      : vpd;
     document.getElementById('resUV').textContent        = esInterior ? '—' : uvMax;
-    // Mostrar factores de torre en el clima usado
-    const factCultivoLbl = factorCultivo.toFixed(2);
-    const factEdadLbl    = factorEdadReal.toFixed(2);
+    const kcLbl = kcMedio.toFixed(2);
+    const kcHint = nKc === 0 ? ' (sin plantas en torre — lechuga ref.)' : '';
+    const kcEl = document.getElementById('resKcRiego');
+    if (kcEl) kcEl.textContent = kcLbl + kcHint;
 
     document.getElementById('resMedioON').textContent    = minONMedio;
     document.getElementById('resMedioOFF').textContent   = minOFFMedio;
     document.getElementById('resMedioCiclos').textContent = ciclosMedio;
     document.getElementById('resMedioTotal').textContent  = totalONMedio;
-    document.getElementById('resMedioVPD').textContent    = Math.round(vpdMediodia * 100) / 100;
+    document.getElementById('resMedioVPD').textContent    = esInterior && vpdInterior != null
+      ? Math.round(vpdInterior * 1000) / 1000
+      : Math.round(vpdMediodia * 100) / 100;
 
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const agua2 = CONFIG_AGUA[state.configAgua || 'destilada'];
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
     const torreTipo = esInterior
-      ? '🏠 Interior · ' + (state.configTorre?.horasLuz || 16) + 'h luz'
+      ? '🏠 Interior · ' + (state.configTorre?.horasLuz || 16) + 'h luz' +
+        (vpdInterior != null ? ' · VPD sala ≈ ' + (Math.round(vpdInterior * 1000) / 1000) + ' kPa' : '')
       : '☀️ Exterior';
     const resumenCultivos = (() => {
       const niveles = getNivelesActivos();
@@ -12559,19 +12973,25 @@ async function calcularRiego() {
       '<strong style="color:var(--white)">' + etiquetaDia + ' · ' + torreTipo + '</strong><br>' +
       (esInterior
         ? '🌿 Cultivos: ' + resumenCultivos + '<br>' +
-          '📊 Factor cultivo: ' + factCultivoLbl + ' · Factor edad: ' + factEdadLbl + '<br>' +
-          '🪴 Base minON: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre
-        : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD: ' + vpd + '<br>' +
-          '💧 Humedad: ' + humMedia + '% · Viento: ' + viento + ' km/h · UV: ' + uvMax + '<br>' +
+          '📊 Kc medio (FAO-56 est.): ' + kcLbl + kcHint +
+          (etiquetaSensorRiego ? '<br>📡' + etiquetaSensorRiego.replace(/^ · /, '') : '') + '<br>' +
+          '🪴 Ref. pulso: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre +
+          '<br>📚 WHC ' + sustrato.whcPct + ' · Poros. aire ' + sustrato.poroAire
+        : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD (Magnus): ' + vpd + ' kPa' +
+          (et0Day != null && et0Day > 0 ? ' · ET₀: ' + et0Day.toFixed(1) + ' mm/d' : '') + '<br>' +
+          '💧 Humedad: ' + humMedia + '% · Viento: ' + viento + ' km/h · UV: ' + uvMax +
+          ' · Demanda rel.: ' + factorON + (etiquetaSensorRiego || '') + '<br>' +
           '🌿 Cultivos: ' + resumenCultivos + '<br>' +
-          '📊 Factor cultivo: ' + factCultivoLbl + ' · Factor edad: ' + factEdadLbl + '<br>' +
-          '🪴 Base minON: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre);
+          '📊 Kc medio (FAO-56 est.): ' + kcLbl + kcHint + '<br>' +
+          '🪴 Ref. pulso: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre +
+          '<br>📚 WHC ' + sustrato.whcPct + ' · Poros. aire ' + sustrato.poroAire);
 
     // Guardar en state para uso en otros módulos
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
       minONMedio, minOFFMedio, ciclosMedio, totalONMedio,
       factorON: Math.round(factorON*100)/100,
       factorOFF: Math.round(factorOFF*100)/100,
+      kcMedio,
       vpd, vpdMediodia: Math.round(vpdMediodia*100)/100,
       fecha: new Date().toLocaleDateString('es-ES') };
     saveState();
@@ -12947,9 +13367,10 @@ async function guardarMedicion() {
   const ph    = document.getElementById('inputPH').value.trim();
   const temp  = document.getElementById('inputTemp').value.trim();
   const vol   = document.getElementById('inputVol').value.trim();
+  const humS  = (document.getElementById('inputHumSustratoMedicion')?.value || '').trim();
   const notas = document.getElementById('inputNotas').value.trim();
 
-  if (!ec && !ph && !temp && !vol) {
+  if (!ec && !ph && !temp && !vol && !humS) {
     showToast('⚠️ Introduce al menos un valor', true);
     return;
   }
@@ -12962,14 +13383,27 @@ async function guardarMedicion() {
   const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
 
   // ── 1. GUARDAR SIEMPRE EN LOCAL PRIMERO ───────────────────────────────────
-  state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol };
+  state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol, humSustrato: humS };
   if (!state.mediciones) state.mediciones = [];
-  state.mediciones.unshift({ fecha, hora, tipo:'medicion', ec, ph, temp, vol, notas });
+  state.mediciones.unshift({ fecha, hora, tipo:'medicion', ec, ph, temp, vol, humSustrato: humS, notas });
   if (state.mediciones.length > 200)
     state.mediciones = state.mediciones.slice(0, 200);
 
+  if (humS !== '') {
+    const humNum = parseFloat(String(humS).replace(',', '.'));
+    if (!isNaN(humNum)) {
+      const sh = ensureSensorHumedadSustrato();
+      sh.lecturaPct = Math.max(0, Math.min(100, humNum));
+      sh.activo = true;
+      delete state.configTorre.sensorHumedadEsponja;
+      guardarEstadoTorreActual();
+      cargarSensorSustratoUI();
+      if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+    }
+  }
+
   // Línea única en el registro unificado (Historial → Registro)
-  addRegistro('medicion', { ec, ph, temp, vol, notas, icono: '📊' });
+  addRegistro('medicion', { ec, ph, temp, vol, humSustrato: humS, notas, icono: '📊' });
 
   // Si es una recarga marcada
   if (esRecarga) {
@@ -12995,11 +13429,13 @@ async function guardarMedicion() {
 
   // ── 2. ACTUALIZAR UI ──────────────────────────────────────────────────────
   document.getElementById('depositoStats').textContent =
-    'EC: ' + (ec||'—') + ' µS/cm · pH: ' + (ph||'—') + ' · Temp: ' + (temp||'—') + '°C · Vol: ' + (vol||'—') + 'L';
+    'EC: ' + (ec||'—') + ' µS/cm · pH: ' + (ph||'—') + ' · Temp: ' + (temp||'—') + '°C · Vol: ' + (vol||'—') + 'L' +
+    (humS ? ' · Sustrato: ' + humS + '%' : '');
 
   // Limpiar campos
-  ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
-    document.getElementById(id).value = '';
+  ['inputEC','inputPH','inputTemp','inputVol','inputHumSustratoMedicion','inputNotas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
   ['statusEC','statusPH','statusTemp','statusVol'].forEach(id => {
     const el = document.getElementById(id);
@@ -13030,6 +13466,7 @@ async function guardarMedicion() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'medicion', fecha, hora, ec, ph, temp, volumen: vol,
+        humSustrato: humS || null,
         notas, alertas: alertas.join(' | ')
       })
     });
@@ -13620,6 +14057,7 @@ function cambiarTorreActiva(idx) {
   }
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
   if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
+  if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
 
 function guardarEstadoTorreActual() {
@@ -13668,13 +14106,15 @@ function cargarEstadoTorre(idx) {
   const riegoEd  = document.getElementById('riegoEdad');
   if (riegoNPl && riegoData.nPlantas) riegoNPl.value = riegoData.nPlantas;
   if (riegoEd  && riegoData.edadSem)  riegoEd.value  = riegoData.edadSem;
+  const swToldo = document.getElementById('toldoSwitch');
   if (riegoData.toldo !== undefined) {
     toldoDesplegado = riegoData.toldo;
-    const sw = document.getElementById('toldoSwitch');
-    if (sw) {
-      sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
-      sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
-    }
+  } else {
+    toldoDesplegado = false;
+  }
+  if (swToldo) {
+    swToldo.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+    swToldo.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
   }
   if (riegoData.diaRiego === 'hoy' || riegoData.diaRiego === 'manana') {
     setDiaRiego(riegoData.diaRiego);
@@ -13682,7 +14122,11 @@ function cargarEstadoTorre(idx) {
     setDiaRiego('hoy');
   }
   // Aplicar constantes de la config de esta torre
+  if (state.configTorre?.sustrato) state.configSustrato = state.configTorre.sustrato;
   aplicarConfigTorre();
+  cargarInteriorGrowUI();
+  cargarSensorSustratoUI();
+  if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
 
 function actualizarHeaderTorre() {
