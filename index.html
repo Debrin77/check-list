@@ -385,15 +385,28 @@ body::before { display: none; }
   border-top: 1px solid var(--border);
   box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 -4px 24px rgba(15, 23, 42, 0.05);
   display: flex;
+  flex-wrap: nowrap;
   align-items: stretch;
   flex-shrink: 0;
   padding-bottom: env(safe-area-inset-bottom, 34px);
   padding-top: 6px;
   gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .tab-btn {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 max(58px, 12.5%);
+  scroll-snap-align: center;
   min-height: var(--tab-row-inner);
   display: flex;
   flex-direction: column;
@@ -1742,49 +1755,14 @@ button.quick-btn {
   margin-top: 3px;
   font-weight: 600;
 }
-
-/* VPD gauge */
-.vpd-section {
-  background: var(--bg3);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 8px;
+.meteo-param-span {
+  grid-column: 1 / -1;
 }
-.vpd-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.vpd-label {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--white);
-}
-.vpd-valor {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-}
-.vpd-track {
-  height: 10px;
-  background: var(--bg2);
-  border-radius: 5px;
-  overflow: hidden;
-  margin-bottom: 6px;
-  position: relative;
-}
-.vpd-fill {
-  height: 100%;
-  border-radius: 5px;
-  transition: width 0.5s ease;
-}
-.vpd-scale {
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  color: var(--muted);
+.meteo-param-hint {
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 8px;
+  line-height: 1.35;
 }
 .vpd-estado {
   text-align: center;
@@ -1793,48 +1771,7 @@ button.quick-btn {
   padding: 4px 10px;
   border-radius: 6px;
   display: inline-block;
-  margin-top: 6px;
-}
-
-/* Gráfica VPD horaria */
-.vpd-chart {
-  background: var(--bg3);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 8px;
-}
-.vpd-chart-title {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
-.vpd-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 60px;
-}
-.vpd-bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: flex-end;
-}
-.vpd-bar {
-  width: 100%;
-  border-radius: 3px 3px 0 0;
-  min-height: 2px;
-  transition: height 0.4s ease;
-}
-.vpd-bar-label {
-  font-size: 8px;
-  color: var(--muted);
-  margin-top: 3px;
-  white-space: nowrap;
+  margin-top: 4px;
 }
 
 /* Alertas meteo */
@@ -3539,7 +3476,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <li>Enlace automático 24/7 con sondas por WiFi/Bluetooth (la integración prevista es manual salvo ampliaciones futuras).</li>
                 <li>Mapas de humedad en cubo ni software de invernadero profesional con climatización enlazada.</li>
                 <li>Apps cerradas de un kit comercial (garantías, repuestos y flujos de esa marca).</li>
-                <li>Calculadoras puras de sales NPK (tipo HydroBuddy) ni informe agronómico certificado.</li>
+                <li>Ni calculadora pura de sales NPK (tipo HydroBuddy), ni <strong>informe agronómico “certificado”</strong>: eso sería un <em>documento oficial</em> (p. ej. análisis de laboratorio o dictamen firmado por un agrónomo colegiado con registro profesional). Esta app solo ofrece <strong>cálculos y textos orientativos</strong> en tu dispositivo; no sustituye informes legales ni certificaciones.</li>
               </ul>
             </div>
           </div>
@@ -3786,7 +3723,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Esponja hidropónica</span>
-                <span class="config-option-desc">WHC ~45–60% · Poros aire ~35–50% · OFF ref. 25 min</span>
+                <span class="config-option-desc">WHC media (cubo) · OFF ref. 24 min · Entre LECA y lana</span>
               </span>
             </button>
             <button type="button" class="config-option" id="opt-lana" role="radio" aria-checked="false"
@@ -3794,7 +3731,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Lana de roca</span>
-                <span class="config-option-desc">WHC alta (cubo) · Poros aire bajos · OFF ref. 32 min</span>
+                <span class="config-option-desc">WHC muy alta (cubo) · OFF ref. 33 min · Alta inercia hídrica</span>
               </span>
             </button>
             <button type="button" class="config-option" id="opt-arcilla" role="radio" aria-checked="false"
@@ -3802,7 +3739,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Arcilla expandida</span>
-                <span class="config-option-desc">Secado rápido · OFF ref. 18 min · Uso típico esquejes</span>
+                <span class="config-option-desc">LECA: WHC baja / aeración alta · OFF ref. 17 min</span>
               </span>
             </button>
             <button type="button" class="config-option" id="opt-mixto" role="radio" aria-checked="false"
@@ -3810,7 +3747,39 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">Mixto</span>
-                <span class="config-option-desc">Esponja + arcilla · Valores intermedios · OFF ref. 28 min</span>
+                <span class="config-option-desc">Esponja + LECA · OFF ref. 27 min · Intermedio</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-perlita" role="radio" aria-checked="false"
+              onclick="setSustrato('perlita')" aria-label="Perlita">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Perlita</span>
+                <span class="config-option-desc">WHC más baja del catálogo · OFF ref. 14 min · Pulsos frecuentes</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-coco" role="radio" aria-checked="false"
+              onclick="setSustrato('coco')" aria-label="Fibra de coco">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Fibra de coco</span>
+                <span class="config-option-desc">Fibra: alta retención vs LECA · OFF ref. 29 min</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-vermiculita" role="radio" aria-checked="false"
+              onclick="setSustrato('vermiculita')" aria-label="Vermiculita">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Vermiculita</span>
+                <span class="config-option-desc">Máx. retención del catálogo · OFF ref. 35 min · Mezcla perlita habitual</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-turba_enraiz" role="radio" aria-checked="false"
+              onclick="setSustrato('turba_enraiz')" aria-label="Turba biodegradable enraizamiento">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Turba · taco biodegradable</span>
+                <span class="config-option-desc">Taco turba · Plántulas · OFF ref. 25 min</span>
               </span>
             </button>
           </div>
@@ -4062,21 +4031,31 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="correccion-box" id="correccionVol"></div>
       </div>
 
-      <!-- HUMEDAD SUSTRATO — solo registro en historial (no cambia el riego solo) -->
-      <div class="param-card" id="cardHumSustrato">
-        <div class="param-header">
-          <div class="param-label">💧 Humedad del sustrato</div>
-          <div class="param-range">solo anotación · opcional</div>
-        </div>
-        <div class="param-input-row">
-          <input type="number" class="param-input" id="inputHumSustratoMedicion" placeholder="—"
-            aria-label="Humedad del sustrato en porcentaje, solo para historial"
-            inputmode="decimal" step="0.5" min="0" max="100">
-          <div class="param-unit">%</div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px">
-          Queda en el historial. El riego sigue basado en <strong>tipo de sustrato</strong> y clima; el ajuste fino ±3 % es apartado y solo si lo activas arriba.
-          Si con un <strong>medidor 4 en 1</strong> la humedad de la esponja marca <strong>normal entre riegos</strong>, encaja con un ciclo sano; la anotación aquí es solo seguimiento, no una alarma automática.
+      <!-- HUMEDAD SUSTRATO — solo registro en historial (desplegable) -->
+      <div class="config-section config-section-collapsible" id="panelHumSustratoMedicion">
+        <button type="button" class="config-section-collapse-head" id="btnCollapseHumSustratoMedicion"
+          aria-expanded="false" aria-controls="collapseBodyHumSustratoMedicion"
+          onclick="toggleMedirCollapse('humSustratoRegistro')">
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+          <span class="config-section-collapse-title">💧 Humedad del sustrato (opcional · anotación)</span>
+        </button>
+        <div class="config-section-collapse-body" id="collapseBodyHumSustratoMedicion" hidden>
+          <div class="param-card" id="cardHumSustrato" style="margin-bottom:0">
+            <div class="param-header">
+              <div class="param-label">Lectura % sustrato</div>
+              <div class="param-range">solo historial</div>
+            </div>
+            <div class="param-input-row">
+              <input type="number" class="param-input" id="inputHumSustratoMedicion" placeholder="—"
+                aria-label="Humedad del sustrato en porcentaje, solo para historial"
+                inputmode="decimal" step="0.5" min="0" max="100">
+              <div class="param-unit">%</div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px">
+              Queda en el historial. El riego sigue basado en <strong>tipo de sustrato</strong> y clima; el ajuste fino ±3 % es apartado y solo si lo activas arriba.
+              Si con un <strong>medidor 4 en 1</strong> la humedad de la esponja marca <strong>normal entre riegos</strong>, encaja con un ciclo sano; la anotación aquí es solo seguimiento, no una alarma automática.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -4614,29 +4593,14 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <div class="meteo-param-val" id="mdLitros" style="color:var(--blue)">—</div>
             <div class="meteo-param-label">💧 mm lluvia</div>
           </div>
-        </div>
-
-        <!-- VPD gauge -->
-        <div class="vpd-section">
-          <div class="vpd-row">
-            <div class="vpd-label">VPD medio del día</div>
-            <div class="vpd-valor" id="mdVPD" style="color:var(--green)">—</div>
+          <div class="meteo-param meteo-param-span">
+            <div class="meteo-param-val" id="mdVPD" style="color:var(--green)">—</div>
+            <div class="meteo-param-label">🌿 VPD medio del día (kPa)</div>
+            <div class="meteo-param-hint">
+              <span class="vpd-estado" id="mdVPDEstado">—</span>
+            </div>
+            <div id="mdVPDMetodo" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4"></div>
           </div>
-          <div class="vpd-track">
-            <div class="vpd-fill" id="mdVPDBar" style="width:0%"></div>
-          </div>
-          <div class="vpd-scale">
-            <span>0</span><span>0.4</span><span>0.8</span><span>1.2</span><span>1.6</span><span>2.0+</span>
-          </div>
-          <div style="text-align:center;margin-top:6px">
-            <span class="vpd-estado" id="mdVPDEstado">—</span>
-          </div>
-        </div>
-
-        <!-- Gráfica VPD horaria -->
-        <div class="vpd-chart">
-          <div class="vpd-chart-title">VPD por horas — hoy</div>
-          <div class="vpd-bars" id="vpdBars"></div>
         </div>
 
       </div>
@@ -4780,7 +4744,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   <!-- FIN CONTENT -->
 
   <!-- TAB BAR -->
-  <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
+  <nav class="tab-bar" role="tablist" aria-label="Secciones principales"
+    title="Desliza lateralmente si no ves todas las pestañas">
     <button class="tab-btn active" type="button" role="tab" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio" aria-selected="true" aria-controls="tab-inicio">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -5176,32 +5141,60 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:10px">🌱 Fijación de plantas en cestas</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <button type="button" class="equip-card" id="sustratoLana" onclick="seleccionarSustrato('lana')" style="padding:12px">
+        <button type="button" class="equip-card" data-setup-sustrato="lana" id="sustratoLana" onclick="seleccionarSustrato('lana')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🧶</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Lana de roca</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Mejor estabilización · Recomendada para plántulas · Neutro pH · Reutilizable
           </div>
         </button>
-        <button type="button" class="equip-card" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')" style="padding:12px">
+        <button type="button" class="equip-card" data-setup-sustrato="esponja" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🟫</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Esponja hidropónica</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Económica · Fácil usar · Absorbe bien · Descartable
           </div>
         </button>
-        <button type="button" class="equip-card" id="sustratoArca" onclick="seleccionarSustrato('arcilla')" style="padding:12px">
+        <button type="button" class="equip-card" data-setup-sustrato="arcilla" id="sustratoArca" onclick="seleccionarSustrato('arcilla')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🟠</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Arcilla expandida</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Muy duradera · Lavable · Buena drenaje · Solo para esquejes
           </div>
         </button>
-        <button type="button" class="equip-card" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')" style="padding:12px">
+        <button type="button" class="equip-card" data-setup-sustrato="mixto" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')" style="padding:12px">
           <div style="font-size:24px;margin-bottom:6px">🔀</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Mixto</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Esponja base + arcilla encima · Mayor estabilidad
+          </div>
+        </button>
+        <button type="button" class="equip-card" data-setup-sustrato="perlita" id="sustratoPerlita" onclick="seleccionarSustrato('perlita')" style="padding:12px">
+          <div style="font-size:24px;margin-bottom:6px">⚪</div>
+          <div style="font-size:12px;font-weight:700;color:#374151">Perlita</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
+            Gran volumen de aire · Seca rápido · Mezclas coco+perlita muy habituales
+          </div>
+        </button>
+        <button type="button" class="equip-card" data-setup-sustrato="coco" id="sustratoCoco" onclick="seleccionarSustrato('coco')" style="padding:12px">
+          <div style="font-size:24px;margin-bottom:6px">🥥</div>
+          <div style="font-size:12px;font-weight:700;color:#374151">Fibra de coco</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
+            Muy usada en hidro · Buena retención y aire según lavado
+          </div>
+        </button>
+        <button type="button" class="equip-card" data-setup-sustrato="vermiculita" id="sustratoVermiculita" onclick="seleccionarSustrato('vermiculita')" style="padding:12px">
+          <div style="font-size:24px;margin-bottom:6px">✨</div>
+          <div style="font-size:12px;font-weight:700;color:#374151">Vermiculita</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
+            Retiene mucha agua · A menudo mezclada con perlita
+          </div>
+        </button>
+        <button type="button" class="equip-card" data-setup-sustrato="turba_enraiz" id="sustratoTurbaEnraiz" onclick="seleccionarSustrato('turba_enraiz')" style="padding:12px">
+          <div style="font-size:24px;margin-bottom:6px">🌱</div>
+          <div style="font-size:12px;font-weight:700;color:#374151">Turba biodegradable</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
+            Tacos / esponjas de enraizamiento · Plántulas y traslado
           </div>
         </button>
       </div>
@@ -6295,6 +6288,22 @@ function activarNotificacionesDesdeInicio(ev) {
   });
 }
 
+/** Centra la pestaña activa en la barra inferior cuando hay scroll horizontal (móviles estrechos). */
+function scrollTabBarToActive(btn) {
+  if (!btn) return;
+  const bar = btn.closest('.tab-bar');
+  if (!bar || bar.scrollWidth <= bar.clientWidth + 2) return;
+  requestAnimationFrame(() => {
+    const instant = typeof matchMedia === 'function' &&
+      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    btn.scrollIntoView({
+      behavior: instant ? 'auto' : 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+  });
+}
+
 function goTab(tab) {
   // Guardar estado torre antes de navegar
   guardarEstadoTorreActual();
@@ -6309,7 +6318,9 @@ function goTab(tab) {
     panel.classList.add('active');
     panel.setAttribute('aria-hidden', 'false');
   }
-  document.getElementById('btn-' + tab).classList.add('active');
+  const activeBtn = document.getElementById('btn-' + tab);
+  if (activeBtn) activeBtn.classList.add('active');
+  scrollTabBarToActive(activeBtn);
   ['inicio','mediciones','torre','calendario','riego','meteo','historial','consejos'].forEach(t => {
     const b = document.getElementById('btn-' + t);
     if (b) b.setAttribute('aria-selected', t === tab ? 'true' : 'false');
@@ -8151,6 +8162,7 @@ function renderSetupPage() {
   // Acciones específicas por página
   if (setupPagina === 1) updateTorreBuilder();
   if (setupPagina === 2) cargarSetupSensoresHwUI();
+  if (setupPagina === 3) setTimeout(() => seleccionarSustrato(setupData.sustrato), 0);
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
   if (setupPagina === 5) setTimeout(syncWizardLuzUI, 0);
   if (setupPagina === 6) setTimeout(renderSetupPlantasGrid, 50);
@@ -8623,7 +8635,7 @@ function guardarSetupYContinuar() {
     sensoresHardware: sensHwGuardar,
   };
   invalidateMeteoNomiCache();
-  const su = ['esponja', 'lana', 'arcilla', 'mixto'].includes(setupData.sustrato) ? setupData.sustrato : 'esponja';
+  const su = normalizaSustratoKey(setupData.sustrato);
   state.configTorre.sustrato = su;
   state.configSustrato = su;
 
@@ -10122,54 +10134,110 @@ const CONFIG_AGUA = {
   }
 };
 
-// Constantes por sustrato — valores orientativos de biblioteca / fichas técnicas (WHC, porosidad)
-// onRef / minOFFRef: referencia demanda climática ≈1.0, 15 plantas lechuga, torre cíclica
+/**
+ * Perfil de riego por sustrato — calibrado de forma coherente con tablas y manuales habituales
+ * (extensión universitaria, fichas de sustratos hortícolas, comparativas WHC / aeración en hidroponía).
+ * - retencion: índice interno 0.22–0.82 (no es un % volumétrico medido en campo). Ordena de menor a mayor
+ *   “inercia” hídrica relativa: macroporos dominantes (perlita, LECA) abajo; fibras y láminas capilares
+ *   (coco, lana, vermiculita) arriba. Entra en riegoMinutosDesdeDemanda vía sPulso y (0.88 + retencion×0.2).
+ * - onRef / minOFFRef: min ON y min OFF de referencia (demanda≈1, ~15 plantas lechuga).
+ */
 const CONFIG_SUSTRATO = {
   esponja: {
     nombre: 'Esponja hidropónica',
-    retencion: 0.48,
-    onRef: 10.5,
-    minOFFRef: 25,
+    retencion: 0.50,
+    onRef: 10.0,
+    minOFFRef: 24,
     objetivoHumedadDefault: 58,
-    whcPct: '≈45–60%',
-    poroAire: '≈35–50%',
-    dryBack: 'Ligero secado entre pulsos; evitar encharcamiento continuo',
-    nota: 'PU/fenólica: retención media-baja, drenaje rápido vs lana'
+    whcPct: 'Media — fenólica/PU: poros finos + aire, entre LECA y cubo denso',
+    poroAire: '≈35–48% (orden típico publicitario cubo esponja)',
+    dryBack: 'Ligero secado entre pulsos sin llegar a estrés severo si el pulso está bien ajustado',
+    nota: 'Valores medios de biblioteca “cubo rígido” frente a macroporos (LECA/perlita)'
   },
   lana: {
     nombre: 'Lana de roca',
-    retencion: 0.78,
-    onRef: 11.2,
-    minOFFRef: 32,
-    objetivoHumedadDefault: 62,
-    whcPct: '≈68–96% agua fácilmente disponible (cubo típico)',
-    poroAire: '≈6–18%',
-    dryBack: 'Pulso frecuente o dry-back moderado según fase (cultivo comercial)',
-    nota: 'Alta inercia hídrica — OFF más largo entre ciclos'
+    retencion: 0.76,
+    onRef: 11.5,
+    minOFFRef: 33,
+    objetivoHumedadDefault: 63,
+    whcPct: 'Muy alta agua fácilmente disponible en cubo comercial (fichas 65–90%+ por volumen de poros)',
+    poroAire: '≈6–18% con matriz saturada según densidad',
+    dryBack: 'Inercia hídrica alta; suele tolerar intervalos algo más largos entre pulsos',
+    nota: 'Alto buffer hídrico — OFF más largo que LECA/perlita a igual demanda climática'
   },
   arcilla: {
     nombre: 'Arcilla expandida',
-    retencion: 0.32,
-    onRef: 9.0,
-    minOFFRef: 18,
-    objetivoHumedadDefault: 48,
-    whcPct: 'Baja — macroporos',
-    poroAire: '≈45–55%',
-    dryBack: 'Seca muy rápido; solo esquejes / apoyo, no sustento principal',
-    nota: 'Torre: uso típico auxiliar — ciclos cortos si riega el cubo'
+    retencion: 0.30,
+    onRef: 8.2,
+    minOFFRef: 17,
+    objetivoHumedadDefault: 46,
+    whcPct: 'Baja vs fibra — LECA: agua en poros grandes, poca matriz capilar fina',
+    poroAire: '≈45–55% aire tras drenaje (típico bol LECA limpio)',
+    dryBack: 'Evapotranspiración vacía poros rápido; en cubeta flood puede saturar distinto que en “solo bolas”',
+    nota: 'En red/torre con poco contacto capilar suele comportarse más “seco” que coco o lana'
   },
   mixto: {
     nombre: 'Mixto (esponja + arcilla)',
-    retencion: 0.58,
-    onRef: 10.2,
-    minOFFRef: 28,
+    retencion: 0.57,
+    onRef: 10.4,
+    minOFFRef: 27,
     objetivoHumedadDefault: 54,
-    whcPct: 'Intermedia',
-    poroAire: '—',
-    dryBack: 'Entre esponja pura y solo arcilla',
-    nota: 'Compromiso estabilidad / retención'
+    whcPct: 'Intermedia — mezcla esponja/bol LECA en cesta',
+    poroAire: 'Compromiso entre macroporos y poros de cubo',
+    dryBack: 'Entre esponja sola (más estable) y solo LECA (más irregular)',
+    nota: 'Montaje típico torre: retención un poco por encima de arcilla pura'
+  },
+  perlita: {
+    nombre: 'Perlita',
+    retencion: 0.22,
+    onRef: 7.6,
+    minOFFRef: 14,
+    objetivoHumedadDefault: 40,
+    whcPct: 'Muy baja (casi solo drenaje + película) — en mezcla suele “llevar” coco',
+    poroAire: '≈40–55% AFP típica en grano hortícola suelto',
+    dryBack: 'Secado muy rápido en cavidad; en torre pura exige pulsos frecuentes',
+    nota: 'Referencia baja retención; mezclas 50/50 coco–perlita se acercan más al perfil coco'
+  },
+  coco: {
+    nombre: 'Fibra de coco',
+    retencion: 0.65,
+    onRef: 10.9,
+    minOFFRef: 29,
+    objetivoHumedadDefault: 57,
+    whcPct: 'Alta disponibilidad hídrica + aeración si fibra lavada y gruesa',
+    poroAire: '≈10–28% según marca, lavado y troceo',
+    dryBack: 'Buffer capacitivo fuerte frente a perlita/LECA; menos “tanque” que cubo lana denso',
+    nota: 'EC y Na+/K+ del lavado cambian sensación real; este perfil es fibra hortícola estándar'
+  },
+  vermiculita: {
+    nombre: 'Vermiculita',
+    retencion: 0.82,
+    onRef: 11.8,
+    minOFFRef: 35,
+    objetivoHumedadDefault: 65,
+    whcPct: 'Muy alta — láminas silicatadas retienen agua interlaminar (hasta ~3–4× peso en fichas)',
+    poroAire: 'Más baja que perlita cuando compacta o húmeda — riesgo anaerobio si encharca',
+    dryBack: 'Secado lento; suele cortarse con perlita 30–70% en mezclas',
+    nota: 'Mayor índice de retención del catálogo; pura en torre puede ser demasiado húmeda'
+  },
+  turba_enraiz: {
+    nombre: 'Taco / esponja de turba biodegradable (enraizamiento)',
+    retencion: 0.53,
+    onRef: 10.2,
+    minOFFRef: 25,
+    objetivoHumedadDefault: 52,
+    whcPct: 'Alta en el volumen del taco — turba mantiene malla capilar fina',
+    poroAire: 'Variable según prensado / pastilla (Jiffy, etc.)',
+    dryBack: 'Almáculo: mantener húmedo; en torre adulta mejor migrar a coco o lana',
+    nota: 'Perfil “plántula”; no equivale a lana de producción en planta adulta'
   }
 };
+
+/** Clave de sustrato válida o 'esponja' por defecto */
+function normalizaSustratoKey(tipo) {
+  const k = String(tipo || '').trim();
+  return CONFIG_SUSTRATO[k] ? k : 'esponja';
+}
 
 function riegoSustratoKey() {
   const k = state.configTorre?.sustrato || state.configSustrato || 'esponja';
@@ -10449,7 +10517,7 @@ function setAgua(tipo) {
 }
 
 function setSustrato(tipo) {
-  const t = ['esponja', 'lana', 'arcilla', 'mixto'].includes(tipo) ? tipo : 'esponja';
+  const t = normalizaSustratoKey(tipo);
   state.configSustrato = t;
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.sustrato = t;
@@ -10461,7 +10529,7 @@ function setSustrato(tipo) {
   }
   saveState();
 
-  ['esponja', 'lana', 'arcilla', 'mixto'].forEach(id => {
+  Object.keys(CONFIG_SUSTRATO).forEach(id => {
     const el = document.getElementById('opt-' + id);
     if (!el) return;
     const sel = id === t;
@@ -10530,6 +10598,9 @@ function resolveMedirExpanded(key, humActivo, hwAny) {
   if (key === 'interiorGrow') {
     return ui.interiorGrow !== undefined ? !!ui.interiorGrow : true;
   }
+  if (key === 'humSustratoRegistro') {
+    return ui.humSustratoRegistro !== undefined ? !!ui.humSustratoRegistro : false;
+  }
   return true;
 }
 
@@ -10540,7 +10611,8 @@ function applyMedirCollapseUI() {
 
   const rows = [
     { body: 'collapseBodyHumedadFino', btn: 'btnCollapseHumedadFino', key: 'humedadFino' },
-    { body: 'collapseBodySensoresHw', btn: 'btnCollapseSensoresHw', key: 'sensoresHw' }
+    { body: 'collapseBodySensoresHw', btn: 'btnCollapseSensoresHw', key: 'sensoresHw' },
+    { body: 'collapseBodyHumSustratoMedicion', btn: 'btnCollapseHumSustratoMedicion', key: 'humSustratoRegistro' }
   ];
   for (let i = 0; i < rows.length; i++) {
     const body = document.getElementById(rows[i].body);
@@ -10816,10 +10888,10 @@ function initConfigUI() {
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
-  ['esponja', 'lana', 'arcilla', 'mixto'].forEach(t => {
+  Object.keys(CONFIG_SUSTRATO).forEach(t => {
     const el = document.getElementById('opt-' + t);
     if (!el) return;
-    const sel = t === sustrato;
+    const sel = t === normalizaSustratoKey(sustrato);
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
@@ -13228,59 +13300,22 @@ function seleccionarDia(idx) {
   document.getElementById('mdLluvia').textContent = prob + '%';
   document.getElementById('mdLitros').textContent = precip;
 
-  // VPD
+  // VPD (dato numérico + estado; sigue usándose en riego y alertas)
   const vpdInfo = vpdEstado(vpd);
-  const vpdPct  = Math.min(100, (vpd / 2.0) * 100);
   document.getElementById('mdVPD').textContent     = vpd;
   document.getElementById('mdVPD').style.color     = vpdColor(vpd);
-  document.getElementById('mdVPDBar').style.width  = vpdPct + '%';
-  document.getElementById('mdVPDBar').style.background = vpdColor(vpd);
   const estadoEl = document.getElementById('mdVPDEstado');
   estadoEl.textContent   = vpdInfo.txt;
   estadoEl.style.background = vpdInfo.bg;
   estadoEl.style.color   = vpdInfo.color;
-
-  // Gráfica VPD horaria (solo hoy)
-  if (idx === 0) {
-    renderVPDChart(tempHoras, humHoras);
-  } else {
-    document.querySelector('.vpd-chart').style.display = 'none';
+  const metodoEl = document.getElementById('mdVPDMetodo');
+  if (metodoEl) {
+    metodoEl.textContent =
+      'Media del VPD en las 24 h del día (temperatura y humedad horarias · Open‑Meteo). Mismo criterio que en el cálculo de riego al aire libre.';
   }
 
   // Alertas cultivo
   renderAlertas(tMax, tMin, humMedia, viento, uv, prob, vpd);
-}
-
-function renderVPDChart(temps, hums) {
-  const chart = document.querySelector('.vpd-chart');
-  chart.style.display = 'block';
-  const bars = document.getElementById('vpdBars');
-  bars.innerHTML = '';
-
-  const horas = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
-  const vpds  = horas.map(h => {
-    const t = temps[h] || 15;
-    const hm = hums[h] || 60;
-    const pvs = 0.6108 * Math.pow(1 + t/100, 8.827);
-    return Math.round(pvs * (1 - hm/100) * 100) / 100;
-  });
-
-  const maxVpd = Math.max(...vpds, 0.5);
-
-  horas.forEach((h, i) => {
-    const v = vpds[i];
-    const pct = Math.min(100, (v / maxVpd) * 100);
-    const color = vpdColor(v);
-    const showLabel = h % 3 === 0;
-
-    const wrap = document.createElement('div');
-    wrap.className = 'vpd-bar-wrap';
-    wrap.innerHTML = `
-      <div class="vpd-bar" style="height:${pct}%;background:${color}"></div>
-      <div class="vpd-bar-label">${showLabel ? h+'h' : ''}</div>
-    `;
-    bars.appendChild(wrap);
-  });
 }
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
@@ -15093,14 +15128,12 @@ function seleccionarAgua(tipo) {
 }
 
 function seleccionarSustrato(tipo) {
-  setupData.sustrato = tipo;
-  ['Lana','Esponja','Arca','Mixto'].forEach(t => {
-    const el = document.getElementById('sustrato' + t);
-    if (el) el.classList.remove('selected');
+  const t = normalizaSustratoKey(tipo);
+  setupData.sustrato = t;
+  document.querySelectorAll('.equip-card[data-setup-sustrato]').forEach(el => {
+    const on = el.getAttribute('data-setup-sustrato') === t;
+    el.classList.toggle('selected', on);
   });
-  const map = { lana:'Lana', esponja:'Esponja', arcilla:'Arca', mixto:'Mixto' };
-  const el = document.getElementById('sustrato' + (map[tipo]||tipo));
-  if (el) el.classList.add('selected');
 }
 
 function seleccionarUbicacion(tipo) {
@@ -15197,7 +15230,7 @@ function selCiudadSetup(nombre, lat, lon) {
 function aplicarSetupDataATorre() {
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.agua      = setupData.agua;
-  state.configTorre.sustrato  = setupData.sustrato;
+  state.configTorre.sustrato  = normalizaSustratoKey(setupData.sustrato);
   state.configTorre.ubicacion = setupData.ubicacion;
   state.configTorre.luz       = setupData.luz || 'led';
   state.configTorre.horasLuz  = Math.max(12, Math.min(20,
