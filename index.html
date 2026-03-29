@@ -3456,26 +3456,26 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </div>
 
         <div class="config-section" id="panelSensorHumedadSustrato">
-          <div class="config-section-title" id="labelSensorSustrato">📡 Humedad del sustrato (opcional)</div>
+          <div class="config-section-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
-            Válido para cualquier sustrato de torre (lana, esponja, arcilla, mixto u otro comercial con escala 0–100%).
-            Si usas sonda VWC, tensiómetro calibrado o tu propia escala, el riego ajusta la demanda mientras esté activo.
-            También puedes registrar el % al guardar la medición diaria del depósito.
+            El riego normal ya usa el <strong>tipo de sustrato</strong> (ciclos de fábrica / referencia) y el clima.
+            Aquí solo un <strong>toque ±3 %</strong> si anotas un % a ojo o con un medidor sencillo; no hace falta equipo calibrado.
+            Objetivo por defecto ≈ valores medios orientativos según sustrato (lana, esponja…).
           </div>
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;font-size:13px">
             <input type="checkbox" id="sensorSustratoActivo" onchange="persistSensorSustrato()"
               aria-describedby="labelSensorSustrato">
-            <span>Usar lectura manual / sensor en el cálculo de riego</span>
+            <span>Aplicar este ajuste fino al cálculo de riego</span>
           </label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <label for="sensorSustratoLectura" style="font-size:11px;color:var(--muted)">Lectura actual (%)</label>
+              <label for="sensorSustratoLectura" style="font-size:11px;color:var(--muted)">Tu lectura (%)</label>
               <input type="number" id="sensorSustratoLectura" inputmode="decimal" min="0" max="100" step="0.5"
-                placeholder="p. ej. 42" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
+                placeholder="opcional" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
                 style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
             </div>
             <div>
-              <label for="sensorSustratoObj" style="font-size:11px;color:var(--muted)">Objetivo confort (%)</label>
+              <label for="sensorSustratoObj" style="font-size:11px;color:var(--muted)">Referencia objetivo (%)</label>
               <input type="number" id="sensorSustratoObj" inputmode="numeric" min="30" max="80" step="1"
                 value="58" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
                 style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
@@ -3647,20 +3647,20 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="correccion-box" id="correccionVol"></div>
       </div>
 
-      <!-- HUMEDAD SUSTRATO (medición + riego) -->
+      <!-- HUMEDAD SUSTRATO — solo registro en historial (no cambia el riego solo) -->
       <div class="param-card" id="cardHumSustrato">
         <div class="param-header">
           <div class="param-label">💧 Humedad del sustrato</div>
-          <div class="param-range">0 – 100% · opcional</div>
+          <div class="param-range">solo anotación · opcional</div>
         </div>
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputHumSustratoMedicion" placeholder="—"
-            aria-label="Humedad del sustrato en porcentaje"
+            aria-label="Humedad del sustrato en porcentaje, solo para historial"
             inputmode="decimal" step="0.5" min="0" max="100">
           <div class="param-unit">%</div>
         </div>
         <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px">
-          Si rellenas este campo al guardar, queda en el historial y se sincroniza con el ajuste de riego (sensor activo).
+          Queda en el historial. El riego sigue basado en <strong>tipo de sustrato</strong> y clima; el ajuste fino ±3 % es apartado y solo si lo activas en el bloque de arriba.
         </div>
       </div>
 
@@ -9691,7 +9691,10 @@ function ensureSensorHumedadSustrato() {
   return cfg.sensorHumedadSustrato;
 }
 
-/** Multiplicador demanda si hay lectura manual / VWC u otra escala 0–100% (cualquier sustrato de torre) */
+/**
+ * Ajuste muy suave si el usuario activa lectura manual: el riego principal sigue siendo clima + tipo de sustrato
+ * (minON/minOFF de referencia). Aquí como mucho ±3 % de demanda — sin sondas caras ni pretender precisión de invernadero.
+ */
 function riegoMultSensorSustrato() {
   const key = riegoSustratoKey();
   const sh = ensureSensorHumedadSustrato();
@@ -9704,13 +9707,13 @@ function riegoMultSensorSustrato() {
   const obj = Math.max(28, Math.min(82, parseFloat(objRaw) || defObj));
   const ratio = lec / obj;
   let m = 1;
-  if (ratio < 0.78) m = 1 + (0.78 - ratio) * 0.42;
-  else if (ratio > 1.18) m = 1 - Math.min(0.2, (ratio - 1.18) * 0.45);
-  m = Math.max(0.84, Math.min(1.26, m));
+  if (ratio < 0.8) m = 1 + (0.8 - ratio) * 0.08;
+  else if (ratio > 1.22) m = 1 - Math.min(0.035, (ratio - 1.22) * 0.1);
+  m = Math.max(0.97, Math.min(1.03, m));
   return {
     mult: m,
-    etiqueta: ' · Sustrato %: ' + (m > 1.02 ? 'más riego' : m < 0.98 ? 'menos riego' : 'OK') +
-      ' (' + Math.round(lec) + '% / obj. ' + Math.round(obj) + '%)'
+    etiqueta: ' · Afinado manual: ' + (m > 1.008 ? 'un poco más' : m < 0.992 ? 'un poco menos' : 'neutro') +
+      ' (' + Math.round(lec) + '% / ref. ' + Math.round(obj) + '%)'
   };
 }
 
@@ -12673,6 +12676,22 @@ function riegoIndiceDemanda(params) {
   return Math.max(0.48, Math.min(1.58, d));
 }
 
+/**
+ * Toldo / malla de sombra: menos radiación en el dosel → UV y ET₀ efectivos menores y algo menos de calor
+ * en la zona de planta (VPD). Factores orientativos (mallas típicas ~50–70 % atenuación).
+ */
+function riegoAjustesToldoActivos(uvMax, et0Day, toldoActivo) {
+  if (!toldoActivo) {
+    return { uvEfectivo: uvMax, et0Efectivo: et0Day, deltaTempZonaPlanta: 0 };
+  }
+  const uvEfectivo = Math.max(0, Math.round(uvMax * 0.38 * 100) / 100);
+  let et0Efectivo = et0Day;
+  if (et0Day != null && typeof et0Day === 'number' && et0Day > 0) {
+    et0Efectivo = Math.round(et0Day * 0.52 * 100) / 100;
+  }
+  return { uvEfectivo, et0Efectivo, deltaTempZonaPlanta: -2 };
+}
+
 /** Edad: prioriza medias por fechas en torre; si faltan, usa semanas del formulario */
 function calcularFactorEdadRiego(edadSemManual) {
   const facTorre = calcularFactorEdad();
@@ -12834,10 +12853,16 @@ async function calcularRiego() {
     const temp1315 = Math.round((tempHoras[13] + tempHoras[14] + tempHoras[15]) / 3);
     const hum1315  = Math.round((humHoras[13] + humHoras[14] + humHoras[15]) / 3);
 
-    // ── VPD (kPa) Magnus–Tetens; demanda = índice único (VPD + viento + UV + lluvia) ──
-    const vpd = riegoVPDkPa(tempMedia, humMedia);
-    const deltaTMedio = uvMax >= 6 ? 1.2 : uvMax >= 4 ? 0.7 : uvMax >= 3 ? 0.35 : 0;
-    const vpdMediodia = riegoVPDkPa(temp1315 + deltaTMedio, hum1315);
+    const toldoAct = toldoDesplegado;
+    const adjToldo = riegoAjustesToldoActivos(uvMax, et0Day, toldoAct);
+    const uvEfectivo = adjToldo.uvEfectivo;
+    const et0Riego = adjToldo.et0Efectivo;
+    const dTempPlanta = adjToldo.deltaTempZonaPlanta;
+
+    // ── VPD (kPa) Magnus–Tetens; con toldo: temp. zona planta y pico radiativo reducidos ──
+    const vpd = riegoVPDkPa(tempMedia + dTempPlanta, humMedia);
+    const deltaTMedio = uvEfectivo >= 6 ? 1.2 : uvEfectivo >= 4 ? 0.7 : uvEfectivo >= 3 ? 0.35 : 0;
+    const vpdMediodia = riegoVPDkPa(temp1315 + dTempPlanta + deltaTMedio, hum1315);
 
     const esInterior = (state.configTorre?.ubicacion === 'interior');
     const { kc: kcMedio, nPlantasKc: nKc } = calcularKcMedioRiego(edadSem);
@@ -12866,10 +12891,10 @@ async function calcularRiego() {
       demandaDia = riegoIndiceDemanda({
         vpdKpa: vpd,
         vientoKmh: viento,
-        uvIdx: uvMax,
-        toldo: toldoDesplegado,
+        uvIdx: uvEfectivo,
+        toldo: toldoAct,
         probLluvia,
-        et0DayMm: et0Day
+        et0DayMm: et0Riego
       });
     }
     const sensRiego = riegoMultSensorSustrato();
@@ -12903,10 +12928,10 @@ async function calcularRiego() {
       demandaMed = riegoIndiceDemanda({
         vpdKpa: vpdMediodia,
         vientoKmh: viento,
-        uvIdx: uvMax,
-        toldo: toldoDesplegado,
+        uvIdx: uvEfectivo,
+        toldo: toldoAct,
         probLluvia,
-        et0DayMm: et0Day
+        et0DayMm: et0Riego
       });
     }
     if (sensRiego.mult !== 1) {
@@ -12935,7 +12960,8 @@ async function calcularRiego() {
     document.getElementById('resVPD').textContent       = esInterior && vpdInterior != null
       ? Math.round(vpdInterior * 1000) / 1000
       : vpd;
-    document.getElementById('resUV').textContent        = esInterior ? '—' : uvMax;
+    document.getElementById('resUV').textContent        = esInterior ? '—'
+      : (toldoAct ? uvEfectivo + ' (bajo toldo · máx ' + uvMax + ')' : uvMax);
     const kcLbl = kcMedio.toFixed(2);
     const kcHint = nKc === 0 ? ' (sin plantas en torre — lechuga ref.)' : '';
     const kcEl = document.getElementById('resKcRiego');
@@ -12977,9 +13003,12 @@ async function calcularRiego() {
           (etiquetaSensorRiego ? '<br>📡' + etiquetaSensorRiego.replace(/^ · /, '') : '') + '<br>' +
           '🪴 Ref. pulso: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre +
           '<br>📚 WHC ' + sustrato.whcPct + ' · Poros. aire ' + sustrato.poroAire
-        : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD (Magnus): ' + vpd + ' kPa' +
-          (et0Day != null && et0Day > 0 ? ' · ET₀: ' + et0Day.toFixed(1) + ' mm/d' : '') + '<br>' +
-          '💧 Humedad: ' + humMedia + '% · Viento: ' + viento + ' km/h · UV: ' + uvMax +
+        : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD (Magnus' +
+          (toldoAct ? ', corrección toldo ' + dTempPlanta + ' °C en temp. efectiva' : '') + '): ' + vpd + ' kPa' +
+          (et0Riego != null && et0Riego > 0 ? ' · ET₀: ' + et0Riego.toFixed(1) + ' mm/d' +
+            (toldoAct && et0Day != null && et0Day > 0 ? ' (ajust.)' : '') : '') + '<br>' +
+          '💧 Humedad: ' + humMedia + '% · Viento: ' + viento + ' km/h · UV efect.: ' +
+          (toldoAct ? uvEfectivo + ' (máx ' + uvMax + ')' : uvMax) +
           ' · Demanda rel.: ' + factorON + (etiquetaSensorRiego || '') + '<br>' +
           '🌿 Cultivos: ' + resumenCultivos + '<br>' +
           '📊 Kc medio (FAO-56 est.): ' + kcLbl + kcHint + '<br>' +
@@ -13389,18 +13418,7 @@ async function guardarMedicion() {
   if (state.mediciones.length > 200)
     state.mediciones = state.mediciones.slice(0, 200);
 
-  if (humS !== '') {
-    const humNum = parseFloat(String(humS).replace(',', '.'));
-    if (!isNaN(humNum)) {
-      const sh = ensureSensorHumedadSustrato();
-      sh.lecturaPct = Math.max(0, Math.min(100, humNum));
-      sh.activo = true;
-      delete state.configTorre.sensorHumedadEsponja;
-      guardarEstadoTorreActual();
-      cargarSensorSustratoUI();
-      if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
-    }
-  }
+  // Humedad en medición: solo historial — el riego usa tipo de sustrato + clima; ajuste fino solo desde el bloque opcional arriba.
 
   // Línea única en el registro unificado (Historial → Registro)
   addRegistro('medicion', { ec, ph, temp, vol, humSustrato: humS, notas, icono: '📊' });
