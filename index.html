@@ -1825,6 +1825,7 @@ button.quick-btn {
 }
 .meteo-alerta-item.ok     { background: #f0fdf4; border-color: #16a34a; color: #14532d; }
 .meteo-alerta-item.warn   { background: #fffbeb; border-color: #d97706; color: #78350f; }
+.meteo-alerta-item.severe { background: #ffedd5; border-color: #ea580c; color: #9a3412; }
 .meteo-alerta-item.bad    { background: #fef2f2; border-color: #dc2626; color: #7f1d1d; }
 
 /* ══ CALENDARIO ══ */
@@ -3029,6 +3030,84 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 .rotacion-alerta.pronto  { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; }
 .rotacion-alerta.ok      { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; }
 
+/* Expectativas / comparación con el mercado (Inicio) */
+.expectativas-wrap {
+  margin-top: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg2);
+  overflow: hidden;
+}
+.expectativas-wrap summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 14px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.expectativas-wrap summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.expectativas-wrap summary::-webkit-details-marker { display: none; }
+.expectativas-wrap summary::after {
+  content: '▾';
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.expectativas-wrap[open] summary::after { content: '▴'; }
+.expectativas-body {
+  padding: 0 14px 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.expectativas-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+@media (max-width: 380px) {
+  .expectativas-cols { grid-template-columns: 1fr; }
+}
+.expectativas-col {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.expectativas-col h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--green);
+}
+.expectativas-col.no h4 { color: var(--gold); }
+.expectativas-col ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.expectativas-col li { margin-bottom: 6px; }
+.expectativas-nota {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
   display: flex;
@@ -3297,6 +3376,38 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <span style="color:var(--red)">Reset sistema</span>
         </button>
       </div>
+
+      <details class="expectativas-wrap" id="panelExpectativasMercado">
+        <summary>ℹ️ Qué es esta app y qué no promete <span style="font-weight:600;color:var(--muted);font-size:11px">(vs otras apps y páginas)</span></summary>
+        <div class="expectativas-body">
+          <p style="margin:0 0 4px;color:var(--white);font-weight:600">
+            Herramienta integrada para torre(s) vertical(es): riego según clima y sustrato, nutrientes, mediciones e historial. Los datos se guardan en tu dispositivo.
+          </p>
+          <div class="expectativas-cols">
+            <div class="expectativas-col">
+              <h4>Sí cubre bien</h4>
+              <ul>
+                <li>VPD, viento, UV, lluvia y ET₀ (Open‑Meteo) para afinar pulsos de riego al aire libre.</li>
+                <li>Interior: horas de luz, tipo de luz y sala (VPD aprox.) sin depender del tiempo exterior.</li>
+                <li>Varias torres, cestas, calendario, checklist de recarga y registro de EC/pH/volumen.</li>
+                <li>Orientada a España (agua por municipio) sin obligar a cuenta ni hardware propio.</li>
+              </ul>
+            </div>
+            <div class="expectativas-col no">
+              <h4>No sustituye</h4>
+              <ul>
+                <li>Sensores 24/7 ni mapas de humedad en cubo como software de invernadero profesional.</li>
+                <li>Apps cerradas de un kit comercial (garantías, repuestos y flujos de esa marca).</li>
+                <li>Calculadoras puras de sales NPK (tipo HydroBuddy) ni informe agronómico certificado.</li>
+                <li>Tablas y sugerencias genéricas: no hay un solo EC/pH/riego óptimo para cada cultivo y día; ajusta según tus plantas.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="expectativas-nota">
+            <strong style="color:var(--white)">Frente al mercado:</strong> suele ser más completa que una calculadora suelta de nutrientes y más abierta que una app ligada a un solo fabricante; menos especializada que plataformas con sondas en sustrato y climatización enlazada. Los nombres de productos del mercado son solo referencias generales.
+          </p>
+        </div>
+      </details>
 
     </div>
     <!-- FIN TAB INICIO -->
@@ -4208,7 +4319,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       </div>
 
-      <!-- Avisos oficiales (AEMET / Meteoalerta) -->
+      <!-- Avisos MeteoAlarm (agrega AEMET + otros) + indicadores heurísticos Open-Meteo -->
       <div id="meteoAvisosOficiales" class="meteo-alertas" style="display:none"></div>
 
       <!-- Alertas para cultivo -->
@@ -12237,8 +12348,7 @@ async function cargarMeteo() {
     if (document.getElementById('meteoAvisosOficiales')) document.getElementById('meteoAvisosOficiales').style.display = 'flex';
     document.getElementById('meteoAlertas').style.display = 'flex';
 
-    // Avisos meteorológicos (Open‑Meteo, sin clave)
-    renderAvisosMeteoOpenMeteo();
+    await renderMeteoAvisosPanelCompleto();
 
   } catch(e) {
     document.getElementById('meteoLoader').innerHTML =
@@ -13313,28 +13423,117 @@ async function ensureMeteoCoordsAuto() {
   return _meteoGeoInFlight;
 }
 
-// ── Avisos meteorológicos (Open‑Meteo, sin clave) ────────────────────────────
-function renderAvisosMeteoOpenMeteo() {
-  const wrap = document.getElementById('meteoAvisosOficiales');
-  if (!wrap) return;
+// ── Avisos: MeteoAlarm (naranja/rojo AEMET agregados) + heurística Open‑Meteo ──
+const CAP_NS_METEO = 'urn:oasis:names:tc:emergency:cap:1.2';
 
-  // Evitar recalcular demasiado a menudo
-  const now = Date.now();
-  if (state._openMeteoAvisosLastRender && (now - state._openMeteoAvisosLastRender) < 5 * 60 * 1000) return;
-  state._openMeteoAvisosLastRender = now;
-  saveState();
+function meteoEscHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-  if (!meteoData?.daily) {
-    wrap.style.display = 'flex';
-    wrap.innerHTML = `
-      <div class="meteo-alerta-item warn">
-        <span style="font-size:16px">📡</span>
-        <span>Sin datos suficientes para alertas meteorológicas.</span>
-      </div>
-    `;
-    return;
+function meteoCapTag(entry, localName) {
+  const list = entry.getElementsByTagNameNS(CAP_NS_METEO, localName);
+  return list.length ? list[0].textContent.trim() : '';
+}
+
+function meteoalarmCiudadCoincideZona(ciudad, areaDesc, title) {
+  if (!ciudad || String(ciudad).trim() === '') return false;
+  const norm = t => String(t || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const blob = norm(areaDesc) + ' ' + norm(title);
+  const c = norm(ciudad);
+  const stop = { comunidad: 1, comunitat: 1, valenciana: 1, autonoma: 1, autonomica: 1, espana: 1, spain: 1 };
+  const tokens = c.split(/[^a-z0-9]+/).filter(t => t.length >= 4 && !stop[t]);
+  for (let i = 0; i < tokens.length; i++) {
+    if (blob.includes(tokens[i])) return true;
   }
+  if (/castell|castello/.test(c) && /castell/.test(blob)) return true;
+  if (/valenc/.test(c) && /valenc/.test(blob)) return true;
+  if (/alicant|alacant/.test(c) && /alicant/.test(blob)) return true;
+  return false;
+}
 
+function parseMeteoalarmAtomEntries(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  if (doc.querySelector('parsererror')) return [];
+  const now = new Date();
+  const out = [];
+  const seenId = new Set();
+
+  doc.querySelectorAll('entry').forEach(entry => {
+    const msgType = meteoCapTag(entry, 'message_type');
+    if (msgType === 'Cancel') return;
+    const st = meteoCapTag(entry, 'status');
+    if (st && st !== 'Actual') return;
+    const expiresStr = meteoCapTag(entry, 'expires');
+    if (expiresStr) {
+      const ex = new Date(expiresStr);
+      if (!isNaN(ex.getTime()) && ex < now) return;
+    }
+    const titleEl = entry.querySelector('title');
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const sev = meteoCapTag(entry, 'severity');
+    const areaDesc = meteoCapTag(entry, 'areaDesc');
+    const event = meteoCapTag(entry, 'event');
+    if (!title && !areaDesc) return;
+
+    let tipo = '';
+    if (/Red /i.test(title) || sev === 'Extreme') tipo = 'bad';
+    else if (/Orange /i.test(title) || sev === 'Severe') tipo = 'severe';
+    else if (/Yellow /i.test(title) || sev === 'Moderate') tipo = 'warn';
+    if (!tipo) return;
+
+    const ident = meteoCapTag(entry, 'identifier') || title + areaDesc;
+    if (seenId.has(ident)) return;
+    seenId.add(ident);
+
+    const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
+    const titulo = title || ((event || 'Aviso') + ' — ' + areaDesc);
+    const txt = areaDesc ? ('Zona: ' + areaDesc) : (event || '');
+    out.push({ tipo, icon, titulo, txt, areaDesc, title });
+  });
+  return out;
+}
+
+function ordenarMeteoalarmPorRelevancia(items, ciudad) {
+  return items.slice().sort((a, b) => {
+    const pri = { bad: 0, severe: 1, warn: 2 };
+    const pa = pri[a.tipo] ?? 3;
+    const pb = pri[b.tipo] ?? 3;
+    if (pa !== pb) return pa - pb;
+    const ra = meteoalarmCiudadCoincideZona(ciudad, a.areaDesc, a.title);
+    const rb = meteoalarmCiudadCoincideZona(ciudad, b.areaDesc, b.title);
+    if (ra !== rb) return ra ? -1 : 1;
+    return 0;
+  });
+}
+
+async function fetchMeteoalarmSpainProxied() {
+  const atomUrl = 'https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-spain';
+  const url = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(atomUrl);
+  const ac = new AbortController();
+  const to = setTimeout(() => ac.abort(), 14000);
+  try {
+    const res = await fetch(url, { signal: ac.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let text = await res.text();
+    if (text.charAt(0) === '{') {
+      try {
+        const j = JSON.parse(text);
+        if (typeof j.contents === 'string') text = j.contents;
+      } catch (_) {}
+    }
+    return text;
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+function buildAvisosMeteoHeuristicas() {
+  if (!meteoData?.daily) return [];
   const d = meteoData.daily;
   const tMax = Math.round(d.temperature_2m_max?.[0] ?? NaN);
   const tMin = Math.round(d.temperature_2m_min?.[0] ?? NaN);
@@ -13342,53 +13541,93 @@ function renderAvisosMeteoOpenMeteo() {
   const uv = Math.round(d.uv_index_max?.[0] ?? 0);
   const prob = Math.round(d.precipitation_probability_max?.[0] ?? NaN);
   const mm = Math.round((d.precipitation_sum?.[0] ?? 0) * 10) / 10;
-
   const alertas = [];
 
-  // Viento
   if (isFinite(viento)) {
-    if (viento >= 70) alertas.push({ tipo:'bad', icon:'💨', titulo:`Viento muy fuerte (${viento} km/h)`, txt:'Asegura la torre, revisa estabilidad y sujeciones.' });
-    else if (viento >= 50) alertas.push({ tipo:'warn', icon:'💨', titulo:`Viento fuerte (${viento} km/h)`, txt:'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
+    if (viento >= 70) alertas.push({ tipo: 'bad', icon: '💨', titulo: 'Viento muy fuerte (' + viento + ' km/h)', txt: 'Asegura la torre, revisa estabilidad y sujeciones.' });
+    else if (viento >= 50) alertas.push({ tipo: 'warn', icon: '💨', titulo: 'Viento fuerte (' + viento + ' km/h)', txt: 'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
   }
-
-  // Lluvia
   if (isFinite(prob)) {
-    if (prob >= 85 && mm >= 15) alertas.push({ tipo:'warn', icon:'🌧️', titulo:`Lluvia probable (${prob}%)`, txt:`Acumulado estimado ~${mm} mm. Protege nutrientes/electricidad si estás en exterior.` });
-    else if (prob >= 70) alertas.push({ tipo:'warn', icon:'🌦️', titulo:`Chubascos posibles (${prob}%)`, txt:'Planifica toldo/cobertura en horas de lluvia.' });
+    if (prob >= 85 && mm >= 15) alertas.push({ tipo: 'warn', icon: '🌧️', titulo: 'Lluvia probable (' + prob + '%)', txt: 'Acumulado estimado ~' + mm + ' mm. Protege nutrientes/electricidad si estás en exterior.' });
+    else if (prob >= 70) alertas.push({ tipo: 'warn', icon: '🌦️', titulo: 'Chubascos posibles (' + prob + '%)', txt: 'Planifica toldo/cobertura en horas de lluvia.' });
   }
-
-  // Calor / frío
   if (isFinite(tMax)) {
-    if (tMax >= 36) alertas.push({ tipo:'bad', icon:'🌡️', titulo:`Calor extremo (${tMax}°C)`, txt:'Riesgo de bolting y agua muy caliente. Toldo + vigilar temp del depósito.' });
-    else if (tMax >= 32) alertas.push({ tipo:'warn', icon:'🌡️', titulo:`Día muy caluroso (${tMax}°C)`, txt:'Vigila VPD y temperatura del agua. Sombra recomendada.' });
+    if (tMax >= 36) alertas.push({ tipo: 'bad', icon: '🌡️', titulo: 'Calor extremo (' + tMax + '°C)', txt: 'Riesgo de bolting y agua muy caliente. Toldo + vigilar temp del depósito.' });
+    else if (tMax >= 32) alertas.push({ tipo: 'warn', icon: '🌡️', titulo: 'Día muy caluroso (' + tMax + '°C)', txt: 'Vigila VPD y temperatura del agua. Sombra recomendada.' });
   }
-  if (isFinite(tMin)) {
-    if (tMin <= 1) alertas.push({ tipo:'warn', icon:'🥶', titulo:`Noche fría (${tMin}°C)`, txt:'Posible estrés en raíces. Revisa calentador/aislamiento.' });
+  if (isFinite(tMin) && tMin <= 1) {
+    alertas.push({ tipo: 'warn', icon: '🥶', titulo: 'Noche fría (' + tMin + '°C)', txt: 'Posible estrés en raíces. Revisa calentador/aislamiento.' });
   }
-
-  // UV
   if (isFinite(uv) && uv >= 8) {
-    alertas.push({ tipo: (tMax >= 30 ? 'bad' : 'warn'), icon:'☀️', titulo:`UV alto (${uv})`, txt:'Evita sol directo prolongado; toldo recomendado.' });
+    alertas.push({ tipo: (tMax >= 30 ? 'bad' : 'warn'), icon: '☀️', titulo: 'UV alto (' + uv + ')', txt: 'Evita sol directo prolongado; toldo recomendado.' });
   }
+  return alertas;
+}
 
-  // Render
+function meteoAlertaRowHtml(a) {
+  return '<div class="meteo-alerta-item ' + a.tipo + '">' +
+    '<span style="font-size:16px">' + a.icon + '</span>' +
+    '<span><strong>' + meteoEscHtml(a.titulo) + '</strong><br>' +
+    '<span style="font-size:11px;opacity:0.9">' + meteoEscHtml(a.txt) + '</span></span>' +
+    '</div>';
+}
+
+async function renderMeteoAvisosPanelCompleto() {
+  const wrap = document.getElementById('meteoAvisosOficiales');
+  if (!wrap) return;
   wrap.style.display = 'flex';
-  if (alertas.length === 0) {
-    wrap.innerHTML = `
-      <div class="meteo-alerta-item ok">
-        <span style="font-size:16px">✅</span>
-        <span>Sin alertas meteorológicas destacables para hoy (según Open‑Meteo).</span>
-      </div>
-    `;
-    return;
+
+  const ciudad = state.configTorre?.ciudad || '';
+  const parts = [];
+
+  try {
+    const xml = await fetchMeteoalarmSpainProxied();
+    const items = parseMeteoalarmAtomEntries(xml);
+    const fuertes = items.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
+    const amarillas = items.filter(it => it.tipo === 'warn');
+    const amarillasZona = amarillas.filter(it => meteoalarmCiudadCoincideZona(ciudad, it.areaDesc, it.title));
+
+    let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, ciudad).slice(0, 8);
+    const ya = new Set(mostrar.map(x => x.titulo));
+    amarillasZona.forEach(y => {
+      if (!ya.has(y.titulo) && mostrar.length < 10) {
+        mostrar.push(y);
+        ya.add(y.titulo);
+      }
+    });
+
+    if (mostrar.length > 0) {
+      parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
+        'Avisos oficiales (MeteoAlarm — mismos datos que publica AEMET en el sistema europeo)</div>');
+      if (ciudad && fuertes.length && !fuertes.some(f => meteoalarmCiudadCoincideZona(ciudad, f.areaDesc, f.title))) {
+        parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
+          'Ningún aviso naranja/rojo coincide literalmente con «' + meteoEscHtml(ciudad) + '»; abajo figuran los activos en España. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> para tu municipio.</span></div>');
+      }
+      mostrar.forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
+    } else if (items.length === 0) {
+      parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>Sin avisos amarillo/naranja/rojo activos en el feed nacional ahora.</span></div>');
+    } else {
+      parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay naranja/rojo activo en el feed; solo avisos de menor nivel u otras zonas. Revisa <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+    }
+  } catch (e) {
+    parts.push('<div class="meteo-alerta-item warn">' +
+      '<span style="font-size:16px">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
+      'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
   }
 
-  wrap.innerHTML = alertas.slice(0, 4).map(a => `
-    <div class="meteo-alerta-item ${a.tipo}">
-      <span style="font-size:16px">${a.icon}</span>
-      <span><strong>${a.titulo}</strong><br><span style="font-size:11px;opacity:0.9">${a.txt}</span></span>
-    </div>
-  `).join('');
+  const heur = buildAvisosMeteoHeuristicas();
+  parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 6px">' +
+    'Modelo numérico (hoy, Open‑Meteo)</div>');
+  if (!meteoData?.daily) {
+    parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📡</span><span>Sin datos suficientes para este bloque.</span></div>');
+  } else if (heur.length === 0) {
+    parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>Sin condiciones destacables según el modelo para hoy.</span></div>');
+  } else {
+    heur.slice(0, 4).forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
+  }
+
+  wrap.innerHTML = parts.join('');
 }
 
 async function guardarMedicion() {
