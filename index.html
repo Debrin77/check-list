@@ -2433,6 +2433,62 @@ button.checklist-close {
   align-items: center;
   gap: 8px;
 }
+.config-section-collapsible {
+  padding: 0;
+  overflow: hidden;
+}
+.config-section-collapse-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--white);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+.config-section-collapse-head:hover {
+  background: rgba(255,255,255,0.05);
+}
+.config-section-collapse-head:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.config-section-collapse-chevron {
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  width: 1.1em;
+  text-align: center;
+}
+.config-section-collapse-head.is-collapsed .config-section-collapse-chevron {
+  transform: rotate(-90deg);
+}
+.config-section-collapse-title {
+  flex: 1;
+  line-height: 1.35;
+}
+.config-section-collapse-body {
+  padding: 0 14px 14px;
+}
+.config-section-collapse-body:not([hidden]) {
+  border-top: 1px solid var(--border);
+}
+.config-section-collapse-body[hidden] {
+  display: none !important;
+}
 .config-options {
   display: flex;
   flex-direction: column;
@@ -3571,6 +3627,24 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </div>
         </div>
 
+        <div class="config-section" id="panelLocalidadMeteo">
+          <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de la torre (avisos oficiales)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px">
+            Escribe el <strong>municipio o localidad exacta</strong> donde está la torre. Los avisos MeteoAlarm se filtran solo si el texto del aviso nombra ese municipio
+            (no provincia ni comunidad). <strong>Independiente</strong> del municipio del grifo: si usas destilada u ósmosis puedes (y debes) indicar aquí tu pueblo igualmente.
+            Conviene el nombre completo (ej. <em>Castelló de la Plana</em>) para no confundir con avisos provinciales.
+          </div>
+          <input type="text" id="inputLocalidadMeteo" placeholder="Ej: Castelló de la Plana, Almassora…"
+            aria-labelledby="labelLocalidadMeteo" autocomplete="address-level2"
+            onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
+            style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:15px;padding:10px 12px;outline:none;box-sizing:border-box;margin-bottom:8px">
+          <button type="button" onclick="usarMunicipioGrifoParaMeteo()" id="btnMunicipioGrifoAMeteo"
+            style="width:100%;padding:8px 12px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;
+                   font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent">
+            Copiar municipio del grifo (solo si ya lo elegiste abajo)
+          </button>
+        </div>
+
         <div class="config-section">
           <div class="config-section-title" id="labelConfigSustrato">🌱 Sustrato</div>
           <div class="config-options" role="radiogroup" aria-labelledby="labelConfigSustrato">
@@ -3609,8 +3683,14 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </div>
         </div>
 
-        <div class="config-section" id="panelSensorHumedadSustrato">
-          <div class="config-section-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</div>
+        <div class="config-section config-section-collapsible" id="panelSensorHumedadSustrato">
+          <button type="button" class="config-section-collapse-head" id="btnCollapseHumedadFino"
+            aria-expanded="true" aria-controls="collapseBodyHumedadFino"
+            onclick="toggleMedirCollapse('humedadFino')">
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+            <span class="config-section-collapse-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</span>
+          </button>
+          <div class="config-section-collapse-body" id="collapseBodyHumedadFino">
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
             El riego normal ya usa el <strong>tipo de sustrato</strong> (ciclos de fábrica / referencia) y el clima.
             Aquí solo un <strong>toque ±3 %</strong> si anotas % con un <strong>medidor de sustrato 4 en 1</strong> (o similar) o a ojo; no hace falta laboratorio.
@@ -3636,10 +3716,17 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
             </div>
           </div>
+          </div>
         </div>
 
-        <div class="config-section" id="panelSensoresHardware">
-          <div class="config-section-title" id="labelSensoresHw">📟 Sondas y medidores (opcional)</div>
+        <div class="config-section config-section-collapsible" id="panelSensoresHardware">
+          <button type="button" class="config-section-collapse-head" id="btnCollapseSensoresHw"
+            aria-expanded="true" aria-controls="collapseBodySensoresHw"
+            onclick="toggleMedirCollapse('sensoresHw')">
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+            <span class="config-section-collapse-title" id="labelSensoresHw">📟 Sondas y medidores (opcional)</span>
+          </button>
+          <div class="config-section-collapse-body" id="collapseBodySensoresHw">
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
             Indica si además de medir “a mano” usas algún <strong>sensor o medidor continuo</strong> (interior o exterior).
             La app <strong>no se conecta por telemática</strong> a esos equipos por defecto: sirve para documentar tu montaje y mostrarte cómo volcar lecturas aquí.
@@ -3668,13 +3755,84 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <p style="margin:0 0 8px"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación de la torre; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
             <p style="margin:0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
           </div>
+          </div>
         </div>
 
-        <div class="config-section" id="panelConfigInteriorGrow" style="display:none">
-          <div class="config-section-title">🏠 Sala interior (riego)</div>
+        <div class="config-section config-section-collapsible" id="panelConfigInteriorGrow" style="display:none">
+          <button type="button" class="config-section-collapse-head" id="btnCollapseInteriorGrow"
+            aria-expanded="true" aria-controls="collapseBodyInteriorGrow"
+            onclick="toggleMedirCollapse('interiorGrow')">
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+            <span class="config-section-collapse-title">🏠 Sala interior (riego)</span>
+          </button>
+          <div class="config-section-collapse-body" id="collapseBodyInteriorGrow">
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
             Sin datos de exterior, el riego usa un VPD aproximado (Magnus–Tetens) con temperatura y humedad relativa del aire,
-            como en muchas apps de invernadero. Ajusta ventilación e intensidad de luz para acercarte a tu sala real.
+            como en muchas apps de invernadero. Indica si la luz es <strong>natural</strong> (ventana), <strong>LED u otra artificial</strong>,
+            las <strong>horas de fotoperíodo</strong> y la intensidad aproximada bajo los focos.
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--white);margin-bottom:6px">Origen de la luz</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <button type="button" class="config-option" id="opt-interior-luz-natural" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('natural')" aria-label="Luz natural ventana">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Natural</span>
+                <span class="config-option-desc">Ventana o lucernario</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-interior-luz-led" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('led')" aria-label="LED full spectrum">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">LED</span>
+                <span class="config-option-desc">Full spectrum / barras</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-interior-luz-mixto" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('mixto')" aria-label="Luz mixta">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Mixto</span>
+                <span class="config-option-desc">Natural + refuerzo</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-interior-luz-fluorescente" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('fluorescente')" aria-label="Fluorescente T5">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">T5 / CFL</span>
+                <span class="config-option-desc">Fluorescente</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-interior-luz-hps" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('hps')" aria-label="HPS halogenuro">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">HPS / HM</span>
+                <span class="config-option-desc">Descarga alta presión</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-interior-luz-sin" role="radio" aria-checked="false"
+              onclick="setInteriorLuzTipo('sin_luz')" aria-label="Sin luz adecuada">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">Sin luz</span>
+                <span class="config-option-desc">No recomendado</span>
+              </span>
+            </button>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+              Horas de luz efectivas al día: <strong id="interiorHorasLuzVal" style="color:var(--white)">16 h</strong>
+            </div>
+            <input type="range" id="interiorHorasLuz" min="12" max="20" step="1" value="16"
+              aria-valuemin="12" aria-valuemax="20"
+              oninput="onInteriorHorasLuzRangeInput()"
+              style="width:100%;accent-color:var(--green)">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
+              <span>12 h</span><span>16 h</span><span>20 h</span>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
             <div>
@@ -3694,7 +3852,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <input type="checkbox" id="interiorCircAire" onchange="persistInteriorGrow()">
             <span>Ventilador o circulación de aire en la sala</span>
           </label>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Intensidad efectiva de la luz (PPFD aprox.)</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Intensidad bajo focos (PPFD aprox.; si es solo luz natural, elige “media” como referencia)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
             <button type="button" class="config-option" id="opt-int-luz-baja" role="radio" aria-checked="false"
               onclick="setInteriorIntensidadLuz('baja')" aria-label="Luz baja">
@@ -3720,6 +3878,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <span class="config-option-desc">Cerca del dosel</span>
               </span>
             </button>
+          </div>
           </div>
         </div>
 
@@ -4844,7 +5003,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <button type="button" class="equip-card" id="eqInterior" onclick="toggleUbic('interior')">
           <div class="equip-icon">🏠</div>
           <div class="equip-titulo">Interior</div>
-          <div class="equip-desc">Dentro de casa con luz artificial</div>
+          <div class="equip-desc">Casa o armario · Luz natural (ventana) y/o LED u otras</div>
         </button>
       </div>
     </div>
@@ -5005,25 +5164,35 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div style="font-size:28px;margin-bottom:6px">🏠</div>
           <div style="font-size:13px;font-weight:800;color:#374151">Interior</div>
           <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5">
-            Casa, local · Temperatura estable · Necesita iluminación artificial · Sin variaciones estacionales
+            Casa, grow room · Indica luz natural y/o artificial (LED, etc.) · Clima más estable que en calle
           </div>
         </button>
       </div>
 
-      <!-- Iluminación si es interior -->
+      <!-- Iluminación si es interior: natural o artificial -->
       <div id="seccionIluminacion" style="display:none">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-          color:#374151;margin-bottom:10px">💡 Tipo de iluminación artificial</div>
+          color:#374151;margin-bottom:10px">💡 ¿Qué luz recibe la torre?</div>
         <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;
-          padding:12px;margin-bottom:10px;font-size:12px;color:#92400e">
-          ⚠️ En interior sin luz solar necesitas al menos <strong>16 horas de luz</strong> para lechugas.
-          Sin suficiente luz las plantas se etiolizan (tallos largos y débiles).
+          padding:12px;margin-bottom:10px;font-size:12px;color:#92400e;line-height:1.55">
+          Indica si la luz es <strong>natural</strong> (ventana, lucernario) o <strong>artificial</strong> (LED, T5, HPS…), o <strong>mixta</strong>.
+          Con <strong>solo artificial</strong>, para lechugas conviene alrededor de <strong>16&nbsp;h/día</strong> de fotoperíodo efectivo; con poca luz las plantas se etiolarán.
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button type="button" class="equip-card" id="luzLED" onclick="seleccionarLuz('led')" style="padding:12px">
+          <button type="button" class="equip-card" id="luzNatural" onclick="seleccionarLuz('natural')" style="padding:12px">
+            <div style="font-size:22px;margin-bottom:4px">🪟</div>
+            <div style="font-size:12px;font-weight:700;color:#374151">Luz natural</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Ventana · Lucernario · Invernadero acristalado</div>
+          </button>
+          <button type="button" class="equip-card selected" id="luzLED" onclick="seleccionarLuz('led')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">💡</div>
-            <div style="font-size:12px;font-weight:700;color:#374151">LED Full Spectrum</div>
-            <div style="font-size:10px;color:#6b7280;margin-top:2px">Recomendado · Bajo consumo · Sin calor</div>
+            <div style="font-size:12px;font-weight:700;color:#374151">LED full spectrum</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Recomendado · Bajo consumo · Poco calor</div>
+          </button>
+          <button type="button" class="equip-card" id="luzMixto" onclick="seleccionarLuz('mixto')" style="padding:12px">
+            <div style="font-size:22px;margin-bottom:4px">🪟💡</div>
+            <div style="font-size:12px;font-weight:700;color:#374151">Mixto</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Ventana + refuerzo LED (u otra)</div>
           </button>
           <button type="button" class="equip-card" id="luzFluorescent" onclick="seleccionarLuz('fluorescente')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🔦</div>
@@ -5033,11 +5202,11 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <button type="button" class="equip-card" id="luzHPS" onclick="seleccionarLuz('hps')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🔆</div>
             <div style="font-size:12px;font-weight:700;color:#374151">HPS / HM</div>
-            <div style="font-size:10px;color:#6b7280;margin-top:2px">Alto rendimiento · Genera calor · Coste alto</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Alto rendimiento · Calor · Coste alto</div>
           </button>
           <button type="button" class="equip-card" id="luzSinLuz" onclick="seleccionarLuz('sin_luz')" style="padding:12px">
             <div style="font-size:22px;margin-bottom:4px">🚫</div>
-            <div style="font-size:12px;font-weight:700;color:#374151">Sin iluminación</div>
+            <div style="font-size:12px;font-weight:700;color:#374151">Sin luz adecuada</div>
             <div style="font-size:10px;color:#dc2626;margin-top:2px;font-weight:700">⚠️ No recomendado</div>
           </button>
         </div>
@@ -5047,7 +5216,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             ⏱ Horas de luz al día: <span id="horasLuzVal" style="color:#15803d">16h</span>
           </div>
           <input type="range" id="sliderHorasLuz" min="12" max="20" value="16"
-            oninput="document.getElementById('horasLuzVal').textContent=this.value+'h'"
+            oninput="setupData.horasLuz=parseInt(this.value,10)||16;document.getElementById('horasLuzVal').textContent=this.value+'h'"
             style="width:100%;accent-color:#16a34a">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af">
             <span>12h (mínimo)</span><span>16h (óptimo)</span><span>20h (máximo)</span>
@@ -7922,6 +8091,7 @@ function renderSetupPage() {
   if (setupPagina === 1) updateTorreBuilder();
   if (setupPagina === 2) cargarSetupSensoresHwUI();
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
+  if (setupPagina === 5) setTimeout(syncWizardLuzUI, 0);
   if (setupPagina === 6) setTimeout(renderSetupPlantasGrid, 50);
   if (setupPagina === 7) setTimeout(actualizarResumenSetup, 50);
 
@@ -8041,6 +8211,7 @@ function updateTorreBuilder() {
 
 function toggleUbic(tipo) {
   setupUbicacion = tipo;
+  setupData.ubicacion = tipo;
   document.getElementById('eqExterior').className = 'equip-card' + (tipo === 'exterior' ? ' selected' : '');
   document.getElementById('eqInterior').className = 'equip-card' + (tipo === 'interior' ? ' selected' : '');
 }
@@ -8359,13 +8530,23 @@ function guardarSetupYContinuar() {
     humedad: !!(setupData.sensoresHardware && setupData.sensoresHardware.humedad),
   };
 
+  const prevLocMet = (!setupEsNuevaTorre && state.configTorre && state.configTorre.localidadMeteo)
+    ? String(state.configTorre.localidadMeteo).trim() : '';
+  const locWizard = (setupCoordenadas.ciudad || '').split(',')[0].trim();
+
   // Guardar configuración en state
+  const horasLuzGuardar = Math.max(12, Math.min(20,
+    parseInt(String(document.getElementById('sliderHorasLuz')?.value || setupData.horasLuz || 16), 10) || 16));
+  setupData.horasLuz = horasLuzGuardar;
+
   state.configTorre = {
     tipoTorre:    setupTipoTorre,
     numNiveles:   niveles,
     numCestas:    cestas,
     volDeposito:  vol,
-    ubicacion:    setupUbicacion,
+    ubicacion:    setupData.ubicacion || setupUbicacion || 'exterior',
+    luz:          setupData.luz || 'led',
+    horasLuz:     horasLuzGuardar,
     equipamiento: [...setupEquipamiento],
     nutriente:    setupNutriente,
     tamanoCesta:  setupTamanoCesta,
@@ -8377,6 +8558,7 @@ function guardarSetupYContinuar() {
     ciudad:       setupCoordenadas.ciudad,
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0495,
+    localidadMeteo: setupEsNuevaTorre ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
   };
   invalidateMeteoNomiCache();
@@ -10155,6 +10337,7 @@ function seleccionarMunicipio(nombre, ec, dureza, nota) {
     warnEl.style.borderColor = '#93c5fd';
     warnEl.style.color = '#1e40af';
   }
+  cargarLocalidadMeteoUI();
 }
 
 function mostrarAlternativasSINAC() {
@@ -10173,6 +10356,7 @@ function resetMunicipio() {
   document.getElementById('geoEstado').style.display = 'none';
   const btn = document.getElementById('btnGeolocalizacion');
   if (btn) { btn.style.display = 'flex'; resetGeoBtn(); }
+  cargarLocalidadMeteoUI();
 }
 
 function setAgua(tipo) {
@@ -10200,6 +10384,7 @@ function setAgua(tipo) {
   }
 
   actualizarRangoEC();
+  cargarLocalidadMeteoUI();
 }
 
 function setSustrato(tipo) {
@@ -10230,6 +10415,74 @@ function actualizarVisibilidadPanelInteriorGrow() {
   if (!p) return;
   const int = (state.configTorre || {}).ubicacion === 'interior';
   p.style.display = int ? 'block' : 'none';
+  applyMedirCollapseUI();
+}
+
+function ensureUIMedirCollapse() {
+  if (!state.configTorre) state.configTorre = {};
+  let u = state.configTorre.uiMedirCollapse;
+  if (!u || typeof u !== 'object' || Array.isArray(u)) {
+    u = {};
+    state.configTorre.uiMedirCollapse = u;
+  }
+  return u;
+}
+
+function resolveMedirExpanded(key, humActivo, hwAny) {
+  const ui = ensureUIMedirCollapse();
+  if (key === 'humedadFino') {
+    return ui.humedadFino !== undefined ? !!ui.humedadFino : !!humActivo;
+  }
+  if (key === 'sensoresHw') {
+    return ui.sensoresHw !== undefined ? !!ui.sensoresHw : !!hwAny;
+  }
+  if (key === 'interiorGrow') {
+    return ui.interiorGrow !== undefined ? !!ui.interiorGrow : true;
+  }
+  return true;
+}
+
+function applyMedirCollapseUI() {
+  const humAct = !!ensureSensorHumedadSustrato().activo;
+  const sh = ensureSensoresHardware();
+  const hwAny = !!(sh.ec || sh.ph || sh.humedad);
+
+  const rows = [
+    { body: 'collapseBodyHumedadFino', btn: 'btnCollapseHumedadFino', key: 'humedadFino' },
+    { body: 'collapseBodySensoresHw', btn: 'btnCollapseSensoresHw', key: 'sensoresHw' }
+  ];
+  for (let i = 0; i < rows.length; i++) {
+    const body = document.getElementById(rows[i].body);
+    const btn = document.getElementById(rows[i].btn);
+    if (!body || !btn) continue;
+    const exp = resolveMedirExpanded(rows[i].key, humAct, hwAny);
+    body.hidden = !exp;
+    btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
+    btn.classList.toggle('is-collapsed', !exp);
+  }
+
+  const intPanel = document.getElementById('panelConfigInteriorGrow');
+  if (intPanel && intPanel.style.display !== 'none') {
+    const body = document.getElementById('collapseBodyInteriorGrow');
+    const btn = document.getElementById('btnCollapseInteriorGrow');
+    if (body && btn) {
+      const exp = resolveMedirExpanded('interiorGrow', humAct, hwAny);
+      body.hidden = !exp;
+      btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
+      btn.classList.toggle('is-collapsed', !exp);
+    }
+  }
+}
+
+function toggleMedirCollapse(key) {
+  const humAct = !!ensureSensorHumedadSustrato().activo;
+  const sh = ensureSensoresHardware();
+  const hwAny = !!(sh.ec || sh.ph || sh.humedad);
+  const cur = resolveMedirExpanded(key, humAct, hwAny);
+  ensureUIMedirCollapse()[key] = !cur;
+  guardarEstadoTorreActual();
+  saveState();
+  applyMedirCollapseUI();
 }
 
 function cargarSensorSustratoUI() {
@@ -10245,11 +10498,13 @@ function cargarSensorSustratoUI() {
       ? sh.objetivoPct
       : def;
   }
+  applyMedirCollapseUI();
 }
 
 function persistSensorSustrato() {
   if (!state.configTorre) state.configTorre = {};
   const sh = ensureSensorHumedadSustrato();
+  const prevActivo = !!sh.activo;
   sh.activo = !!document.getElementById('sensorSustratoActivo')?.checked;
   const raw = document.getElementById('sensorSustratoLectura')?.value;
   sh.lecturaPct = raw === '' || raw == null ? null : parseFloat(raw);
@@ -10258,8 +10513,12 @@ function persistSensorSustrato() {
   sh.objetivoPct = oRaw === '' || oRaw == null ? null : parseFloat(oRaw);
   if (sh.objetivoPct == null || isNaN(sh.objetivoPct)) sh.objetivoPct = def;
   delete state.configTorre.sensorHumedadEsponja;
+  const ui = ensureUIMedirCollapse();
+  if (!prevActivo && sh.activo) ui.humedadFino = true;
+  if (prevActivo && !sh.activo) ui.humedadFino = false;
   guardarEstadoTorreActual();
   saveState();
+  applyMedirCollapseUI();
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
@@ -10292,16 +10551,53 @@ function cargarSensoresHardwareUI() {
   if (p) p.checked = !!s.ph;
   if (h) h.checked = !!s.humedad;
   actualizarVisibilidadAyudaSensores();
+  applyMedirCollapseUI();
 }
 
 function persistSensoresHardware() {
   const s = ensureSensoresHardware();
+  const prevAny = !!(s.ec || s.ph || s.humedad);
   s.ec = !!document.getElementById('sensorHwEC')?.checked;
   s.ph = !!document.getElementById('sensorHwPH')?.checked;
   s.humedad = !!document.getElementById('sensorHwHum')?.checked;
+  const nowAny = !!(s.ec || s.ph || s.humedad);
+  const ui = ensureUIMedirCollapse();
+  if (!prevAny && nowAny) ui.sensoresHw = true;
+  if (prevAny && !nowAny) ui.sensoresHw = false;
   guardarEstadoTorreActual();
   saveState();
   actualizarVisibilidadAyudaSensores();
+  applyMedirCollapseUI();
+}
+
+function persistLocalidadMeteo() {
+  if (!state.configTorre) state.configTorre = {};
+  const v = (document.getElementById('inputLocalidadMeteo')?.value || '').trim();
+  state.configTorre.localidadMeteo = v;
+  invalidateMeteoNomiCache();
+  guardarEstadoTorreActual();
+  saveState();
+}
+
+function usarMunicipioGrifoParaMeteo() {
+  const n = state.configAguaMunicipio;
+  if (!n) {
+    showToast('No hay municipio del grifo guardado. Elige «Agua del grifo» y tu pueblo, o escribe el municipio de la torre a mano.', true);
+    return;
+  }
+  const el = document.getElementById('inputLocalidadMeteo');
+  if (el) el.value = String(n).split(',')[0].trim();
+  persistLocalidadMeteo();
+  showToast('Municipio de avisos copiado desde el grifo', false);
+}
+
+function cargarLocalidadMeteoUI() {
+  const el = document.getElementById('inputLocalidadMeteo');
+  if (!el) return;
+  const v = (state.configTorre && state.configTorre.localidadMeteo) ? String(state.configTorre.localidadMeteo) : '';
+  el.value = v;
+  const btn = document.getElementById('btnMunicipioGrifoAMeteo');
+  if (btn) btn.style.display = state.configAgua === 'grifo' && state.configAguaMunicipio ? 'block' : 'none';
 }
 
 function cargarInteriorGrowUI() {
@@ -10313,6 +10609,23 @@ function cargarInteriorGrowUI() {
   if (tEl) tEl.value = cfg.interiorTempC != null && cfg.interiorTempC !== '' ? cfg.interiorTempC : '';
   if (hEl) hEl.value = cfg.interiorHumedadAmbPct != null && cfg.interiorHumedadAmbPct !== '' ? cfg.interiorHumedadAmbPct : '';
   if (cEl) cEl.checked = !!cfg.interiorCirculacionAire;
+  const luz = cfg.luz || 'led';
+  const idLuz = {
+    natural: 'opt-interior-luz-natural', led: 'opt-interior-luz-led', mixto: 'opt-interior-luz-mixto',
+    fluorescente: 'opt-interior-luz-fluorescente', hps: 'opt-interior-luz-hps', sin_luz: 'opt-interior-luz-sin'
+  };
+  Object.keys(idLuz).forEach(k => {
+    const el = document.getElementById(idLuz[k]);
+    if (!el) return;
+    const sel = k === luz;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
+  });
+  const hHr = Math.max(12, Math.min(20, parseInt(String(cfg.horasLuz != null ? cfg.horasLuz : 16), 10) || 16));
+  const hr = document.getElementById('interiorHorasLuz');
+  const hv = document.getElementById('interiorHorasLuzVal');
+  if (hr) hr.value = hHr;
+  if (hv) hv.textContent = hHr + ' h';
   const v = cfg.interiorIntensidadLuz || 'media';
   ['baja', 'media', 'alta'].forEach(k => {
     const el = document.getElementById('opt-int-luz-' + k);
@@ -10321,6 +10634,21 @@ function cargarInteriorGrowUI() {
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
+}
+
+function setInteriorLuzTipo(tipo) {
+  if (!state.configTorre) state.configTorre = {};
+  const ok = ['natural', 'led', 'mixto', 'fluorescente', 'hps', 'sin_luz'];
+  state.configTorre.luz = ok.includes(tipo) ? tipo : 'led';
+  cargarInteriorGrowUI();
+  persistInteriorGrow();
+}
+
+function onInteriorHorasLuzRangeInput() {
+  const el = document.getElementById('interiorHorasLuz');
+  const v = document.getElementById('interiorHorasLuzVal');
+  if (el && v) v.textContent = el.value + ' h';
+  persistInteriorGrow();
 }
 
 function setInteriorIntensidadLuz(v) {
@@ -10338,6 +10666,24 @@ function persistInteriorGrow() {
   cfg.interiorTempC = tRaw === '' || tRaw == null ? null : parseFloat(String(tRaw).replace(',', '.'));
   cfg.interiorHumedadAmbPct = hRaw === '' || hRaw == null ? null : parseFloat(String(hRaw).replace(',', '.'));
   cfg.interiorCirculacionAire = !!document.getElementById('interiorCircAire')?.checked;
+  const hzRaw = document.getElementById('interiorHorasLuz')?.value;
+  let hz = hzRaw == null || hzRaw === '' ? null : parseInt(String(hzRaw), 10);
+  if (!Number.isFinite(hz)) hz = cfg.horasLuz;
+  cfg.horasLuz = hz == null ? 16 : Math.max(12, Math.min(20, hz));
+  const idLuz = {
+    natural: 'opt-interior-luz-natural', led: 'opt-interior-luz-led', mixto: 'opt-interior-luz-mixto',
+    fluorescente: 'opt-interior-luz-fluorescente', hps: 'opt-interior-luz-hps', sin_luz: 'opt-interior-luz-sin'
+  };
+  let luzPick = cfg.luz || 'led';
+  const orden = ['natural', 'led', 'mixto', 'fluorescente', 'hps', 'sin_luz'];
+  for (let i = 0; i < orden.length; i++) {
+    const el = document.getElementById(idLuz[orden[i]]);
+    if (el && el.classList.contains('selected')) {
+      luzPick = orden[i];
+      break;
+    }
+  }
+  cfg.luz = luzPick;
   if (!cfg.interiorIntensidadLuz) cfg.interiorIntensidadLuz = 'media';
   guardarEstadoTorreActual();
   saveState();
@@ -10388,8 +10734,10 @@ function initConfigUI() {
   });
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
+  cargarLocalidadMeteoUI();
   actualizarVisibilidadPanelInteriorGrow();
   cargarInteriorGrowUI();
+  applyMedirCollapseUI();
 
   if (agua === 'grifo') {
     document.getElementById('warningGrifo')?.classList.add('show');
@@ -12610,10 +12958,12 @@ let meteoData = null;
 let diaSeleccionado = 0;
 let _meteoNomiKey = null;
 let _meteoNomiContext = '';
+let _meteoNomiMunicipio = '';
 
 function invalidateMeteoNomiCache() {
   _meteoNomiKey = null;
   _meteoNomiContext = '';
+  _meteoNomiMunicipio = '';
 }
 
 function condEmoji(precipProb, tempMax, uv) {
@@ -13339,7 +13689,9 @@ async function calcularRiego() {
       vpdInterior = riegoVPDkPa(T, H);
       demandaDia = 0.48 + vpdInterior * 0.38 + (horasLuz - 14) * 0.028;
       const luzTipo = cfgIn.luz || 'led';
-      const multLuz = { led: 1, fluorescente: 0.92, hps: 1.12, sin_luz: 0.62 }[luzTipo] ?? 1;
+      const multLuz = {
+        natural: 0.94, led: 1, mixto: 1.03, fluorescente: 0.92, hps: 1.12, sin_luz: 0.62
+      }[luzTipo] ?? 1;
       const inten = cfgIn.interiorIntensidadLuz || 'media';
       const multInt = { baja: 0.9, media: 1, alta: 1.1 }[inten] ?? 1;
       demandaDia *= multLuz * multInt;
@@ -13436,8 +13788,11 @@ async function calcularRiego() {
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const agua2 = CONFIG_AGUA[state.configAgua || 'destilada'];
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
+    const luzCorta = {
+      natural: 'natural', led: 'LED', mixto: 'mixto', fluorescente: 'T5', hps: 'HPS', sin_luz: 'sin luz'
+    }[state.configTorre?.luz || 'led'] || 'LED';
     const torreTipo = esInterior
-      ? '🏠 Interior · ' + (state.configTorre?.horasLuz || 16) + 'h luz' +
+      ? '🏠 Interior · ' + luzCorta + ' · ' + (state.configTorre?.horasLuz || 16) + 'h luz' +
         (vpdInterior != null ? ' · VPD sala ≈ ' + (Math.round(vpdInterior * 1000) / 1000) + ' kPa' : '')
       : '☀️ Exterior';
     const resumenCultivos = (() => {
@@ -13754,6 +14109,9 @@ async function ensureMeteoCoordsAuto() {
               const prov = data.address?.state || data.address?.region || '';
               if (ciudad || prov) {
                 state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación actual') + (prov ? `, ${prov}` : '');
+                if (ciudad && !(state.configTorre.localidadMeteo && String(state.configTorre.localidadMeteo).trim())) {
+                  state.configTorre.localidadMeteo = String(ciudad).trim();
+                }
               }
             } catch (_) {}
           }
@@ -13785,23 +14143,50 @@ function meteoCapTag(entry, localName) {
   return list.length ? list[0].textContent.trim() : '';
 }
 
-function meteoalarmCiudadCoincideZona(ciudad, areaDesc, title) {
-  if (!ciudad || String(ciudad).trim() === '') return false;
-  const norm = t => String(t || '')
+function meteoNormTxt(s) {
+  return String(s || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
-  const blob = norm(areaDesc) + ' ' + norm(title);
-  const c = norm(ciudad);
-  const stop = { comunidad: 1, comunitat: 1, valenciana: 1, autonoma: 1, autonomica: 1, espana: 1, spain: 1 };
-  const tokens = c.split(/[^a-z0-9]+/).filter(t => t.length >= 4 && !stop[t]);
-  for (let i = 0; i < tokens.length; i++) {
-    if (blob.includes(tokens[i])) return true;
+}
+
+/** Coincidencia estricta con municipio/localidad (no provincia ni CCAA solas). */
+function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
+  const raw = String(municipio || '').split(',')[0].trim();
+  if (!raw) return false;
+  const mFull = meteoNormTxt(raw).replace(/\s+/g, ' ').trim();
+  const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
+  if (!blob) return false;
+
+  if (mFull.length >= 6 && blob.includes(mFull)) return true;
+
+  const stop = { de:1, la:1, el:1, las:1, los:1, del:1, les:1, els:1, en:1, y:1, i:1, al:1, sa:1 };
+  const tokens = mFull.split(/\s+/).filter(t => t.length >= 3 && !stop[t]);
+  const significant = tokens.filter(t => t.length >= 4);
+  const toCheck = significant.length ? significant : tokens;
+  if (toCheck.length === 0) {
+    return mFull.length >= 3 && blob.includes(mFull);
   }
-  if (/castell|castello/.test(c) && /castell/.test(blob)) return true;
-  if (/valenc/.test(c) && /valenc/.test(blob)) return true;
-  if (/alicant|alacant/.test(c) && /alicant/.test(blob)) return true;
-  return false;
+
+  if (toCheck.length === 1 && toCheck[0].length < 10) {
+    const broad = /\b(provincia|comarca|comunitat|comunidad autonoma|comunitat autonoma|costera|costa|litoral|prelitoral|interior|illes|islas|illa de|camp de|camp del|marina|ribera|altiplano|pirine|serrania|muntanya)\b/;
+    if (broad.test(blob)) return false;
+  }
+
+  for (let i = 0; i < toCheck.length; i++) {
+    if (!blob.includes(toCheck[i])) return false;
+  }
+  return true;
+}
+
+function getMunicipioMeteoFiltro() {
+  const cfg = state.configTorre || {};
+  const ex = (cfg.localidadMeteo || '').trim();
+  if (ex) return ex.split(',')[0].trim();
+  const nom = (_meteoNomiMunicipio || '').trim();
+  if (nom) return nom;
+  const c = (cfg.ciudad || '').trim();
+  return c ? c.split(',')[0].trim() : '';
 }
 
 function parseMeteoalarmAtomEntries(xmlText) {
@@ -13847,14 +14232,14 @@ function parseMeteoalarmAtomEntries(xmlText) {
   return out;
 }
 
-function ordenarMeteoalarmPorRelevancia(items, ciudad) {
+function ordenarMeteoalarmPorRelevancia(items, municipioFiltro) {
   return items.slice().sort((a, b) => {
     const pri = { bad: 0, severe: 1, warn: 2 };
     const pa = pri[a.tipo] ?? 3;
     const pb = pri[b.tipo] ?? 3;
     if (pa !== pb) return pa - pb;
-    const ra = meteoalarmCiudadCoincideZona(ciudad, a.areaDesc, a.title);
-    const rb = meteoalarmCiudadCoincideZona(ciudad, b.areaDesc, b.title);
+    const ra = meteoalarmMunicipioCoincide(municipioFiltro, a.areaDesc, a.title);
+    const rb = meteoalarmMunicipioCoincide(municipioFiltro, b.areaDesc, b.title);
     if (ra !== rb) return ra ? -1 : 1;
     return 0;
   });
@@ -13899,6 +14284,10 @@ async function ensureGpsUbicacionMeteoAvisos() {
                 const prov = ad.state || ad.region || '';
                 if (ciudad || prov) {
                   state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación GPS') + (prov ? ', ' + prov : '');
+                  if (ciudad) {
+                    const lm = (state.configTorre.localidadMeteo || '').trim();
+                    if (!lm) state.configTorre.localidadMeteo = String(ciudad).trim();
+                  }
                 }
               }
             } catch (_) {}
@@ -13923,13 +14312,15 @@ async function refreshMeteoNominatimContext() {
   const lon = parseFloat(cfg.lon);
   if (!isFinite(lat) || !isFinite(lon)) {
     _meteoNomiContext = '';
+    _meteoNomiMunicipio = '';
     _meteoNomiKey = null;
     return;
   }
   const key = String(Math.round(lat * 5000)) + '_' + String(Math.round(lon * 5000));
-  if (_meteoNomiKey === key && _meteoNomiContext) return;
+  if (_meteoNomiKey === key && _meteoNomiMunicipio) return;
   _meteoNomiKey = key;
   _meteoNomiContext = '';
+  _meteoNomiMunicipio = '';
   try {
     const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + encodeURIComponent(lat) +
       '&lon=' + encodeURIComponent(lon) + '&format=json&accept-language=es';
@@ -13943,25 +14334,12 @@ async function refreshMeteoNominatimContext() {
     if (!res.ok) return;
     const d = await res.json();
     const a = d.address || {};
-    const iso = a['ISO3166-2-lvl4'];
-    const raw = [
-      a.city, a.town, a.village, a.municipality, a.city_district,
-      a.county, a.state_district, a.state, a.region,
-      iso ? String(iso).replace(/^es-/i, '') : ''
-    ].filter(Boolean);
-    const uniq = [];
-    const seen = Object.create(null);
-    for (let i = 0; i < raw.length; i++) {
-      const p = String(raw[i]).trim();
-      if (!p) continue;
-      const k = p.toLowerCase();
-      if (seen[k]) continue;
-      seen[k] = 1;
-      uniq.push(p);
-    }
-    _meteoNomiContext = uniq.join(' ');
+    const muni = String(a.city || a.town || a.village || a.municipality || '').trim();
+    _meteoNomiMunicipio = muni;
+    _meteoNomiContext = muni;
   } catch (_) {
     _meteoNomiContext = '';
+    _meteoNomiMunicipio = '';
   }
 }
 
@@ -14032,36 +14410,34 @@ async function renderMeteoAvisosPanelCompleto() {
   wrap.style.display = 'flex';
 
   await refreshMeteoNominatimContext();
-  let ciudadBase = (state.configTorre?.ciudad || '').trim();
-  let ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+  let municipioFiltro = getMunicipioMeteoFiltro();
 
-  if (!ubicTxt) {
+  if (!municipioFiltro) {
     await ensureGpsUbicacionMeteoAvisos();
     await refreshMeteoNominatimContext();
-    ciudadBase = (state.configTorre?.ciudad || '').trim();
-    ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+    municipioFiltro = getMunicipioMeteoFiltro();
   }
 
   const parts = [];
 
-  if (!ubicTxt) {
+  if (!municipioFiltro) {
     parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
-    'Sin texto de zona para filtrar avisos: indica <strong>ciudad o municipio de la torre</strong> en la configuración, o acepta la <strong>ubicación GPS</strong> del móvil cuando el navegador la pida (así se usa la zona más cercana conocida). ' +
-    'Consulta también <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> por municipio.</span></div>');
+    'Sin <strong>municipio</strong> para filtrar avisos: indícalo en <strong>Mediciones → Municipio de la torre (avisos oficiales)</strong> o en el asistente de ubicación. No usa provincia ni CCAA. Si activas GPS, se rellenará el pueblo detectado. ' +
+    '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
   } else {
     try {
       const xml = await fetchMeteoalarmSpainProxied();
       const items = parseMeteoalarmAtomEntries(xml);
-      const relevantes = items.filter(it => meteoalarmCiudadCoincideZona(ubicTxt, it.areaDesc, it.title));
-      const etiquetaZona = ciudadBase || (_meteoNomiContext || '').split(/\s+/).slice(0, 2).join(' ') || 'tu ubicación';
+      const relevantes = items.filter(it => meteoalarmMunicipioCoincide(municipioFiltro, it.areaDesc, it.title));
+      const etiquetaZona = municipioFiltro;
 
       parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
-        'Avisos oficiales solo si afectan a tu zona (Torre: «' + meteoEscHtml(etiquetaZona) + '» · MeteoAlarm)</div>');
+        'Avisos si nombran tu municipio («' + meteoEscHtml(etiquetaZona) + '») · MeteoAlarm</div>');
 
       if (relevantes.length > 0) {
         const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
         const amarillas = relevantes.filter(it => it.tipo === 'warn');
-        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, ubicTxt).slice(0, 8);
+        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, municipioFiltro).slice(0, 8);
         const ya = new Set(mostrar.map(x => x.titulo));
         amarillas.forEach(y => {
           if (!ya.has(y.titulo) && mostrar.length < 10) {
@@ -14074,7 +14450,7 @@ async function renderMeteoAvisosPanelCompleto() {
         parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
           '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
       } else {
-        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos MeteoAlarm (amarillo/naranja/rojo) que coincidan con tu zona en este momento. ' +
+        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos MeteoAlarm (amarillo/naranja/rojo) que <strong>nombren tu municipio</strong> en este momento. ' +
           '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET — avisos por municipio</a>.</span></div>');
       }
     } catch (e) {
@@ -14354,7 +14730,12 @@ function actualizarResumenSetup() {
   const cestas  = document.getElementById('sliderCestas')?.value  || 5;
   const vol     = document.getElementById('sliderVol')?.value     || 20;
   const nut     = NUTRIENTES_DB.find(n => n.id === (window.setupNutriente || 'canna_aqua'));
-  const ubic    = window.setupUbicacion || 'exterior';
+  const ubic    = setupData.ubicacion || window.setupUbicacion || 'exterior';
+  const luzResumenTxt = {
+    natural: 'Luz natural (ventana)', led: 'LED', mixto: 'Mixto ventana + artificial',
+    fluorescente: 'Fluorescente T5', hps: 'HPS / HM', sin_luz: 'Sin luz adecuada'
+  }[setupData.luz || 'led'] || 'LED';
+  const hLuzRes = Math.max(12, Math.min(20, parseInt(String(setupData.horasLuz || 16), 10) || 16));
   const grupos  = ['lechugas','asiaticas','hojas','hierbas','fresas','frutos'];
   const plantasNombres = {
     lechugas:'Lechugas', asiaticas:'Asiáticas', hojas:'Hojas verdes',
@@ -14392,7 +14773,10 @@ function actualizarResumenSetup() {
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
     '💊 Dosis primera recarga: <strong>' + dosisHtml + '</strong><br>' +
-    (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong><br>' +
+    (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong>' +
+    (ubic === 'interior'
+      ? '<br>💡 Luz: <strong>' + luzResumenTxt + '</strong> · ' + hLuzRes + ' h/día'
+      : '') + '<br>' +
     hwResumen +
     '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
     '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Torre)' : 'Una torre') + '</strong>';
@@ -14602,6 +14986,7 @@ function seleccionarSustrato(tipo) {
 
 function seleccionarUbicacion(tipo) {
   setupData.ubicacion = tipo;
+  setupUbicacion = tipo;
   ['Exterior','Interior'].forEach(t => {
     const el = document.getElementById('loc' + t);
     if (el) el.classList.remove('selected');
@@ -14613,15 +14998,32 @@ function seleccionarUbicacion(tipo) {
   if (secLuz) secLuz.style.display = tipo === 'interior' ? 'block' : 'none';
 }
 
-function seleccionarLuz(tipo) {
-  setupData.luz = tipo;
-  ['LED','Fluorescent','HPS','SinLuz'].forEach(t => {
-    const el = document.getElementById('luz' + t);
+function syncWizardLuzUI() {
+  const map = { natural:'Natural', mixto:'Mixto', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
+  const tipo = setupData.luz || 'led';
+  ['Natural','Mixto','LED','Fluorescent','HPS','SinLuz'].forEach(suf => {
+    const el = document.getElementById('luz' + suf);
     if (el) el.classList.remove('selected');
   });
-  const map = { led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
-  const el = document.getElementById('luz' + (map[tipo]||tipo));
-  if (el) el.classList.add('selected');
+  const suf = map[tipo] || 'LED';
+  document.getElementById('luz' + suf)?.classList.add('selected');
+  const h = Math.max(12, Math.min(20, parseInt(String(setupData.horasLuz || 16), 10) || 16));
+  setupData.horasLuz = h;
+  const sl = document.getElementById('sliderHorasLuz');
+  const hv = document.getElementById('horasLuzVal');
+  if (sl) sl.value = h;
+  if (hv) hv.textContent = h + 'h';
+}
+
+function seleccionarLuz(tipo) {
+  setupData.luz = tipo;
+  const map = { natural:'Natural', mixto:'Mixto', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
+  ['Natural','Mixto','LED','Fluorescent','HPS','SinLuz'].forEach(suf => {
+    const el = document.getElementById('luz' + suf);
+    if (el) el.classList.remove('selected');
+  });
+  const suf = map[tipo] || 'LED';
+  document.getElementById('luz' + suf)?.classList.add('selected');
 }
 
 function onBuscarCiudadSetup(val) {
@@ -14678,12 +15080,17 @@ function aplicarSetupDataATorre() {
   state.configTorre.agua      = setupData.agua;
   state.configTorre.sustrato  = setupData.sustrato;
   state.configTorre.ubicacion = setupData.ubicacion;
-  state.configTorre.luz       = setupData.luz;
-  state.configTorre.horasLuz  = parseInt(document.getElementById('sliderHorasLuz')?.value || 16);
+  state.configTorre.luz       = setupData.luz || 'led';
+  state.configTorre.horasLuz  = Math.max(12, Math.min(20,
+    parseInt(String(document.getElementById('sliderHorasLuz')?.value || setupData.horasLuz || 16), 10) || 16));
   if (setupData.ciudad) {
     state.configTorre.ciudad  = setupData.ciudad;
     state.configTorre.lat     = setupData.lat;
     state.configTorre.lon     = setupData.lon;
+    const firstM = String(setupData.ciudad).split(',')[0].trim();
+    if (firstM && !(state.configTorre.localidadMeteo && String(state.configTorre.localidadMeteo).trim())) {
+      state.configTorre.localidadMeteo = firstM;
+    }
     invalidateMeteoNomiCache();
   }
   // Actualizar también el tipo de agua en la config principal
@@ -14861,6 +15268,7 @@ function cargarEstadoTorre(idx) {
   cargarInteriorGrowUI();
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
+  cargarLocalidadMeteoUI();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
 
@@ -15051,7 +15459,13 @@ function actualizarBadgesNutriente() {
   if (dashDetalle) dashDetalle.textContent = nut.detalle;
   if (dashUbicacion) {
     const ub = cfg.ubicacion || 'exterior';
-    dashUbicacion.textContent = ub === 'interior' ? '🏠 Interior' : '☀️ Exterior';
+    if (ub === 'interior') {
+      const lz = { natural: 'natural', led: 'LED', mixto: 'mixto', fluorescente: 'T5', hps: 'HPS', sin_luz: 'sin luz' }[cfg.luz || 'led'] || 'LED';
+      const h = cfg.horasLuz || 16;
+      dashUbicacion.textContent = '🏠 Interior · ' + lz + ' · ' + h + 'h';
+    } else {
+      dashUbicacion.textContent = '☀️ Exterior';
+    }
   }
 
   // Dashboard inicio — banner torre
