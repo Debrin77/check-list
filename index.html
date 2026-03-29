@@ -3611,7 +3611,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="config-section-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
             El riego normal ya usa el <strong>tipo de sustrato</strong> (ciclos de fábrica / referencia) y el clima.
-            Aquí solo un <strong>toque ±3 %</strong> si anotas un % a ojo o con un medidor sencillo; no hace falta equipo calibrado.
+            Aquí solo un <strong>toque ±3 %</strong> si anotas % con un <strong>medidor de sustrato 4 en 1</strong> (o similar) o a ojo; no hace falta laboratorio.
+            <strong>Entre riegos</strong>, en esponja suele leerse zona «normal» / intermedia en el medidor: es <strong>habitual y no implica fallo</strong> del programa; sirve solo si quieres afinar este ajuste.
             Objetivo por defecto ≈ valores medios orientativos según sustrato (lana, esponja…).
           </div>
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;font-size:13px">
@@ -3812,7 +3813,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="param-unit">%</div>
         </div>
         <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px">
-          Queda en el historial. El riego sigue basado en <strong>tipo de sustrato</strong> y clima; el ajuste fino ±3 % es apartado y solo si lo activas en el bloque de arriba.
+          Queda en el historial. El riego sigue basado en <strong>tipo de sustrato</strong> y clima; el ajuste fino ±3 % es apartado y solo si lo activas arriba.
+          Si con un <strong>medidor 4 en 1</strong> la humedad de la esponja marca <strong>normal entre riegos</strong>, encaja con un ciclo sano; la anotación aquí es solo seguimiento, no una alarma automática.
         </div>
       </div>
 
@@ -11711,17 +11713,11 @@ const CONSEJOS_DATA = {
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)',
     consejos: [
       { icono:'⚡', titulo:'Entender la EC',
-        texto:'La EC mide la concentración de nutrientes. <strong>1300-1400 µS/cm</strong> es el rango óptimo para lechugas. Si baja mucho las plantas tienen hambre. Si sube demasiado hay estrés osmótico — las raíces no pueden absorber agua.',
-        alerta:{ tipo:'info', txt:'ℹ️ La EC sube naturalmente cuando las plantas transpiran más agua que nutrientes. En verano controla más frecuentemente.' } },
-      { icono:'🟤', titulo:'Agua rojiza en el depósito',
-        texto:'El color rojizo-anaranjado viene de la oxidación del hierro quelado del Aqua Vega y los ácidos húmicos. <strong>Es normal pero indica que toca recarga</strong>. Cubrir el depósito con material opaco negro reduce mucho este problema.',
-        alerta:{ tipo:'warn', txt:'⚠️ El depósito debe estar completamente opaco a la luz. Incluso pequeñas filtraciones de luz aceleran la proliferación de algas.' } },
-      { icono:'🧪', titulo:'Protocolo de nutrientes',
-        texto:'Siempre en este orden: <strong>1º Agua destilada → 2º CalMag → 3º Aqua Vega A → 4º Aqua Vega B</strong>. Nunca mezcles A y B puros. Espera 20 min con difusor antes de medir EC y pH.',
-        alerta:{ tipo:'ok', txt:'✅ Con agua destilada el CalMag es imprescindible — sin él el pH fluctúa mucho y los nutrientes se precipitan.' } },
-      { icono:'💧', titulo:'Reposición de agua',
-        texto:'Cuando el volumen baja de 16L repón solo con agua destilada si la EC está en rango. Si la EC también está baja, añade nutrientes proporcionales: por cada litro añadido, 0.33ml CalMag + 2ml Vega A + 2ml Vega B.',
-        alerta:{ tipo:'info', txt:'ℹ️ En verano el depósito puede bajar 1-2L al día por evaporación y absorción. Controla el volumen cada 2-3 días.' } },
+        texto:'La EC mide la concentración de nutrientes. El rango objetivo depende del <strong>cultivo</strong> y de la <strong>marca</strong> que tengas seleccionada en la torre (véase checklist y medición). Si baja mucho hay hambre de nutrientes; si sube demasiado, estrés osmótico.',
+        alerta:{ tipo:'info', txt:'ℹ️ La EC sube cuando las plantas transpiran más agua que nutrientes. En verano controla más a menudo.' } },
+      { icono:'🟤', titulo:'Agua coloreada en el depósito',
+        texto:'Tonos ámbar o rojizos suelen venir de la oxidación del <strong>hierro quelado</strong> u otros compuestos de la solución — es habitual en muchas líneas <strong>A+B</strong>. Suele ser normal tras varios días e indica que conviene plantear <strong>recarga</strong>. Cubrir el depósito opaco a la luz reduce algas.',
+        alerta:{ tipo:'warn', txt:'⚠️ El depósito debe estar opaco a la luz; filtraciones de luz aceleran algas y degradación.' } },
     ]
   },
   ecph: {
@@ -12019,16 +12015,8 @@ function selConsejoCat(key) {
   document.getElementById('consejosLista').scrollTop = 0;
 }
 
-function renderConsejosLista() {
-  const cat = CONSEJOS_DATA[consejoCatActiva];
-  const lista = document.getElementById('consejosLista');
-
-  if (cat.soloTabla) {
-    lista.innerHTML = buildHtmlTablaEcPh();
-    return;
-  }
-
-  lista.innerHTML = cat.consejos.map(c => `
+function htmlConsejoCard(cat, c) {
+  return `
     <div class="consejo-card">
       <div class="consejo-header">
         <div class="consejo-icon" style="background:${cat.bg}">
@@ -12045,7 +12033,106 @@ function renderConsejosLista() {
         </div>
       ` : ''}
     </div>
-  `).join('');
+  `;
+}
+
+/** Protocolo y reposición en Consejos → Agua y EC: siempre según nutriente activo de la torre. */
+function buildConsejosAguaNutrienteDinamico() {
+  const nut = getNutrienteTorre();
+  const cfg = state.configTorre || {};
+  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+  const pasos = (nut.protocolo || []).map(p =>
+    '<li style="margin:0.35em 0">' + meteoEscHtml(p) + '</li>'
+  ).join('');
+  const listaProto = pasos
+    ? '<ol style="margin:8px 0 0 1em;padding:0;line-height:1.55;font-size:12px;color:var(--muted)">' + pasos + '</ol>'
+    : '<p style="font-size:12px;color:var(--muted)">Consulta el envase y el checklist de recarga de la app.</p>';
+
+  let ordenWarn = '';
+  if (nut.partes === 2 && nut.orden && nut.orden.length >= 2) {
+    ordenWarn = '<strong>No mezclar concentrados</strong>: añade <strong>' + meteoEscHtml(nut.orden[0]) +
+      '</strong> y <strong>' + meteoEscHtml(nut.orden[1]) + '</strong> en el orden del fabricante, bien diluidos.';
+  } else if (nut.partes === 3 && nut.orden && nut.orden.length >= 3) {
+    ordenWarn = 'Respeta el orden del fabricante: ' + nut.orden.map(o => '<strong>' + meteoEscHtml(o) + '</strong>').join(' → ') +
+      '. No mezcles los concentrados entre sí.';
+  } else if (nut.partes === 1 && nut.orden && nut.orden[0]) {
+    ordenWarn = 'Una sola base: <strong>' + meteoEscHtml(nut.orden[0]) + '</strong>.';
+  }
+
+  const calmagOk = nut.calmagNecesario
+    ? 'Con agua blanda / destilada suele necesitarse <strong>CalMag</strong> (o el suplemento Ca/Mg que indique la marca).'
+    : 'Esta línea suele llevar Ca/Mg integrado: <strong>no añadas CalMag</strong> salvo que el fabricante lo indique.';
+
+  const phOk = nut.pHBuffer
+    ? 'Esta marca tiene <strong>buffers de pH</strong>: al mezclar, sigue las mismas precauciones que en el checklist (no exceder corrector al inicio).'
+    : 'Ajusta el pH al rango <strong>' + nut.pHRango[0] + '–' + nut.pHRango[1] + '</strong> indicado para ' + meteoEscHtml(nut.nombre) + '.';
+
+  const mlCM = calcularMlCalMag();
+  const mlAB = calcularMlAB();
+  const cmPL = volObj > 0 ? mlCM / volObj : 0;
+  const abPL = volObj > 0 ? mlAB / volObj : 0;
+  const rnd = x => Math.round(x * 100) / 100;
+
+  const partesRepos = [];
+  if (nut.calmagNecesario && cmPL > 0) {
+    partesRepos.push(rnd(cmPL) + ' ml CalMag');
+  }
+  if (nut.partes === 1 && nut.orden && nut.orden[0]) {
+    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[0]);
+  } else if (nut.partes === 2 && nut.orden && nut.orden.length >= 2) {
+    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[0]);
+    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[1]);
+  } else if (nut.partes >= 3 && nut.orden) {
+    nut.orden.slice(0, nut.partes).forEach(o => {
+      partesRepos.push(rnd(abPL) + ' ml ' + o);
+    });
+  }
+
+  const bloqueDosis = partesRepos.length
+    ? 'Si la <strong>EC ha bajado</strong> respecto al objetivo del cultivo, como guía <strong>por cada litro</strong> repuesto: ' +
+      partesRepos.map(p => meteoEscHtml(p)).join(' + ') + '. Remueve, espera unos minutos con difusor o bomba y mide de nuevo EC y pH.'
+    : 'Si la EC ha bajado, usa la misma proporción que en tu última recarga o el checklist de la app.';
+
+  const textoRepos =
+    'Volumen de referencia en la app: <strong>' + volObj + ' L</strong>. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
+    '<strong>Si la EC sigue en rango</strong> para tus plantas, añade solo agua. ' + bloqueDosis;
+
+  return htmlConsejoCard({
+    nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
+  }, {
+    icono:'🧪',
+    titulo:'Protocolo de nutrientes — ' + meteoEscHtml(nut.nombre),
+    texto: 'Pasos orientativos del fabricante para <strong>' + meteoEscHtml(nut.nombre) + '</strong> (torre activa). Coinciden con el orden del checklist de recarga.' +
+      listaProto + (ordenWarn ? '<p style="margin:10px 0 0;font-size:12px;color:var(--white)">' + ordenWarn + '</p>' : ''),
+    alerta:{ tipo:'ok', txt:'✅ ' + calmagOk + ' ' + phOk }
+  }) + htmlConsejoCard({
+    nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
+  }, {
+    icono:'💧',
+    titulo:'Reposición de agua — ' + meteoEscHtml(nut.nombre),
+    texto: textoRepos,
+    alerta:{ tipo:'info', txt:'ℹ️ EC orientativa para añadir nutrientes: por debajo de ~' + ecMin +
+      ' µS/cm. En verano el nivel puede bajar más rápido; revisa cada 2–3 días.' }
+  });
+}
+
+function renderConsejosLista() {
+  const cat = CONSEJOS_DATA[consejoCatActiva];
+  const lista = document.getElementById('consejosLista');
+
+  if (cat.soloTabla) {
+    lista.innerHTML = buildHtmlTablaEcPh();
+    return;
+  }
+
+  if (consejoCatActiva === 'agua') {
+    const [cEc, cColor] = cat.consejos;
+    lista.innerHTML = htmlConsejoCard(cat, cEc) + buildConsejosAguaNutrienteDinamico() + htmlConsejoCard(cat, cColor);
+    return;
+  }
+
+  lista.innerHTML = cat.consejos.map(c => htmlConsejoCard(cat, c)).join('');
 }
 
 // ══════════════════════════════════════════════════
@@ -13619,6 +13706,63 @@ function ordenarMeteoalarmPorRelevancia(items, ciudad) {
   });
 }
 
+/** GPS solo para completar ubicación de avisos si falta texto (no sustituye la ciudad que tú escribiste en la torre). */
+let _meteoAvisosGpsPromise = null;
+
+async function ensureGpsUbicacionMeteoAvisos() {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+  if (_meteoAvisosGpsPromise) return _meteoAvisosGpsPromise;
+  const now = Date.now();
+  const last = state._meteoAvisosGpsTryAt || 0;
+  if (now - last < 90 * 1000) return;
+  state._meteoAvisosGpsTryAt = now;
+
+  _meteoAvisosGpsPromise = new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          if (!state.configTorre) state.configTorre = {};
+          const teniaCiudad = !!(state.configTorre.ciudad && String(state.configTorre.ciudad).trim());
+          state.configTorre.lat = lat;
+          state.configTorre.lon = lon;
+          if (!teniaCiudad) {
+            try {
+              const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + encodeURIComponent(lat) +
+                '&lon=' + encodeURIComponent(lon) + '&format=json&accept-language=es';
+              const r = await fetch(url, {
+                headers: {
+                  Accept: 'application/json',
+                  'Accept-Language': 'es',
+                  'User-Agent': 'HydrocaruTorre/1.0'
+                }
+              });
+              if (r.ok) {
+                const data = await r.json();
+                const ad = data.address || {};
+                const ciudad = ad.city || ad.town || ad.village || ad.municipality || '';
+                const prov = ad.state || ad.region || '';
+                if (ciudad || prov) {
+                  state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación GPS') + (prov ? ', ' + prov : '');
+                }
+              }
+            } catch (_) {}
+          }
+          invalidateMeteoNomiCache();
+          saveState();
+        } finally {
+          resolve();
+        }
+      },
+      () => resolve(),
+      { timeout: 12000, maximumAge: 120000, enableHighAccuracy: true }
+    );
+  }).finally(() => { setTimeout(() => { _meteoAvisosGpsPromise = null; }, 100); });
+
+  return _meteoAvisosGpsPromise;
+}
+
 async function refreshMeteoNominatimContext() {
   const cfg = state.configTorre || {};
   const lat = parseFloat(cfg.lat);
@@ -13645,9 +13789,11 @@ async function refreshMeteoNominatimContext() {
     if (!res.ok) return;
     const d = await res.json();
     const a = d.address || {};
+    const iso = a['ISO3166-2-lvl4'];
     const raw = [
-      a.city, a.town, a.village, a.municipality,
-      a.county, a.state_district, a.state
+      a.city, a.town, a.village, a.municipality, a.city_district,
+      a.county, a.state_district, a.state, a.region,
+      iso ? String(iso).replace(/^es-/i, '') : ''
     ].filter(Boolean);
     const uniq = [];
     const seen = Object.create(null);
@@ -13731,25 +13877,32 @@ async function renderMeteoAvisosPanelCompleto() {
   if (!wrap) return;
   wrap.style.display = 'flex';
 
-  const ciudadBase = (state.configTorre?.ciudad || '').trim();
   await refreshMeteoNominatimContext();
-  const ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+  let ciudadBase = (state.configTorre?.ciudad || '').trim();
+  let ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+
+  if (!ubicTxt) {
+    await ensureGpsUbicacionMeteoAvisos();
+    await refreshMeteoNominatimContext();
+    ciudadBase = (state.configTorre?.ciudad || '').trim();
+    ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+  }
 
   const parts = [];
 
   if (!ubicTxt) {
     parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
-    'Para mostrar <strong>solo los avisos de tu zona</strong>, configura la ubicación de la torre (ciudad o coordenadas) en los ajustes de la torre. ' +
-    'Consulta siempre <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> por municipio.</span></div>');
+    'Sin texto de zona para filtrar avisos: indica <strong>ciudad o municipio de la torre</strong> en la configuración, o acepta la <strong>ubicación GPS</strong> del móvil cuando el navegador la pida (así se usa la zona más cercana conocida). ' +
+    'Consulta también <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> por municipio.</span></div>');
   } else {
     try {
       const xml = await fetchMeteoalarmSpainProxied();
       const items = parseMeteoalarmAtomEntries(xml);
       const relevantes = items.filter(it => meteoalarmCiudadCoincideZona(ubicTxt, it.areaDesc, it.title));
-      const etiquetaZona = ciudadBase || 'tu ubicación';
+      const etiquetaZona = ciudadBase || (_meteoNomiContext || '').split(/\s+/).slice(0, 2).join(' ') || 'tu ubicación';
 
       parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
-        'Avisos oficiales solo si afectan a «' + meteoEscHtml(etiquetaZona) + '» (MeteoAlarm)</div>');
+        'Avisos oficiales solo si afectan a tu zona (Torre: «' + meteoEscHtml(etiquetaZona) + '» · MeteoAlarm)</div>');
 
       if (relevantes.length > 0) {
         const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
