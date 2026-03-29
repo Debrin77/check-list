@@ -98,6 +98,17 @@
   outline: 3px solid #38bdf8;
   outline-offset: 2px;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* Respeta “Reduce motion” del sistema (Apple HIG, Material, WCAG 2.3.3) */
 @media (prefers-reduced-motion: reduce) {
@@ -4430,6 +4441,53 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           role="switch" aria-checked="false" aria-labelledby="labelToldoRiego">
           <span class="toggle-knob" aria-hidden="true"></span>
         </button>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">🌾 Fase de cultivo</div>
+        <label for="riegoFaseCultivo" class="visually-hidden">Fase de cultivo para el cálculo de riego</label>
+        <select id="riegoFaseCultivo" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+          onchange="persistRiegoAvanzado()">
+          <option value="propagacion">Propagación / plántula — menos transpiración (~×0,84)</option>
+          <option value="vegetativo">Desarrollo vegetativo (~×0,94)</option>
+          <option value="produccion" selected>Producción / engorde — referencia (~×1,0)</option>
+          <option value="cierre">Pre-cosecha, cierre suave (~×0,97)</option>
+        </select>
+        <p style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45">
+          Modula el índice de demanda tras el clima; encaja con la idea de VPD más conservador en plántulas.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">🔀 Mezcla de sustratos</div>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" id="riegoMezclaActiva" onchange="persistRiegoAvanzado()">
+          <span>Interpolar dos medios (retención + ON/OFF de referencia en proporción)</span>
+        </label>
+        <div id="riegoMezclaCampos" style="display:none">
+          <div class="riego-input-grid" style="margin-bottom:10px">
+            <div class="riego-field">
+              <label for="riegoMezclaA">Componente 1</label>
+              <select id="riegoMezclaA" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+                onchange="persistRiegoAvanzado()"></select>
+            </div>
+            <div class="riego-field">
+              <label for="riegoMezclaB">Componente 2</label>
+              <select id="riegoMezclaB" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+                onchange="persistRiegoAvanzado()"></select>
+            </div>
+          </div>
+          <label for="riegoMezclaPctA" id="labelRiegoMezclaPct" style="font-size:12px;color:var(--muted)">Proporción del componente 1</label>
+          <input type="range" id="riegoMezclaPctA" min="10" max="90" step="5" value="70"
+            aria-labelledby="labelRiegoMezclaPct"
+            oninput="document.getElementById('riegoMezclaPctALabel').textContent='Proporción: '+this.value+'% del primer componente · resto el segundo';persistRiegoAvanzado()">
+          <div id="riegoMezclaPctALabel" style="font-size:11px;color:var(--muted);margin-top:4px">
+            Proporción: 70% del primer componente · resto el segundo
+          </div>
+          <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.45">
+            Ej.: coco + perlita 70/30. Si eliges el mismo sustrato dos veces, la mezcla se desactiva sola.
+          </p>
+        </div>
       </div>
 
       <!-- Loader -->
@@ -10239,6 +10297,71 @@ function normalizaSustratoKey(tipo) {
   return CONFIG_SUSTRATO[k] ? k : 'esponja';
 }
 
+/** Multiplicador suave del índice de demanda según fase (transpiración típica / VPD recomendado) */
+const RIEGO_FASE_CULTIVO = {
+  propagacion: { mult: 0.84, label: 'Propagación / plántula' },
+  vegetativo:  { mult: 0.94, label: 'Desarrollo vegetativo' },
+  produccion:  { mult: 1.0,  label: 'Producción / engorde' },
+  cierre:      { mult: 0.97, label: 'Pre-cosecha (cierre suave)' },
+};
+
+function riegoFaseCultivoMult() {
+  const f = state.configTorre?.faseCultivoRiego || 'produccion';
+  return RIEGO_FASE_CULTIVO[f]?.mult ?? 1;
+}
+
+function riegoFaseCultivoLabel() {
+  const f = state.configTorre?.faseCultivoRiego || 'produccion';
+  return RIEGO_FASE_CULTIVO[f]?.label || 'Producción';
+}
+
+function ensureSustratoMezclaDefaults() {
+  if (!state.configTorre) state.configTorre = {};
+  let m = state.configTorre.sustratoMezcla;
+  if (!m || typeof m !== 'object') {
+    m = {
+      activa: false,
+      a: normalizaSustratoKey(state.configTorre.sustrato),
+      b: 'perlita',
+      pctA: 70
+    };
+    state.configTorre.sustratoMezcla = m;
+  }
+  m.a = normalizaSustratoKey(m.a || state.configTorre.sustrato);
+  m.b = normalizaSustratoKey(m.b || 'perlita');
+  m.pctA = Math.max(10, Math.min(90, parseInt(m.pctA, 10) || 70));
+}
+
+/** Perfil numérico para cálculos: mezcla interpolada o sustrato único */
+function interpSustratoMezcla(aKey, bKey, pctA) {
+  const t = Math.max(0.1, Math.min(0.9, (parseFloat(pctA) || 50) / 100));
+  const A = CONFIG_SUSTRATO[aKey];
+  const B = CONFIG_SUSTRATO[bKey];
+  if (!A || !B) return CONFIG_SUSTRATO[normalizaSustratoKey(aKey)];
+  const pA = Math.round(t * 100);
+  const pB = Math.round((1 - t) * 100);
+  return {
+    nombre: `Mezcla ${pA}% ${A.nombre} + ${pB}% ${B.nombre}`,
+    retencion: A.retencion * t + B.retencion * (1 - t),
+    onRef: A.onRef * t + B.onRef * (1 - t),
+    minOFFRef: A.minOFFRef * t + B.minOFFRef * (1 - t),
+    objetivoHumedadDefault: Math.round(A.objetivoHumedadDefault * t + B.objetivoHumedadDefault * (1 - t)),
+    whcPct: `Interpolado ${pA}/${pB} · ver textos de cada componente en Mediciones`,
+    poroAire: 'Mezcla',
+    dryBack: 'Intermedio proporcional a la mezcla',
+    nota: 'Si predomina un solo medio, desactiva mezcla y elige un perfil'
+  };
+}
+
+function riegoSustratoPerfil() {
+  ensureSustratoMezclaDefaults();
+  const m = state.configTorre.sustratoMezcla;
+  if (m.activa && m.a && m.b && m.a !== m.b) {
+    return interpSustratoMezcla(m.a, m.b, m.pctA);
+  }
+  return CONFIG_SUSTRATO[riegoSustratoKey()];
+}
+
 function riegoSustratoKey() {
   const k = state.configTorre?.sustrato || state.configSustrato || 'esponja';
   return CONFIG_SUSTRATO[k] ? k : 'esponja';
@@ -10262,12 +10385,11 @@ function ensureSensorHumedadSustrato() {
  * (minON/minOFF de referencia). Aquí como mucho ±3 % de demanda — sin sondas caras ni pretender precisión de invernadero.
  */
 function riegoMultSensorSustrato() {
-  const key = riegoSustratoKey();
   const sh = ensureSensorHumedadSustrato();
   if (!sh?.activo || sh.lecturaPct == null || String(sh.lecturaPct) === '') {
     return { mult: 1, etiqueta: '' };
   }
-  const defObj = CONFIG_SUSTRATO[key]?.objetivoHumedadDefault ?? 58;
+  const defObj = riegoSustratoPerfil()?.objetivoHumedadDefault ?? 58;
   const lec = Math.max(0, Math.min(100, parseFloat(sh.lecturaPct)));
   const objRaw = sh.objetivoPct;
   const obj = Math.max(28, Math.min(82, parseFloat(objRaw) || defObj));
@@ -10521,12 +10643,17 @@ function setSustrato(tipo) {
   state.configSustrato = t;
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.sustrato = t;
+  ensureSustratoMezclaDefaults();
+  state.configTorre.sustratoMezcla.activa = false;
+  state.configTorre.sustratoMezcla.a = t;
   initTorres();
   const tIdx = state.torreActiva || 0;
   if (state.torres?.[tIdx]) {
     if (!state.torres[tIdx].config) state.torres[tIdx].config = {};
     state.torres[tIdx].config.sustrato = t;
+    if (state.torres[tIdx].config.sustratoMezcla) state.torres[tIdx].config.sustratoMezcla.activa = false;
   }
+  guardarEstadoTorreActual();
   saveState();
 
   Object.keys(CONFIG_SUSTRATO).forEach(id => {
@@ -10537,6 +10664,68 @@ function setSustrato(tipo) {
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
   cargarSensorSustratoUI();
+  syncRiegoAvanzadoUI();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+}
+
+function syncRiegoAvanzadoUI() {
+  const fSel = document.getElementById('riegoFaseCultivo');
+  const cb = document.getElementById('riegoMezclaActiva');
+  const sa = document.getElementById('riegoMezclaA');
+  const sb = document.getElementById('riegoMezclaB');
+  const rng = document.getElementById('riegoMezclaPctA');
+  const wrap = document.getElementById('riegoMezclaCampos');
+  const lab = document.getElementById('riegoMezclaPctALabel');
+  if (!fSel && !cb) return;
+  if (!state.configTorre) state.configTorre = {};
+  ensureSustratoMezclaDefaults();
+  const fv = state.configTorre.faseCultivoRiego || 'produccion';
+  if (fSel) fSel.value = RIEGO_FASE_CULTIVO[fv] ? fv : 'produccion';
+  const m = state.configTorre.sustratoMezcla;
+  if (cb) cb.checked = !!m.activa;
+  if (sa) {
+    fillRiegoMezclaSelectIfEmpty(sa);
+    sa.value = m.a || riegoSustratoKey();
+  }
+  if (sb) {
+    fillRiegoMezclaSelectIfEmpty(sb);
+    sb.value = m.b || 'perlita';
+  }
+  if (rng) rng.value = m.pctA != null ? m.pctA : 70;
+  if (wrap) wrap.style.display = m.activa ? 'block' : 'none';
+  if (lab && rng) lab.textContent = 'Proporción: ' + rng.value + '% del primer componente · resto el segundo';
+}
+
+function fillRiegoMezclaSelectIfEmpty(sel) {
+  if (!sel || sel.options.length > 0) return;
+  sel.innerHTML = Object.keys(CONFIG_SUSTRATO).map(k => {
+    const n = CONFIG_SUSTRATO[k].nombre.replace(/</g, '');
+    return '<option value="' + k + '">' + n + '</option>';
+  }).join('');
+}
+
+function persistRiegoAvanzado() {
+  if (!state.configTorre) state.configTorre = {};
+  ensureSustratoMezclaDefaults();
+  const fSel = document.getElementById('riegoFaseCultivo');
+  if (fSel && RIEGO_FASE_CULTIVO[fSel.value]) state.configTorre.faseCultivoRiego = fSel.value;
+  const m = state.configTorre.sustratoMezcla;
+  const cb = document.getElementById('riegoMezclaActiva');
+  m.activa = !!(cb && cb.checked);
+  const sa = document.getElementById('riegoMezclaA');
+  const sb = document.getElementById('riegoMezclaB');
+  const rng = document.getElementById('riegoMezclaPctA');
+  if (sa) m.a = normalizaSustratoKey(sa.value);
+  if (sb) m.b = normalizaSustratoKey(sb.value);
+  if (rng) m.pctA = Math.max(10, Math.min(90, parseInt(rng.value, 10) || 70));
+  if (m.a === m.b) m.activa = false;
+  const wrap = document.getElementById('riegoMezclaCampos');
+  const lab = document.getElementById('riegoMezclaPctALabel');
+  if (wrap) wrap.style.display = m.activa ? 'block' : 'none';
+  if (lab && rng) lab.textContent = 'Proporción: ' + rng.value + '% del primer componente · resto el segundo';
+  guardarEstadoTorreActual();
+  saveState();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
 function cargarUbicacionMedicionesUI() {
@@ -10650,7 +10839,7 @@ function toggleMedirCollapse(key) {
 
 function cargarSensorSustratoUI() {
   const sh = ensureSensorHumedadSustrato();
-  const def = CONFIG_SUSTRATO[riegoSustratoKey()]?.objetivoHumedadDefault ?? 58;
+  const def = riegoSustratoPerfil()?.objetivoHumedadDefault ?? 58;
   const cb = document.getElementById('sensorSustratoActivo');
   const inL = document.getElementById('sensorSustratoLectura');
   const inO = document.getElementById('sensorSustratoObj');
@@ -10672,7 +10861,7 @@ function persistSensorSustrato() {
   const raw = document.getElementById('sensorSustratoLectura')?.value;
   sh.lecturaPct = raw === '' || raw == null ? null : parseFloat(raw);
   const oRaw = document.getElementById('sensorSustratoObj')?.value;
-  const def = CONFIG_SUSTRATO[riegoSustratoKey()]?.objetivoHumedadDefault ?? 58;
+  const def = riegoSustratoPerfil()?.objetivoHumedadDefault ?? 58;
   sh.objetivoPct = oRaw === '' || oRaw == null ? null : parseFloat(oRaw);
   if (sh.objetivoPct == null || isNaN(sh.objetivoPct)) sh.objetivoPct = def;
   delete state.configTorre.sensorHumedadEsponja;
@@ -13533,6 +13722,7 @@ function sincronizarInputsRiego() {
 
   // Nota: el toldo NO se sincroniza aquí — si no, cada calcularRiego() machacaba el interruptor
   // con el valor guardado antes del último toggle. Se carga solo en cargarEstadoTorre() y tras toggleToldo().
+  syncRiegoAvanzadoUI();
 }
 
 
@@ -13819,7 +14009,7 @@ async function calcularRiego() {
     const esInterior = (state.configTorre?.ubicacion === 'interior');
     const { kc: kcMedio, nPlantasKc: nKc } = calcularKcMedioRiego(edadSem);
 
-    const sustrato = CONFIG_SUSTRATO[riegoSustratoKey()];
+    const sustrato = riegoSustratoPerfil();
 
     let demandaDia;
     let vpdInterior = null;
@@ -13851,6 +14041,12 @@ async function calcularRiego() {
         et0DayMm: et0Riego
       });
     }
+    const multFase = riegoFaseCultivoMult();
+    if (esInterior) {
+      demandaDia = Math.max(0.52, Math.min(1.22, demandaDia * multFase));
+    } else {
+      demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * multFase));
+    }
     const sensRiego = riegoMultSensorSustrato();
     let etiquetaSensorRiego = sensRiego.etiqueta;
     if (sensRiego.mult !== 1) {
@@ -13876,7 +14072,7 @@ async function calcularRiego() {
     const espaciado   = Math.round(840 / ciclos);
     const totalON     = minON * ciclos;
 
-    // ── Programa mediodía (13–15 h): misma función que el día con VPD de esas horas (+ ligero efecto radiativo)
+    // ── Programa mediodía (13–15 h)
     let demandaMed;
     if (esInterior) {
       demandaMed = demandaDia;
@@ -13889,6 +14085,7 @@ async function calcularRiego() {
         probLluvia,
         et0DayMm: et0Riego
       });
+      demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * multFase));
     }
     if (sensRiego.mult !== 1) {
       demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * sensRiego.mult));
@@ -13961,13 +14158,16 @@ async function calcularRiego() {
       });
       return Object.entries(grupos).map(([g,n]) => n + ' ' + g).join(' · ') || 'Sin plantas';
     })();
+    const riegoLineaFaseMedio =
+      '🌾 Fase: ' + riegoFaseCultivoLabel() + ' (×' + (Math.round(multFase * 100) / 100) + ') · 🪴 ' + sustrato.nombre + '<br>';
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong style="color:var(--white)">' + etiquetaDia + ' · ' + torreTipo + '</strong><br>' +
+      riegoLineaFaseMedio +
       (esInterior
         ? '🌿 Cultivos: ' + resumenCultivos + '<br>' +
           '📊 Kc medio (FAO-56 est.): ' + kcLbl + kcHint +
           (etiquetaSensorRiego ? '<br>📡' + etiquetaSensorRiego.replace(/^ · /, '') : '') + '<br>' +
-          '🪴 Ref. pulso: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre +
+          '🪴 Ref. ON (calibrada): ' + minONBase.toFixed(1) + ' min' +
           '<br>📚 WHC ' + sustrato.whcPct + ' · Poros. aire ' + sustrato.poroAire
         : '🌡️ Temp: ' + tempMin + '°C / ' + tempMax + '°C · VPD (Magnus' +
           (toldoAct ? ', corrección toldo ' + dTempPlanta + ' °C en temp. efectiva' : '') + '): ' + vpd + ' kPa' +
@@ -13978,7 +14178,7 @@ async function calcularRiego() {
           ' · Demanda rel.: ' + factorON + (etiquetaSensorRiego || '') + '<br>' +
           '🌿 Cultivos: ' + resumenCultivos + '<br>' +
           '📊 Kc medio (FAO-56 est.): ' + kcLbl + kcHint + '<br>' +
-          '🪴 Ref. pulso: ' + minONBase.toFixed(1) + ' min · Sustrato: ' + sustrato.nombre +
+          '🪴 Ref. ON (calibrada): ' + minONBase.toFixed(1) + ' min' +
           '<br>📚 WHC ' + sustrato.whcPct + ' · Poros. aire ' + sustrato.poroAire);
 
     // Guardar en state para uso en otros módulos
@@ -13988,6 +14188,9 @@ async function calcularRiego() {
       factorON: Math.round(factorON*100)/100,
       factorOFF: Math.round(factorOFF*100)/100,
       kcMedio,
+      faseCultivoRiego: state.configTorre?.faseCultivoRiego || 'produccion',
+      multFaseCultivo: Math.round(multFase * 100) / 100,
+      sustratoPerfilNombre: sustrato.nombre,
       vpd, vpdMediodia: Math.round(vpdMediodia*100)/100,
       fecha: new Date().toLocaleDateString('es-ES') };
     saveState();
@@ -15231,6 +15434,13 @@ function aplicarSetupDataATorre() {
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.agua      = setupData.agua;
   state.configTorre.sustrato  = normalizaSustratoKey(setupData.sustrato);
+  state.configTorre.faseCultivoRiego = 'produccion';
+  state.configTorre.sustratoMezcla = {
+    activa: false,
+    a: state.configTorre.sustrato,
+    b: 'perlita',
+    pctA: 70
+  };
   state.configTorre.ubicacion = setupData.ubicacion;
   state.configTorre.luz       = setupData.luz || 'led';
   state.configTorre.horasLuz  = Math.max(12, Math.min(20,
@@ -15422,6 +15632,7 @@ function cargarEstadoTorre(idx) {
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
   cargarLocalidadMeteoUI();
+  syncRiegoAvanzadoUI();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
 
