@@ -7,7 +7,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#16a34a">
+<meta name="theme-color" content="#15803d">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -31,27 +31,29 @@
 <!-- Accesibilidad: lang ya en <html lang="es"> -->
 <title>CULTIVA — Cultivo Hidropónico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* ── TEMA DIURNO — alto contraste para uso en exterior ── */
-  --bg:         #f4f6f1;
+  /* ── TEMA DIURNO — neutros fríos + verde cultivo ── */
+  --bg:         #f4f6f8;
   --bg2:        #ffffff;
-  --bg3:        #eaede6;
-  --border:     rgba(0,0,0,0.12);
-  --green:      #15803d;    /* verde oscuro — buen contraste sobre blanco */
+  --bg3:        #eceff5;
+  --border:     rgba(15, 23, 42, 0.09);
+  --green:      #15803d;
   --green-dim:  #14532d;
   --green-pale: #dcfce7;
-  --gold:       #b45309;    /* ámbar oscuro */
+  --gold:       #b45309;
   --gold-dim:   #fef3c7;
-  --red:        #b91c1c;    /* rojo oscuro */
+  --red:        #b91c1c;
   --red-dim:    #fee2e2;
   --orange:     #c2410c;
-  --blue:       #1d4ed8;    /* azul oscuro */
-  --white:      #111827;    /* texto principal — casi negro */
-  --muted:      #4b5563;    /* texto secundario — gris oscuro legible */
-  --font-display: 'Syne', sans-serif;
-  --font-mono:    'Inconsolata', monospace;
+  --blue:       #1d4ed8;
+  --white:      #0f172a;
+  --muted:      #64748b;
+  --font-sans:  'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Syne', var(--font-sans);
+  --font-mono:    'Inconsolata', ui-monospace, monospace;
   --safe-top:    env(safe-area-inset-top, 47px);
   --safe-bottom: env(safe-area-inset-bottom, 34px);
   --tab-h:      calc(54px + env(safe-area-inset-bottom, 34px));
@@ -125,12 +127,15 @@ body {
   height: -webkit-fill-available;
   background: var(--bg);
   color: var(--white);
-  font-family: var(--font-mono);
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.45;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
   -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ══ SPLASH SCREEN ══ */
@@ -316,9 +321,11 @@ body::before { display: none; }
 /* ══ HEADER ══ */
 .header {
   height: var(--header-h);
-  background: var(--bg2);
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 20px rgba(15, 23, 42, 0.04);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -370,9 +377,11 @@ body::before { display: none; }
 /* ══ TAB BAR ══ */
 .tab-bar {
   height: var(--tab-h);
-  background: var(--bg2);
+  background: color-mix(in srgb, var(--bg2) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
-  box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 -4px 24px rgba(15, 23, 42, 0.05);
   display: flex;
   align-items: flex-start;
   flex-shrink: 0;
@@ -391,11 +400,12 @@ body::before { display: none; }
   cursor: pointer;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: #94a3b8;
   transition: all 0.2s;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 9px;
-  letter-spacing: 0.2px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0 2px;
   position: relative;
@@ -457,10 +467,10 @@ body::before { display: none; }
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 .card-title {
   font-family: var(--font-display);
@@ -2665,7 +2675,7 @@ button.toggle-switch {
 .setup-overlay {
   position: fixed;
   inset: 0;
-  background: #f0fdf4;
+  background: linear-gradient(165deg, #f8fafc 0%, #f0fdf4 45%, #ecfdf5 100%);
   z-index: 900;
   display: none;
   flex-direction: column;
@@ -2675,9 +2685,12 @@ button.toggle-switch {
 
 .setup-header {
   padding: env(safe-area-inset-top, 47px) 20px 16px;
-  background: #ffffff;
-  border-bottom: 1.5px solid #e5e7eb;
+  background: color-mix(in srgb, #ffffff 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   flex-shrink: 0;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04);
 }
 .setup-logo {
   font-family: var(--font-display);
@@ -2727,10 +2740,12 @@ button.toggle-switch {
   margin-bottom: 6px;
 }
 .setup-subtitle {
-  font-size: 14px;
-  color: #6b7280;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: #64748b;
   margin-bottom: 24px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* Torre visual interactiva */
@@ -2945,43 +2960,46 @@ button.toggle-switch {
 }
 .setup-btn-next:active { transform: scale(0.97); }
 
-/* Pantalla bienvenida VEVOR */
-.welcome-card {
-  background: #ffffff;
-  border: 2px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px 20px;
+/* Bienvenida asistente torre */
+.welcome-hero {
+  font-size: 64px;
+  line-height: 1;
   text-align: center;
+  margin: 8px 0 20px;
+  filter: drop-shadow(0 8px 20px rgba(22, 163, 74, 0.2));
+}
+.welcome-start-btn {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
-  margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.welcome-card:active { transform: scale(0.97); }
-.welcome-card.vevor { border-color: #16a34a; background: #f0fdf4; }
-.welcome-card.custom { border-color: #2563eb; background: #eff6ff; }
-.welcome-card-icon { font-size: 52px; margin-bottom: 12px; }
-.welcome-card-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 900;
-  color: #111827;
-  margin-bottom: 6px;
+.welcome-start-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
 }
-.welcome-card-desc { font-size: 13px; color: #6b7280; line-height: 1.5; }
-.welcome-card-badge {
-  display: inline-block;
-  margin-top: 8px;
-  background: #16a34a;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
+.welcome-hint {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 16px;
+  line-height: 1.45;
 }
 
-button.equip-card,
-button.welcome-card {
+button.equip-card {
   display: block;
   width: 100%;
   font: inherit;
@@ -2992,6 +3010,9 @@ button.welcome-card {
   margin: 0;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  box-sizing: border-box;
+}
+button.welcome-start-btn {
   box-sizing: border-box;
 }
 .equip-grid > button.equip-card,
@@ -3645,6 +3666,98 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </button>
         </div>
 
+        <div class="config-section" id="panelUbicacionLuzMediciones">
+          <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación de la torre y origen de luz (riego)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+            Si la torre está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
+            En <strong>Exterior</strong> el programa usa el clima de la ubicación; estos controles no se aplican.
+          </div>
+          <div class="config-options" role="radiogroup" aria-labelledby="labelUbicacionLuzMed"
+            style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
+            <button type="button" class="config-option" id="opt-medir-ubic-exterior" role="radio" aria-checked="true"
+              onclick="setUbicacionTorreMediciones('exterior')" aria-label="Torre en exterior">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">☀️ Exterior</span>
+                <span class="config-option-desc">Terraza, balcón, jardín</span>
+              </span>
+            </button>
+            <button type="button" class="config-option" id="opt-medir-ubic-interior" role="radio" aria-checked="false"
+              onclick="setUbicacionTorreMediciones('interior')" aria-label="Torre en interior">
+              <span class="config-option-radio" aria-hidden="true"></span>
+              <span class="config-option-body">
+                <span class="config-option-title">🏠 Interior</span>
+                <span class="config-option-desc">Casa, armario, invernadero acristalado</span>
+              </span>
+            </button>
+          </div>
+          <div id="wrapLuzOrigenMediciones" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;color:var(--white);margin-bottom:8px">Origen de la luz</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+              <button type="button" class="config-option" id="opt-interior-luz-natural" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('natural')" aria-label="Luz natural ventana">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">Natural</span>
+                  <span class="config-option-desc">Ventana o lucernario</span>
+                </span>
+              </button>
+              <button type="button" class="config-option" id="opt-interior-luz-led" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('led')" aria-label="LED full spectrum">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">LED</span>
+                  <span class="config-option-desc">Full spectrum / barras</span>
+                </span>
+              </button>
+              <button type="button" class="config-option" id="opt-interior-luz-mixto" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('mixto')" aria-label="Luz mixta">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">Mixto</span>
+                  <span class="config-option-desc">Natural + refuerzo</span>
+                </span>
+              </button>
+              <button type="button" class="config-option" id="opt-interior-luz-fluorescente" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('fluorescente')" aria-label="Fluorescente T5">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">T5 / CFL</span>
+                  <span class="config-option-desc">Fluorescente</span>
+                </span>
+              </button>
+              <button type="button" class="config-option" id="opt-interior-luz-hps" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('hps')" aria-label="HPS halogenuro">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">HPS / HM</span>
+                  <span class="config-option-desc">Descarga alta presión</span>
+                </span>
+              </button>
+              <button type="button" class="config-option" id="opt-interior-luz-sin" role="radio" aria-checked="false"
+                onclick="setInteriorLuzTipo('sin_luz')" aria-label="Sin luz adecuada">
+                <span class="config-option-radio" aria-hidden="true"></span>
+                <span class="config-option-body">
+                  <span class="config-option-title">Sin luz</span>
+                  <span class="config-option-desc">No recomendado</span>
+                </span>
+              </button>
+            </div>
+            <div style="margin-bottom:4px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+                Horas de luz efectivas al día: <strong id="interiorHorasLuzVal" style="color:var(--white)">16 h</strong>
+              </div>
+              <input type="range" id="interiorHorasLuz" min="12" max="20" step="1" value="16"
+                aria-valuemin="12" aria-valuemax="20"
+                oninput="onInteriorHorasLuzRangeInput()"
+                style="width:100%;accent-color:var(--green)">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
+                <span>12 h</span><span>16 h</span><span>20 h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="config-section">
           <div class="config-section-title" id="labelConfigSustrato">🌱 Sustrato</div>
           <div class="config-options" role="radiogroup" aria-labelledby="labelConfigSustrato">
@@ -3767,72 +3880,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </button>
           <div class="config-section-collapse-body" id="collapseBodyInteriorGrow">
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
-            Sin datos de exterior, el riego usa un VPD aproximado (Magnus–Tetens) con temperatura y humedad relativa del aire,
-            como en muchas apps de invernadero. Indica si la luz es <strong>natural</strong> (ventana), <strong>LED u otra artificial</strong>,
-            las <strong>horas de fotoperíodo</strong> y la intensidad aproximada bajo los focos.
-          </div>
-          <div style="font-size:11px;font-weight:700;color:var(--white);margin-bottom:6px">Origen de la luz</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-            <button type="button" class="config-option" id="opt-interior-luz-natural" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('natural')" aria-label="Luz natural ventana">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">Natural</span>
-                <span class="config-option-desc">Ventana o lucernario</span>
-              </span>
-            </button>
-            <button type="button" class="config-option" id="opt-interior-luz-led" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('led')" aria-label="LED full spectrum">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">LED</span>
-                <span class="config-option-desc">Full spectrum / barras</span>
-              </span>
-            </button>
-            <button type="button" class="config-option" id="opt-interior-luz-mixto" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('mixto')" aria-label="Luz mixta">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">Mixto</span>
-                <span class="config-option-desc">Natural + refuerzo</span>
-              </span>
-            </button>
-            <button type="button" class="config-option" id="opt-interior-luz-fluorescente" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('fluorescente')" aria-label="Fluorescente T5">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">T5 / CFL</span>
-                <span class="config-option-desc">Fluorescente</span>
-              </span>
-            </button>
-            <button type="button" class="config-option" id="opt-interior-luz-hps" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('hps')" aria-label="HPS halogenuro">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">HPS / HM</span>
-                <span class="config-option-desc">Descarga alta presión</span>
-              </span>
-            </button>
-            <button type="button" class="config-option" id="opt-interior-luz-sin" role="radio" aria-checked="false"
-              onclick="setInteriorLuzTipo('sin_luz')" aria-label="Sin luz adecuada">
-              <span class="config-option-radio" aria-hidden="true"></span>
-              <span class="config-option-body">
-                <span class="config-option-title">Sin luz</span>
-                <span class="config-option-desc">No recomendado</span>
-              </span>
-            </button>
-          </div>
-          <div style="margin-bottom:12px">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
-              Horas de luz efectivas al día: <strong id="interiorHorasLuzVal" style="color:var(--white)">16 h</strong>
-            </div>
-            <input type="range" id="interiorHorasLuz" min="12" max="20" step="1" value="16"
-              aria-valuemin="12" aria-valuemax="20"
-              oninput="onInteriorHorasLuzRangeInput()"
-              style="width:100%;accent-color:var(--green)">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
-              <span>12 h</span><span>16 h</span><span>20 h</span>
-            </div>
+            Ajustes de <strong>sala</strong> para el VPD (Magnus–Tetens). El <strong>origen de luz y las horas</strong> están arriba, en
+            <strong>«Ubicación de la torre y origen de luz»</strong>.
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
             <div>
@@ -4779,24 +4828,17 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   <div class="setup-content">
 
     <div class="setup-page active" id="spage0">
-      <div class="setup-title">👋 Bienvenido</div>
-      <div class="setup-subtitle">¿Tienes una torre VEVOR vertical de 5 niveles o quieres configurar tu propio sistema?</div>
-
-      <button type="button" class="welcome-card vevor" onclick="elegirTipoTorre('vevor')"
-        aria-label="Torre VEVOR vertical: configuración precalibrada y lista">
-        <div class="welcome-card-icon" aria-hidden="true">🏭</div>
-        <div class="welcome-card-title">Torre VEVOR</div>
-        <div class="welcome-card-desc">Torre vertical VEVOR de 6 niveles × 5 cestas con depósito de 20L. Configuración precalibrada y optimizada.</div>
-        <div class="welcome-card-badge">✅ Configuración lista</div>
+      <div class="setup-title">Configura tu torre</div>
+      <div class="setup-subtitle">
+        Ajusta niveles, cestas, volumen del depósito, tubo central si aplica, nutriente y ubicación.
+        Cada montaje es distinto: no usamos plantillas de marca comercial.
+      </div>
+      <div class="welcome-hero" aria-hidden="true">🌿</div>
+      <button type="button" class="welcome-start-btn" onclick="iniciarConfiguracionTorre()"
+        aria-label="Empezar asistente de configuración paso a paso">
+        Empezar asistente
       </button>
-
-      <button type="button" class="welcome-card custom" onclick="elegirTipoTorre('custom')"
-        aria-label="Configurar torre personalizada paso a paso">
-        <div class="welcome-card-icon" aria-hidden="true">⚙️</div>
-        <div class="welcome-card-title">Configurar mi torre</div>
-        <div class="welcome-card-desc">Personaliza niveles, cestas, volumen del depósito y equipamiento para cualquier sistema hidropónico.</div>
-        <div class="welcome-card-badge" style="background:#2563eb">🔧 Asistente paso a paso</div>
-      </button>
+      <p class="welcome-hint">Podrás cambiar estos datos después en la pestaña Torre o Medir → Configuración.</p>
     </div>
 
     <div class="setup-page" id="spage1">
@@ -4854,7 +4896,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
             <button type="button" class="equip-card" id="tubo50"  onclick="seleccionarTubo(50)"  style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">50mm</div>
-              <div style="font-size:9px;color:#6b7280">VEVOR estándar</div>
+              <div style="font-size:9px;color:#6b7280">Torres compactas</div>
             </button>
             <button type="button" class="equip-card" id="tubo75"  onclick="seleccionarTubo(75)"  style="padding:8px;text-align:center">
               <div style="font-size:15px;font-weight:800;color:#374151">75mm</div>
@@ -4950,7 +4992,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <button type="button" class="equip-card" id="cesta40" onclick="seleccionarCesta('40')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">🌿</div>
           <div style="font-size:12px;font-weight:800;color:#374151">4.0 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">Torre VEVOR ✅<br>Lechugas perfectas</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">Muy habitual en torres verticales<br>Lechugas y hojas</div>
         </button>
         <button type="button" class="equip-card selected" id="cesta50" onclick="seleccionarCesta('50')" style="padding:10px 6px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">🟢</div>
@@ -7720,7 +7762,7 @@ function updateTorreStats() {
   const nut = getNutrienteTorre();
   const torreNombre = state.torres?.[state.torreActiva||0]?.nombre || 'Torre';
   const vol  = cfg.volDeposito || 20;
-  const tipo = cfg.tipoTorre === 'vevor' ? 'VEVOR' : (torreNombre);
+  const tipo = torreNombre;
 
   // Título torre
   renderTablaVariedades();
@@ -8018,7 +8060,7 @@ const NUTRIENTES_DB = [
 // ══════════════════════════════════════════════════
 
 let setupPagina = 0;
-let setupTipoTorre = 'custom'; // 'vevor' o 'custom'
+let setupTipoTorre = 'custom';
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna';
@@ -8048,28 +8090,10 @@ function cerrarSetup() {
   a11yDialogClosed(o);
 }
 
-function elegirTipoTorre(tipo) {
-  setupTipoTorre = tipo;
-  if (tipo === 'vevor') {
-    // Precargar valores VEVOR
-    document.getElementById('sliderNiveles').value = 6;
-    document.getElementById('sliderCestas').value = 5;
-    document.getElementById('sliderVol').value = 20;
-    setupEquipamiento = new Set(['difusor', 'calentador', 'bomba', 'timer', 'medidorEC', 'toldo']);
-    setupNutriente = 'canna';
-    const shV = (state.configTorre && state.configTorre.sensoresHardware) || {};
-    setupData.sensoresHardware = {
-      ec: !!shV.ec,
-      ph: !!shV.ph,
-      humedad: !!shV.humedad,
-    };
-    // Saltar directamente al paso de nutrientes/ubicación
-    setupPagina = 3;
-    renderSetupPage();
-  } else {
-    setupPagina = 1;
-    renderSetupPage();
-  }
+function iniciarConfiguracionTorre() {
+  setupTipoTorre = 'custom';
+  setupPagina = 1;
+  renderSetupPage();
 }
 
 function renderSetupPage() {
@@ -8137,7 +8161,7 @@ function renderSetupPage() {
 }
 
 function setupNext() {
-  if (setupPagina === 0) return; // página 0 se controla con elegirTipoTorre
+  if (setupPagina === 0) return; // página 0: botón «Empezar asistente»
   const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
   if (setupPagina < ultimoPaso) {
     setupPagina++;
@@ -8540,7 +8564,7 @@ function guardarSetupYContinuar() {
   setupData.horasLuz = horasLuzGuardar;
 
   state.configTorre = {
-    tipoTorre:    setupTipoTorre,
+    tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,
     volDeposito:  vol,
@@ -8551,9 +8575,9 @@ function guardarSetupYContinuar() {
     nutriente:    setupNutriente,
     tamanoCesta:  setupTamanoCesta,
     tamanoCestaCustom: document.getElementById('cestaCmCustom')?.value || '',
-    diametroTubo:  setupTipoTorre === 'custom' ? setupDiametroTubo : 50,
-    antiRaices:    setupTipoTorre === 'custom' ? setupAntiRaices : 'na',
-    alturaTorre:   setupTipoTorre === 'custom' ? setupAlturaTorre : 1.2,
+    diametroTubo:  setupDiametroTubo,
+    antiRaices:    setupAntiRaices,
+    alturaTorre:   setupAlturaTorre,
     bombaCalculada: window.setupBombaCalculada || null,
     ciudad:       setupCoordenadas.ciudad,
     lat:          setupCoordenadas.lat  || 39.9864,
@@ -10410,11 +10434,41 @@ function setSustrato(tipo) {
   cargarSensorSustratoUI();
 }
 
+function cargarUbicacionMedicionesUI() {
+  if (!state.configTorre) state.configTorre = {};
+  const u = (state.configTorre.ubicacion || 'exterior') === 'interior' ? 'interior' : 'exterior';
+  ['exterior', 'interior'].forEach(id => {
+    const el = document.getElementById('opt-medir-ubic-' + id);
+    if (!el) return;
+    const sel = id === u;
+    el.classList.toggle('selected', sel);
+    el.setAttribute('aria-checked', sel ? 'true' : 'false');
+  });
+  const wrap = document.getElementById('wrapLuzOrigenMediciones');
+  if (wrap) wrap.style.display = u === 'interior' ? 'block' : 'none';
+}
+
+function setUbicacionTorreMediciones(tipo) {
+  const v = tipo === 'interior' ? 'interior' : 'exterior';
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.ubicacion = v;
+  invalidateMeteoNomiCache();
+  guardarEstadoTorreActual();
+  saveState();
+  cargarUbicacionMedicionesUI();
+  actualizarVisibilidadPanelInteriorGrow();
+  cargarInteriorGrowUI();
+  applyMedirCollapseUI();
+  if (typeof updateDashboard === 'function') updateDashboard();
+  if (document.getElementById('tab-riego')?.classList.contains('active') && typeof calcularRiego === 'function') calcularRiego();
+}
+
 function actualizarVisibilidadPanelInteriorGrow() {
   const p = document.getElementById('panelConfigInteriorGrow');
   if (!p) return;
   const int = (state.configTorre || {}).ubicacion === 'interior';
   p.style.display = int ? 'block' : 'none';
+  cargarUbicacionMedicionesUI();
   applyMedirCollapseUI();
 }
 
@@ -10735,6 +10789,7 @@ function initConfigUI() {
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
   cargarLocalidadMeteoUI();
+  cargarUbicacionMedicionesUI();
   actualizarVisibilidadPanelInteriorGrow();
   cargarInteriorGrowUI();
   applyMedirCollapseUI();
@@ -14952,7 +15007,7 @@ function seleccionarCesta(tam) {
     : parseFloat(tam);
   const infos = {
     3.8: '⚪ 3.8cm — Para microgreens y germinación. Esponja 2.5cm.',
-    4.0: '🌿 4.0cm — Las de la torre VEVOR. Perfectas para lechugas, mizuna y hierbas. La raíz sale hacia el agua y el tamaño de la cesta no limita el crecimiento.',
+    4.0: '🌿 4.0cm — Muy habitual en torres verticales comerciales. Ideal para lechugas, mizuna y hierbas. La raíz sale hacia el agua y el tamaño de cesta no suele limitar el crecimiento.',
     5.0: '🟢 5.0cm — Estándar hidropónico. Más estabilidad para lechugas grandes (romana, iceberg) y mejor para exterior con viento.',
     7.5: '🔵 7.5cm — Para hierbas grandes, rúcula, espinaca. Más volumen de sustrato.',
     10:  '⭕ 10cm — Para frutos pequeños, pimientos, fresas. Necesita soporte estructural.',
@@ -15265,6 +15320,7 @@ function cargarEstadoTorre(idx) {
   // Aplicar constantes de la config de esta torre
   if (state.configTorre?.sustrato) state.configSustrato = state.configTorre.sustrato;
   aplicarConfigTorre();
+  cargarUbicacionMedicionesUI();
   cargarInteriorGrowUI();
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
@@ -15349,7 +15405,7 @@ function abrirSetupNuevaTorre() {
 
   // Preconfigurar sliders con valores razonables para torre nueva
   setupPagina = 0;
-  setupTipoTorre = 'vevor';
+  setupTipoTorre = 'custom';
   setupEquipamiento = new Set(['difusor','calentador','bomba','timer','medidorEC']);
   setupNutriente = 'canna_aqua';
   setupUbicacion = 'exterior';
