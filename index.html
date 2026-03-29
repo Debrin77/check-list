@@ -2372,6 +2372,47 @@ button.checklist-close {
 .consejo-alerta.info  { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; font-weight:600; }
 .consejo-alerta.warn  { background: #fffbeb; color: #78350f; border: 1px solid #fcd34d; font-weight:600; }
 .consejo-alerta.ok    { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; font-weight:600; }
+.consejo-ecph-wrap {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.consejo-ecph-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.consejo-ecph-table {
+  width: 100%;
+  min-width: 280px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.consejo-ecph-table th {
+  text-align: left;
+  padding: 8px 6px;
+  background: var(--bg3);
+  color: var(--white);
+  font-weight: 800;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.consejo-ecph-table td {
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  vertical-align: top;
+}
+.consejo-ecph-table td:first-child {
+  font-weight: 700;
+  color: var(--white);
+}
+.consejo-ecph-table tr:last-child td { border-bottom: none; }
 
 /* ══ CONFIGURACIÓN AGUA / SUSTRATO ══ */
 .config-section {
@@ -8236,6 +8277,7 @@ function guardarSetupYContinuar() {
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0495,
   };
+  invalidateMeteoNomiCache();
   const su = ['esponja', 'lana', 'arcilla', 'mixto'].includes(setupData.sustrato) ? setupData.sustrato : 'esponja';
   state.configTorre.sustrato = su;
   state.configSustrato = su;
@@ -11682,6 +11724,11 @@ const CONSEJOS_DATA = {
         alerta:{ tipo:'info', txt:'ℹ️ En verano el depósito puede bajar 1-2L al día por evaporación y absorción. Controla el volumen cada 2-3 días.' } },
     ]
   },
+  ecph: {
+    nombre: '📊 EC / pH', color: '#6366f1', bg: 'rgba(99,102,241,0.1)',
+    soloTabla: true,
+    consejos: []
+  },
   clima: {
     nombre: '🌡️ Clima', color: '#b45309', bg: 'rgba(217,119,6,0.1)',
     consejos: [
@@ -11845,6 +11892,54 @@ function renderDiagnostico() {
 
 let consejoCatActiva = 'cultivo';
 
+/** µS/cm y pH orientativos (bibliografía / manuales de hidroponía) — ajustar por nutriente, agua y fase */
+const REF_CULTIVOS_EC_PH = [
+  { cultivo: 'Lechuga / lechuguinas', ec: '900–1600', ph: '5,5–6,5', nota: 'Rango app lechuga ~1300–1400' },
+  { cultivo: 'Espinaca / acelga / kale', ec: '1200–2000', ph: '5,5–6,5', nota: 'Mayor necesidad nitro' },
+  { cultivo: 'Rúcula / canónigos / mostaza', ec: '1000–1600', ph: '5,5–6,4', nota: 'Similar lechuga' },
+  { cultivo: 'Albahaca / menta / perejil', ec: '1000–1800', ph: '5,5–6,5', nota: 'Albahaca algo más EC en pleno sol' },
+  { cultivo: 'Cilantro / eneldo', ec: '1200–1800', ph: '5,5–6,2', nota: '' },
+  { cultivo: 'Tomate — vegetativo', ec: '1400–2400', ph: '5,5–6,5', nota: '' },
+  { cultivo: 'Tomate — floración / fruto', ec: '2200–3200', ph: '5,5–6,2', nota: 'Subir EC de forma gradual' },
+  { cultivo: 'Pimiento / berenjena', ec: '1600–2600', ph: '5,5–6,5', nota: '' },
+  { cultivo: 'Pepino', ec: '1400–2200', ph: '5,5–6,2', nota: '' },
+  { cultivo: 'Judía verde / guisante (brotes)', ec: '1400–2400', ph: '6,0–6,5', nota: '' },
+  { cultivo: 'Fresa / fresón', ec: '1200–2000', ph: '5,5–6,2', nota: 'Plántulas más bajo EC' },
+  { cultivo: 'Brócoli / coliflor', ec: '1700–2600', ph: '6,0–6,8', nota: '' },
+  { cultivo: 'Zanahoria (hojas) / microverduras', ec: '1200–2000', ph: '5,5–6,5', nota: '' },
+  { cultivo: 'Melón / sandía', ec: '1600–3000', ph: '5,5–6,2', nota: 'Fructificación arriba del rango' },
+  { cultivo: 'Flores de corte (p. ej. rosa)', ec: '1200–2200', ph: '5,5–6,2', nota: '' },
+];
+
+function buildHtmlTablaEcPh() {
+  const rows = REF_CULTIVOS_EC_PH.map(r => `
+    <tr>
+      <td>${meteoEscHtml(r.cultivo)}</td>
+      <td>${meteoEscHtml(r.ec)}</td>
+      <td>${meteoEscHtml(r.ph)}</td>
+      <td style="font-size:10px">${meteoEscHtml(r.nota || '—')}</td>
+    </tr>
+  `).join('');
+  return `
+    <div class="consejo-ecph-wrap">
+      <div class="consejo-titulo" style="margin-bottom:8px">Referencia rápida hidroponía</div>
+      <div class="consejo-ecph-note">
+        Valores medios habituales en bibliografía y tablas de cultivos (EC en <strong>µS/cm</strong> como en esta app; pH de la solución).
+        Varía según <strong>marca de abono</strong>, agua base, temperatura y fase (plántula → vegetativo → flor/fruto). Úsalo como guía, no como dogma.
+      </div>
+      <table class="consejo-ecph-table">
+        <thead><tr>
+          <th>Cultivo</th>
+          <th>EC µS/cm</th>
+          <th>pH</th>
+          <th>Nota</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
 function mostrarTabConsejos(tab) {
   const panelC = document.getElementById('panelConsejos');
   const panelD = document.getElementById('panelDiagnostico');
@@ -11927,6 +12022,11 @@ function selConsejoCat(key) {
 function renderConsejosLista() {
   const cat = CONSEJOS_DATA[consejoCatActiva];
   const lista = document.getElementById('consejosLista');
+
+  if (cat.soloTabla) {
+    lista.innerHTML = buildHtmlTablaEcPh();
+    return;
+  }
 
   lista.innerHTML = cat.consejos.map(c => `
     <div class="consejo-card">
@@ -12267,6 +12367,13 @@ const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 let meteoData = null;
 let diaSeleccionado = 0;
+let _meteoNomiKey = null;
+let _meteoNomiContext = '';
+
+function invalidateMeteoNomiCache() {
+  _meteoNomiKey = null;
+  _meteoNomiContext = '';
+}
 
 function condEmoji(precipProb, tempMax, uv) {
   if (precipProb > 70) return '🌧️';
@@ -13410,6 +13517,7 @@ async function ensureMeteoCoordsAuto() {
             } catch (_) {}
           }
 
+          if (changed) invalidateMeteoNomiCache();
           saveState();
         } finally {
           resolve();
@@ -13511,6 +13619,52 @@ function ordenarMeteoalarmPorRelevancia(items, ciudad) {
   });
 }
 
+async function refreshMeteoNominatimContext() {
+  const cfg = state.configTorre || {};
+  const lat = parseFloat(cfg.lat);
+  const lon = parseFloat(cfg.lon);
+  if (!isFinite(lat) || !isFinite(lon)) {
+    _meteoNomiContext = '';
+    _meteoNomiKey = null;
+    return;
+  }
+  const key = String(Math.round(lat * 5000)) + '_' + String(Math.round(lon * 5000));
+  if (_meteoNomiKey === key && _meteoNomiContext) return;
+  _meteoNomiKey = key;
+  _meteoNomiContext = '';
+  try {
+    const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + encodeURIComponent(lat) +
+      '&lon=' + encodeURIComponent(lon) + '&format=json&accept-language=es';
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'Accept-Language': 'es',
+        'User-Agent': 'HydrocaruTorre/1.0'
+      }
+    });
+    if (!res.ok) return;
+    const d = await res.json();
+    const a = d.address || {};
+    const raw = [
+      a.city, a.town, a.village, a.municipality,
+      a.county, a.state_district, a.state
+    ].filter(Boolean);
+    const uniq = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < raw.length; i++) {
+      const p = String(raw[i]).trim();
+      if (!p) continue;
+      const k = p.toLowerCase();
+      if (seen[k]) continue;
+      seen[k] = 1;
+      uniq.push(p);
+    }
+    _meteoNomiContext = uniq.join(' ');
+  } catch (_) {
+    _meteoNomiContext = '';
+  }
+}
+
 async function fetchMeteoalarmSpainProxied() {
   const atomUrl = 'https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-spain';
   const url = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(atomUrl);
@@ -13577,43 +13731,50 @@ async function renderMeteoAvisosPanelCompleto() {
   if (!wrap) return;
   wrap.style.display = 'flex';
 
-  const ciudad = state.configTorre?.ciudad || '';
+  const ciudadBase = (state.configTorre?.ciudad || '').trim();
+  await refreshMeteoNominatimContext();
+  const ubicTxt = [ciudadBase, (_meteoNomiContext || '').trim()].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+
   const parts = [];
 
-  try {
-    const xml = await fetchMeteoalarmSpainProxied();
-    const items = parseMeteoalarmAtomEntries(xml);
-    const fuertes = items.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
-    const amarillas = items.filter(it => it.tipo === 'warn');
-    const amarillasZona = amarillas.filter(it => meteoalarmCiudadCoincideZona(ciudad, it.areaDesc, it.title));
+  if (!ubicTxt) {
+    parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
+    'Para mostrar <strong>solo los avisos de tu zona</strong>, configura la ubicación de la torre (ciudad o coordenadas) en los ajustes de la torre. ' +
+    'Consulta siempre <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> por municipio.</span></div>');
+  } else {
+    try {
+      const xml = await fetchMeteoalarmSpainProxied();
+      const items = parseMeteoalarmAtomEntries(xml);
+      const relevantes = items.filter(it => meteoalarmCiudadCoincideZona(ubicTxt, it.areaDesc, it.title));
+      const etiquetaZona = ciudadBase || 'tu ubicación';
 
-    let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, ciudad).slice(0, 8);
-    const ya = new Set(mostrar.map(x => x.titulo));
-    amarillasZona.forEach(y => {
-      if (!ya.has(y.titulo) && mostrar.length < 10) {
-        mostrar.push(y);
-        ya.add(y.titulo);
-      }
-    });
-
-    if (mostrar.length > 0) {
       parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
-        'Avisos oficiales (MeteoAlarm — mismos datos que publica AEMET en el sistema europeo)</div>');
-      if (ciudad && fuertes.length && !fuertes.some(f => meteoalarmCiudadCoincideZona(ciudad, f.areaDesc, f.title))) {
-        parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
-          'Ningún aviso naranja/rojo coincide literalmente con «' + meteoEscHtml(ciudad) + '»; abajo figuran los activos en España. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a> para tu municipio.</span></div>');
+        'Avisos oficiales solo si afectan a «' + meteoEscHtml(etiquetaZona) + '» (MeteoAlarm)</div>');
+
+      if (relevantes.length > 0) {
+        const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
+        const amarillas = relevantes.filter(it => it.tipo === 'warn');
+        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, ubicTxt).slice(0, 8);
+        const ya = new Set(mostrar.map(x => x.titulo));
+        amarillas.forEach(y => {
+          if (!ya.has(y.titulo) && mostrar.length < 10) {
+            mostrar.push(y);
+            ya.add(y.titulo);
+          }
+        });
+        mostrar.forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
+      } else if (items.length === 0) {
+        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+      } else {
+        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos MeteoAlarm (amarillo/naranja/rojo) que coincidan con tu zona en este momento. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET — avisos por municipio</a>.</span></div>');
       }
-      mostrar.forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
-    } else if (items.length === 0) {
-      parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>Sin avisos amarillo/naranja/rojo activos en el feed nacional ahora.</span></div>');
-    } else {
-      parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay naranja/rojo activo en el feed; solo avisos de menor nivel u otras zonas. Revisa <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+    } catch (e) {
+      parts.push('<div class="meteo-alerta-item warn">' +
+        '<span style="font-size:16px">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
+        'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
     }
-  } catch (e) {
-    parts.push('<div class="meteo-alerta-item warn">' +
-      '<span style="font-size:16px">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
-      'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
   }
 
   const heur = buildAvisosMeteoHeuristicas();
@@ -14208,6 +14369,7 @@ function aplicarSetupDataATorre() {
     state.configTorre.ciudad  = setupData.ciudad;
     state.configTorre.lat     = setupData.lat;
     state.configTorre.lon     = setupData.lon;
+    invalidateMeteoNomiCache();
   }
   // Actualizar también el tipo de agua en la config principal
   const aguaMap = { destilada:'destilada', osmosis:'osmosis', grifo:'grifo' };
