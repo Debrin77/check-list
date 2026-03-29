@@ -3432,20 +3432,22 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <li>Interior: horas de luz, tipo de luz y sala (VPD aprox.) sin depender del tiempo exterior.</li>
                 <li>Varias torres, cestas, calendario, checklist de recarga y registro de EC/pH/volumen.</li>
                 <li>Orientada a España (agua por municipio) sin obligar a cuenta ni hardware propio.</li>
+                <li>Tablas y consejos de referencia (EC/pH, cultivo…) en la pestaña <strong>Consejos</strong>.</li>
+                <li>Si usas sondas o medidores, puedes indicarlo en <strong>Configuración</strong> (Mediciones) y registrar sus lecturas a mano — ver guía allí.</li>
               </ul>
             </div>
             <div class="expectativas-col no">
               <h4>No sustituye</h4>
               <ul>
-                <li>Sensores 24/7 ni mapas de humedad en cubo como software de invernadero profesional.</li>
+                <li>Enlace automático 24/7 con sondas por WiFi/Bluetooth (la integración prevista es manual salvo ampliaciones futuras).</li>
+                <li>Mapas de humedad en cubo ni software de invernadero profesional con climatización enlazada.</li>
                 <li>Apps cerradas de un kit comercial (garantías, repuestos y flujos de esa marca).</li>
                 <li>Calculadoras puras de sales NPK (tipo HydroBuddy) ni informe agronómico certificado.</li>
-                <li>Tablas y sugerencias genéricas: no hay un solo EC/pH/riego óptimo para cada cultivo y día; ajusta según tus plantas.</li>
               </ul>
             </div>
           </div>
           <p class="expectativas-nota">
-            <strong style="color:var(--white)">Frente al mercado:</strong> suele ser más completa que una calculadora suelta de nutrientes y más abierta que una app ligada a un solo fabricante; menos especializada que plataformas con sondas en sustrato y climatización enlazada. Los nombres de productos del mercado son solo referencias generales.
+            <strong style="color:var(--white)">Frente al mercado:</strong> suele ser más completa que una calculadora suelta de nutrientes y más abierta que una app ligada a un solo fabricante; menos especializada que plataformas con telemetría continua y climatización enlazada. Los nombres de productos del mercado son solo referencias generales.
           </p>
         </div>
       </details>
@@ -3633,6 +3635,38 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 value="58" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
                 style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--white);font-size:15px;box-sizing:border-box">
             </div>
+          </div>
+        </div>
+
+        <div class="config-section" id="panelSensoresHardware">
+          <div class="config-section-title" id="labelSensoresHw">📟 Sondas y medidores (opcional)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+            Indica si además de medir “a mano” usas algún <strong>sensor o medidor continuo</strong> (interior o exterior).
+            La app <strong>no se conecta por telemática</strong> a esos equipos por defecto: sirve para documentar tu montaje y mostrarte cómo volcar lecturas aquí.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;font-size:13px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="sensorHwEC" onchange="persistSensoresHardware()"
+                aria-describedby="labelSensoresHw">
+              <span>Sonda o medidor de <strong>EC / conductividad</strong> en el depósito o solución</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="sensorHwPH" onchange="persistSensoresHardware()"
+                aria-describedby="labelSensoresHw">
+              <span>Sonda o medidor de <strong>pH</strong> (sumergido o de gota)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="sensorHwHum" onchange="persistSensoresHardware()"
+                aria-describedby="labelSensoresHw">
+              <span>Sensor de <strong>humedad</strong> (sustrato, aire de la sala o ambos)</span>
+            </label>
+          </div>
+          <div id="panelSensoresIntegracionAyuda" style="display:none;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.65">
+            <div style="font-weight:800;color:var(--white);margin-bottom:8px;font-size:12px">Cómo integrar las lecturas en Cultiva</div>
+            <p style="margin:0 0 8px"><strong>Forma prevista hoy:</strong> sin cuenta ni API del fabricante. Cuando veas el valor en la pantalla del equipo, en su app móvil o en un registrador, <strong>transcríbelo en Mediciones</strong> (EC, pH, volumen; humedad del sustrato en el campo opcional). Así quedan en el historial, el inicio y las evaluaciones.</p>
+            <p style="margin:0 0 8px"><strong>Humedad:</strong> si mides HR de esponja/lana con sonda o medidor 4&nbsp;en&nbsp;1, puedes usar el mismo dato en el bloque de humedad del formulario y, si activas el ajuste fino de arriba, como referencia ±3&nbsp;% en riego.</p>
+            <p style="margin:0 0 8px"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación de la torre; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
+            <p style="margin:0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
           </div>
         </div>
 
@@ -4850,6 +4884,28 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="equip-titulo">Toldo / malla</div>
           <div class="equip-desc">Protección solar en verano</div>
         </button>
+      </div>
+      <div style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:12px;border:1.5px solid #e5e7eb">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">
+          📟 ¿Sondas o medidores además del pen?
+        </div>
+        <div style="font-size:11px;color:#6b7280;line-height:1.45;margin-bottom:10px">
+          Opcional (interior o exterior). Misma lógica que en <strong>Mediciones → Configuración</strong>: la app no enlaza por WiFi/Bluetooth; así dejamos constancia y el checklist te recordará contrastar lecturas.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#374151">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="setupSensHwEC" onchange="persistSetupSensoresHardware()">
+            <span>EC / conductividad en depósito o solución</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="setupSensHwPH" onchange="persistSetupSensoresHardware()">
+            <span>pH (sonda o medidor)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="setupSensHwHum" onchange="persistSetupSensoresHardware()">
+            <span>Humedad (sustrato, aire o ambos)</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -7803,6 +7859,12 @@ const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
 function abrirSetup() {
   setupPagina = 0;
+  const sh = (state.configTorre && state.configTorre.sensoresHardware) || {};
+  setupData.sensoresHardware = {
+    ec: !!sh.ec,
+    ph: !!sh.ph,
+    humedad: !!sh.humedad,
+  };
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
@@ -7826,6 +7888,12 @@ function elegirTipoTorre(tipo) {
     document.getElementById('sliderVol').value = 20;
     setupEquipamiento = new Set(['difusor', 'calentador', 'bomba', 'timer', 'medidorEC', 'toldo']);
     setupNutriente = 'canna';
+    const shV = (state.configTorre && state.configTorre.sensoresHardware) || {};
+    setupData.sensoresHardware = {
+      ec: !!shV.ec,
+      ph: !!shV.ph,
+      humedad: !!shV.humedad,
+    };
     // Saltar directamente al paso de nutrientes/ubicación
     setupPagina = 3;
     renderSetupPage();
@@ -7852,6 +7920,7 @@ function renderSetupPage() {
 
   // Acciones específicas por página
   if (setupPagina === 1) updateTorreBuilder();
+  if (setupPagina === 2) cargarSetupSensoresHwUI();
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
   if (setupPagina === 6) setTimeout(renderSetupPlantasGrid, 50);
   if (setupPagina === 7) setTimeout(actualizarResumenSetup, 50);
@@ -7985,6 +8054,30 @@ function toggleEquip(id) {
     setupEquipamiento.add(id);
     card.className = 'equip-card selected';
   }
+}
+
+function ensureSetupSensoresHardware() {
+  if (!setupData.sensoresHardware) {
+    setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
+  }
+  return setupData.sensoresHardware;
+}
+
+function cargarSetupSensoresHwUI() {
+  const s = ensureSetupSensoresHardware();
+  const e = document.getElementById('setupSensHwEC');
+  const p = document.getElementById('setupSensHwPH');
+  const h = document.getElementById('setupSensHwHum');
+  if (e) e.checked = !!s.ec;
+  if (p) p.checked = !!s.ph;
+  if (h) h.checked = !!s.humedad;
+}
+
+function persistSetupSensoresHardware() {
+  const s = ensureSetupSensoresHardware();
+  s.ec = !!document.getElementById('setupSensHwEC')?.checked;
+  s.ph = !!document.getElementById('setupSensHwPH')?.checked;
+  s.humedad = !!document.getElementById('setupSensHwHum')?.checked;
 }
 
 function renderNutrientesGrid() {
@@ -8260,6 +8353,12 @@ function guardarSetupYContinuar() {
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
   const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
 
+  const sensHwGuardar = {
+    ec: !!(setupData.sensoresHardware && setupData.sensoresHardware.ec),
+    ph: !!(setupData.sensoresHardware && setupData.sensoresHardware.ph),
+    humedad: !!(setupData.sensoresHardware && setupData.sensoresHardware.humedad),
+  };
+
   // Guardar configuración en state
   state.configTorre = {
     tipoTorre:    setupTipoTorre,
@@ -8278,6 +8377,7 @@ function guardarSetupYContinuar() {
     ciudad:       setupCoordenadas.ciudad,
     lat:          setupCoordenadas.lat  || 39.9864,
     lon:          setupCoordenadas.lon  || -0.0495,
+    sensoresHardware: sensHwGuardar,
   };
   invalidateMeteoNomiCache();
   const su = ['esponja', 'lana', 'arcilla', 'mixto'].includes(setupData.sustrato) ? setupData.sustrato : 'esponja';
@@ -10163,6 +10263,47 @@ function persistSensorSustrato() {
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
+function ensureSensoresHardware() {
+  if (!state.configTorre) state.configTorre = {};
+  let s = state.configTorre.sensoresHardware;
+  if (!s || typeof s !== 'object') {
+    s = { ec: false, ph: false, humedad: false };
+    state.configTorre.sensoresHardware = s;
+  }
+  if (typeof s.ec !== 'boolean') s.ec = !!s.ec;
+  if (typeof s.ph !== 'boolean') s.ph = !!s.ph;
+  if (typeof s.humedad !== 'boolean') s.humedad = !!s.humedad;
+  return s;
+}
+
+function actualizarVisibilidadAyudaSensores() {
+  const s = ensureSensoresHardware();
+  const any = !!(s.ec || s.ph || s.humedad);
+  const box = document.getElementById('panelSensoresIntegracionAyuda');
+  if (box) box.style.display = any ? 'block' : 'none';
+}
+
+function cargarSensoresHardwareUI() {
+  const s = ensureSensoresHardware();
+  const e = document.getElementById('sensorHwEC');
+  const p = document.getElementById('sensorHwPH');
+  const h = document.getElementById('sensorHwHum');
+  if (e) e.checked = !!s.ec;
+  if (p) p.checked = !!s.ph;
+  if (h) h.checked = !!s.humedad;
+  actualizarVisibilidadAyudaSensores();
+}
+
+function persistSensoresHardware() {
+  const s = ensureSensoresHardware();
+  s.ec = !!document.getElementById('sensorHwEC')?.checked;
+  s.ph = !!document.getElementById('sensorHwPH')?.checked;
+  s.humedad = !!document.getElementById('sensorHwHum')?.checked;
+  guardarEstadoTorreActual();
+  saveState();
+  actualizarVisibilidadAyudaSensores();
+}
+
 function cargarInteriorGrowUI() {
   if (!state.configTorre) state.configTorre = {};
   const cfg = state.configTorre;
@@ -10246,6 +10387,7 @@ function initConfigUI() {
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
   cargarSensorSustratoUI();
+  cargarSensoresHardwareUI();
   actualizarVisibilidadPanelInteriorGrow();
   cargarInteriorGrowUI();
 
@@ -10845,6 +10987,16 @@ function getCLPasos() {
   const ecMed = Math.round((ecMin + ecMax) / 2);
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
+  const shCl = ensureSensoresHardware();
+  const hwLista = [shCl.ec && 'EC', shCl.ph && 'pH', shCl.humedad && 'humedad'].filter(Boolean);
+  const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Medir y ajustar';
+  const pasosPrev6 = hwLista.length ? [{
+    id:'6.0hw',
+    seccion:'📊 Paso 6 — Medir y ajustar',
+    paso:'6.0',
+    desc:'Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).',
+    nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. Los valores de los pasos siguientes deben coincidir con lo que anotarás después en Mediciones → dashboard.',
+  }] : [];
 
   return [
   { id:'P1', seccion:'🌙 Preparación', paso:'P1',
@@ -10917,7 +11069,9 @@ function getCLPasos() {
     desc:'Esperar 20 minutos con difusor en marcha antes de medir',
     nota:'Con difusor 20 min son suficientes' },
 
-  { id:'6.1', seccion:'📊 Paso 6 — Medir y ajustar', paso:'6.1',
+  ...pasosPrev6,
+
+  { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
     desc:'Medir EC — objetivo ' + ecMin + '–' + ecMax + ' µS/cm (cultivos y ' + nut.nombre + ')',
     campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecMed) }] },
   { id:'6.2', seccion:null, paso:'6.2',
@@ -14082,6 +14236,7 @@ const setupData = {
   ciudad: null,
   lat: null,
   lon: null,
+  sensoresHardware: { ec: false, ph: false, humedad: false },
 };
 
 // ══ Setup páginas 6 y 7 ══════════════════════════
@@ -14225,6 +14380,12 @@ function actualizarResumenSetup() {
     dosisHtml += ordenR.map(p => p + ' ' + d.mlAB + 'ml').join(' · ');
   }
 
+  const sHw = ensureSetupSensoresHardware();
+  const hwLM = [sHw.ec && 'EC', sHw.ph && 'pH', sHw.humedad && 'humedad'].filter(Boolean);
+  const hwResumen = hwLM.length
+    ? '📟 Sensores / medidores: <strong>' + hwLM.join(', ') + '</strong> (valores manualmente en Mediciones)<br>'
+    : '📟 Sensores / medidores: <strong>sin marcar</strong> (configúralo en paso Equipamiento o en Mediciones)<br>';
+
   el.innerHTML =
     '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>' +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
@@ -14232,6 +14393,7 @@ function actualizarResumenSetup() {
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
     '💊 Dosis primera recarga: <strong>' + dosisHtml + '</strong><br>' +
     (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong><br>' +
+    hwResumen +
     '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
     '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Torre)' : 'Una torre') + '</strong>';
 }
@@ -14698,6 +14860,7 @@ function cargarEstadoTorre(idx) {
   aplicarConfigTorre();
   cargarInteriorGrowUI();
   cargarSensorSustratoUI();
+  cargarSensoresHardwareUI();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
 
@@ -14784,6 +14947,7 @@ function abrirSetupNuevaTorre() {
   setupUbicacion = 'exterior';
   setupPlantasSeleccionadas = new Set();
   setupNumTorres = 'una'; // no relevante para nueva torre
+  setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
 
   const so = document.getElementById('setupOverlay');
   so.classList.add('open');
