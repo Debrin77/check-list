@@ -4445,16 +4445,23 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       <div class="card" style="margin-bottom:12px">
         <div class="card-title">🌾 Fase de cultivo</div>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" id="riegoFaseCultivoAuto" checked
+            onchange="persistRiegoAvanzado()"
+            aria-describedby="riegoFaseCultivoHint">
+          <span>Automático según plantas en la torre (fechas + ciclo de cada variedad)</span>
+        </label>
         <label for="riegoFaseCultivo" class="visually-hidden">Fase de cultivo para el cálculo de riego</label>
         <select id="riegoFaseCultivo" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
-          onchange="persistRiegoAvanzado()">
+          onchange="document.getElementById('riegoFaseCultivoAuto').checked=false;persistRiegoAvanzado()">
           <option value="propagacion">Propagación / plántula — menos transpiración (~×0,84)</option>
           <option value="vegetativo">Desarrollo vegetativo (~×0,94)</option>
           <option value="produccion" selected>Producción / engorde — referencia (~×1,0)</option>
           <option value="cierre">Pre-cosecha, cierre suave (~×0,97)</option>
         </select>
-        <p style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45">
-          Modula el índice de demanda tras el clima; encaja con la idea de VPD más conservador en plántulas.
+        <p id="riegoFaseCultivoHint" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45">
+          Con automático activo, la fase sigue el avance medio del ciclo (mismos tramos que la Kc del riego). Sin plantas con fecha, usa la edad en semanas de arriba (lechuga referencia ~45 d).
+          Modula el índice de demanda tras el clima. Si eliges otra fase en el desplegable, el modo pasa a manual; puedes volver a marcar automático cuando quieras.
         </p>
       </div>
 
@@ -10305,14 +10312,50 @@ const RIEGO_FASE_CULTIVO = {
   cierre:      { mult: 0.97, label: 'Pre-cosecha (cierre suave)' },
 };
 
-function riegoFaseCultivoMult() {
-  const f = state.configTorre?.faseCultivoRiego || 'produccion';
-  return RIEGO_FASE_CULTIVO[f]?.mult ?? 1;
+/** Avance 0–1 del ciclo (ponderado por planta con fecha; si no hay, lechuga ref. y edad del formulario) */
+function riegoPctCicloMedioTorre(edadSemManual) {
+  let sum = 0, n = 0;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!c || !c.variedad) return;
+      sum += riegoPctCicloPlanta(c, edadSemManual);
+      n++;
+    });
+  });
+  if (n === 0) {
+    const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
+    return Math.max(0, Math.min(1.15, (s * 7) / 45));
+  }
+  return sum / n;
 }
 
-function riegoFaseCultivoLabel() {
-  const f = state.configTorre?.faseCultivoRiego || 'produccion';
-  return RIEGO_FASE_CULTIVO[f]?.label || 'Producción';
+/** Mismos hitos que riegoKcDesdePctYGrupo (inicio / desarrollo / mediados / final) */
+function riegoFaseDesdePctCiclo(pct) {
+  const p = Math.max(0, Math.min(1.2, pct));
+  if (p < 0.12) return 'propagacion';
+  if (p < 0.35) return 'vegetativo';
+  if (p < 0.85) return 'produccion';
+  return 'cierre';
+}
+
+function riegoFaseCultivoKeyEfectiva(edadSem) {
+  if (!state.configTorre) return 'produccion';
+  const auto = state.configTorre.faseCultivoRiegoAuto !== false;
+  if (auto) {
+    return riegoFaseDesdePctCiclo(riegoPctCicloMedioTorre(edadSem));
+  }
+  const f = state.configTorre.faseCultivoRiego || 'produccion';
+  return RIEGO_FASE_CULTIVO[f] ? f : 'produccion';
+}
+
+function riegoFaseCultivoMult(edadSem) {
+  const k = riegoFaseCultivoKeyEfectiva(edadSem);
+  return RIEGO_FASE_CULTIVO[k]?.mult ?? 1;
+}
+
+function riegoFaseCultivoLabel(edadSem) {
+  const k = riegoFaseCultivoKeyEfectiva(edadSem);
+  return RIEGO_FASE_CULTIVO[k]?.label || 'Producción';
 }
 
 function ensureSustratoMezclaDefaults() {
@@ -10670,17 +10713,30 @@ function setSustrato(tipo) {
 
 function syncRiegoAvanzadoUI() {
   const fSel = document.getElementById('riegoFaseCultivo');
+  const cbFaseAuto = document.getElementById('riegoFaseCultivoAuto');
   const cb = document.getElementById('riegoMezclaActiva');
   const sa = document.getElementById('riegoMezclaA');
   const sb = document.getElementById('riegoMezclaB');
   const rng = document.getElementById('riegoMezclaPctA');
   const wrap = document.getElementById('riegoMezclaCampos');
   const lab = document.getElementById('riegoMezclaPctALabel');
-  if (!fSel && !cb) return;
+  if (!fSel && !cb && !cbFaseAuto) return;
   if (!state.configTorre) state.configTorre = {};
   ensureSustratoMezclaDefaults();
-  const fv = state.configTorre.faseCultivoRiego || 'produccion';
-  if (fSel) fSel.value = RIEGO_FASE_CULTIVO[fv] ? fv : 'produccion';
+  const autoFase = state.configTorre.faseCultivoRiegoAuto !== false;
+  if (cbFaseAuto) cbFaseAuto.checked = autoFase;
+  const edadSem = parseFloat(document.getElementById('riegoEdad')?.value) || 4;
+  if (fSel) {
+    fSel.removeAttribute('aria-disabled');
+    fSel.title = '';
+    if (autoFase) {
+      const k = riegoFaseCultivoKeyEfectiva(edadSem);
+      fSel.value = RIEGO_FASE_CULTIVO[k] ? k : 'produccion';
+    } else {
+      const fv = state.configTorre.faseCultivoRiego || 'produccion';
+      fSel.value = RIEGO_FASE_CULTIVO[fv] ? fv : 'produccion';
+    }
+  }
   const m = state.configTorre.sustratoMezcla;
   if (cb) cb.checked = !!m.activa;
   if (sa) {
@@ -10707,8 +10763,21 @@ function fillRiegoMezclaSelectIfEmpty(sel) {
 function persistRiegoAvanzado() {
   if (!state.configTorre) state.configTorre = {};
   ensureSustratoMezclaDefaults();
+  const cbFaseAuto = document.getElementById('riegoFaseCultivoAuto');
   const fSel = document.getElementById('riegoFaseCultivo');
-  if (fSel && RIEGO_FASE_CULTIVO[fSel.value]) state.configTorre.faseCultivoRiego = fSel.value;
+  const wasAuto = state.configTorre.faseCultivoRiegoAuto !== false;
+  const nowAuto = cbFaseAuto ? cbFaseAuto.checked : wasAuto;
+  state.configTorre.faseCultivoRiegoAuto = nowAuto;
+  if (!nowAuto) {
+    if (wasAuto && fSel) {
+      const ed = parseFloat(document.getElementById('riegoEdad')?.value) || 4;
+      const inf = riegoFaseDesdePctCiclo(riegoPctCicloMedioTorre(ed));
+      fSel.value = inf;
+      state.configTorre.faseCultivoRiego = inf;
+    } else if (fSel && RIEGO_FASE_CULTIVO[fSel.value]) {
+      state.configTorre.faseCultivoRiego = fSel.value;
+    }
+  }
   const m = state.configTorre.sustratoMezcla;
   const cb = document.getElementById('riegoMezclaActiva');
   m.activa = !!(cb && cb.checked);
@@ -10725,6 +10794,7 @@ function persistRiegoAvanzado() {
   if (lab && rng) lab.textContent = 'Proporción: ' + rng.value + '% del primer componente · resto el segundo';
   guardarEstadoTorreActual();
   saveState();
+  syncRiegoAvanzadoUI();
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
@@ -14041,7 +14111,7 @@ async function calcularRiego() {
         et0DayMm: et0Riego
       });
     }
-    const multFase = riegoFaseCultivoMult();
+    const multFase = riegoFaseCultivoMult(edadSem);
     if (esInterior) {
       demandaDia = Math.max(0.52, Math.min(1.22, demandaDia * multFase));
     } else {
@@ -14159,7 +14229,9 @@ async function calcularRiego() {
       return Object.entries(grupos).map(([g,n]) => n + ' ' + g).join(' · ') || 'Sin plantas';
     })();
     const riegoLineaFaseMedio =
-      '🌾 Fase: ' + riegoFaseCultivoLabel() + ' (×' + (Math.round(multFase * 100) / 100) + ') · 🪴 ' + sustrato.nombre + '<br>';
+      '🌾 Fase: ' + riegoFaseCultivoLabel(edadSem) + ' (×' + (Math.round(multFase * 100) / 100) + ')' +
+        (state.configTorre?.faseCultivoRiegoAuto !== false ? ' · auto' : ' · manual') +
+       ' · 🪴 ' + sustrato.nombre + '<br>';
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong style="color:var(--white)">' + etiquetaDia + ' · ' + torreTipo + '</strong><br>' +
       riegoLineaFaseMedio +
@@ -14188,7 +14260,8 @@ async function calcularRiego() {
       factorON: Math.round(factorON*100)/100,
       factorOFF: Math.round(factorOFF*100)/100,
       kcMedio,
-      faseCultivoRiego: state.configTorre?.faseCultivoRiego || 'produccion',
+      faseCultivoRiego: riegoFaseCultivoKeyEfectiva(edadSem),
+      faseCultivoRiegoAuto: state.configTorre?.faseCultivoRiegoAuto !== false,
       multFaseCultivo: Math.round(multFase * 100) / 100,
       sustratoPerfilNombre: sustrato.nombre,
       vpd, vpdMediodia: Math.round(vpdMediodia*100)/100,
@@ -15435,6 +15508,7 @@ function aplicarSetupDataATorre() {
   state.configTorre.agua      = setupData.agua;
   state.configTorre.sustrato  = normalizaSustratoKey(setupData.sustrato);
   state.configTorre.faseCultivoRiego = 'produccion';
+  state.configTorre.faseCultivoRiegoAuto = true;
   state.configTorre.sustratoMezcla = {
     activa: false,
     a: state.configTorre.sustrato,
