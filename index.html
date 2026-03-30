@@ -2434,6 +2434,23 @@ button.checklist-close {
   font-size: 11px;
 }
 .consejo-dosis18-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.consejo-dosis18-fuente {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.consejo-dosis18-k {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+.consejo-dosis18-cell { font-size: 10px; }
+.consejo-dosis18-miTorre .consejo-dosis18-table { min-width: 0; }
 
 /* ══ CONFIGURACIÓN AGUA / SUSTRATO ══ */
 .config-section {
@@ -4297,6 +4314,23 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <div class="deposito-info" style="flex:1">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
               <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
+              <div id="torreVolDepWrap" style="margin-top:10px;padding-top:10px;border-top:1.5px solid #e5e7eb">
+                <label class="form-label" for="torreVolDepositoL" style="font-size:10px;font-weight:800;
+                  color:#6b7280;text-transform:uppercase;letter-spacing:0.35px;margin-bottom:6px;display:block">
+                  Volumen del depósito (para mezclas)
+                </label>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <input type="number" id="torreVolDepositoL" class="form-input" min="5" max="100" step="1"
+                    inputmode="numeric" autocomplete="off"
+                    aria-describedby="torreVolDepHint"
+                    onchange="guardarVolDepositoDesdeTorre()"
+                    style="max-width:104px;font-size:15px;font-weight:800;padding:8px 10px;border-radius:10px">
+                  <span style="font-size:13px;font-weight:800;color:#374151">litros</span>
+                </div>
+                <div id="torreVolDepHint" style="font-size:10px;color:#6b7280;margin-top:6px;line-height:1.45">
+                  Checklist, Consejos y dosis usan este valor. El volumen en <strong>Mediciones</strong> es la lectura del día, no sustituye a esto.
+                </div>
+              </div>
             </div>
           </div>
           <!-- Nutriente activo de esta torre -->
@@ -5538,6 +5572,31 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
 </div>
 
+<!-- Modal: guardar tabla personal en Consejos (tras checklist) -->
+<div class="modal-overlay" id="modalConsejosTablaPersonal"
+  onclick="cerrarModalConsejosTablaPersonal(event)"
+  role="dialog" aria-modal="true" aria-labelledby="ctpTitle"
+  style="z-index:850">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ctpTitle">📋 Tabla en Consejos</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 14px">
+      Elige el <strong>nutriente</strong> y los <strong>litros del depósito</strong>. Se guardará un recordatorio en
+      <strong>Consejos → EC / pH</strong> con destilada, ósmosis y grifo (mismas proporciones de abono; CalMag según nota en columna grifo).
+    </p>
+    <label for="ctpVolLitros" style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Litros de agua en el depósito</label>
+    <input type="number" id="ctpVolLitros" min="1" max="500" step="0.5" inputmode="decimal"
+      style="width:100%;margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--white);font-size:15px;box-sizing:border-box">
+    <label for="ctpNutrienteId" style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Nutriente</label>
+    <select id="ctpNutrienteId"
+      style="width:100%;margin-bottom:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;box-sizing:border-box"></select>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="button" class="btn btn-ghost" style="flex:1;min-width:120px" onclick="cerrarModalConsejosTablaPersonal()">Ahora no</button>
+      <button type="button" class="btn btn-primary" style="flex:1;min-width:120px" onclick="guardarConsejosTablaPersonal()">Guardar tabla</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL FUENTES AGUA ══ -->
 <div class="modal-overlay" id="modalAgua" onclick="cerrarModalAgua(event)" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
   <div class="modal">
@@ -6359,13 +6418,15 @@ function cerrarModalAgua(ev) {
 
 function a11yEscapeTopDialog(ev) {
   if (ev.key !== 'Escape' || ev.defaultPrevented) return;
-  const order = ['modalOverlay', 'checklistOverlay', 'setupOverlay', 'modalTorres', 'modalAgua'];
+  const order = ['modalConsejosTablaPersonal', 'modalOverlay', 'checklistOverlay', 'setupOverlay', 'modalTorres', 'modalAgua'];
   for (const id of order) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('open')) {
       if (id === 'checklistOverlay' && typeof clEsPrimeraVez !== 'undefined' && clEsPrimeraVez) return;
       ev.preventDefault();
-      if (id === 'modalOverlay') {
+      if (id === 'modalConsejosTablaPersonal') {
+        cerrarModalConsejosTablaPersonal();
+      } else if (id === 'modalOverlay') {
         document.getElementById('modalOverlay').classList.remove('open');
         editingCesta = null;
         a11yDialogClosed(el);
@@ -7964,6 +8025,12 @@ function updateTorreStats() {
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) depEl.textContent = tipo + ' — ' + vol + 'L';
 
+  const volDepIn = document.getElementById('torreVolDepositoL');
+  if (volDepIn && document.activeElement !== volDepIn) {
+    const vCfg = cfg.volDeposito != null && cfg.volDeposito > 0 ? cfg.volDeposito : VOL_OBJETIVO;
+    volDepIn.value = String(Math.max(5, Math.min(100, Math.round(vCfg))));
+  }
+
   // Badge nutriente
   const flagEl = document.getElementById('torreBadgeFlag');
   const nomEl  = document.getElementById('torreBadgeNombre');
@@ -7971,8 +8038,36 @@ function updateTorreStats() {
   if (nomEl)  nomEl.textContent  = nut.nombre  || '—';
 }
 
+/** Editar volumen nominal del depósito desde la pestaña Torre (mismaclave que el asistente). */
+function guardarVolDepositoDesdeTorre() {
+  const el = document.getElementById('torreVolDepositoL');
+  if (!el) return;
+  let v = parseFloat(String(el.value).replace(',', '.'));
+  if (!Number.isFinite(v)) v = VOL_OBJETIVO;
+  v = Math.round(Math.max(5, Math.min(100, v)));
+  el.value = String(v);
+
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  if (state.configTorre.volDeposito === v) return;
+
+  state.configTorre.volDeposito = v;
+  const tIdx = state.torreActiva || 0;
+  if (state.torres && state.torres[tIdx]) {
+    if (!state.torres[tIdx].config) state.torres[tIdx].config = { ...state.configTorre };
+    state.torres[tIdx].config.volDeposito = v;
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  actualizarBadgesNutriente();
+  updateDashboard();
+  updateTorreStats();
+  showToast('🪣 Depósito: ' + v + ' L · mezclas y checklist usan este volumen');
+}
+
 // ══════════════════════════════════════════════════
-// DATOS NUTRIENTES — Top 11 marcas
+// DATOS NUTRIENTES — Catálogo (CalMag blando: siempre ~400 µS/cm vía mlCalMagParaAguaBlanda)
 // ══════════════════════════════════════════════════
 const NUTRIENTES_DB = [
   {
@@ -7982,7 +8077,7 @@ const NUTRIENTES_DB = [
     partes: 2,
     buffer: true,
     sistema: 'recirculante', // NFT, DWC, ebb&flow
-    ecPorMl: 33,             // calibrado con datos reales tuyos: 30ml→1000µS en 18L
+    ecPorMl: 33,             // reserva / fallback; cálculo principal = ml/L tabla (REF) + CalMag
     ecObjetivo: [900, 1400], // mS/cm según fabricante (0.9-1.4 con agua EC 0)
     calmagNecesario: true,
     calmagMl: 13,            // calibrado: 13ml→400µS en 18L agua destilada
@@ -8099,7 +8194,7 @@ const NUTRIENTES_DB = [
       '⚠️ NUNCA mezclar Micro directamente con Bloom',
     ],
     detalle: 'FloraGro+FloraMicro+FloraBloom · El estándar mundial · Ratio 1:2:1 para lechugas',
-    nota: 'Usado por la NASA. El más estudiado del mundo. 3 botellas vs 2 de Canna.',
+    nota: 'Usado por la NASA. El más estudiado del mundo. 3 botellas vs 2 de Canna. Equivalente comercial Terra Aquatica Flora Series.',
     precio: '€€',
     disponible_es: true,
   },
@@ -8203,17 +8298,365 @@ const NUTRIENTES_DB = [
     pHRango: [5.5, 6.5],
     pHIntervenir: [5.5, 6.5],
     orden: ['Campeador A', 'Campeador B'],
-    dosis: { min: 1.5, max: 3.5, unidad: 'ml/L', recomendado: 2.5 },
+    dosis: { min: 0.5, max: 2.5, unidad: 'ml/L (cada parte A y B)', recomendado: 1 },
     protocolo: [
-      '1. Llenar con agua destilada/ósmosis',
+      '1. Llenar con agua destilada/ósmosis (EC ~0)',
       '2. Añadir CalMag → remover',
-      '3. Añadir Campeador A → remover 2 min',
-      '4. Añadir Campeador B → remover 3 min',
-      '5. Ajustar pH a 5.5-6.5',
-      '6. Verificar EC objetivo',
+      '3. Añadir Campeador A (~1 ml/L en blanda; p. ej. 18 ml en 18 L) → remover 2 min',
+      '4. Añadir Campeador B (misma ml/L que A) → remover 3 min',
+      '5. Ajustar pH a 5.5-6.5 según medidor',
+      '6. Verificar EC objetivo y afinar según ficha del fabricante',
     ],
     detalle: 'A+B · 100% española · NPK + micronutrientes quelados',
     nota: 'Marca española de laboratorio propio. Excelente relación calidad/precio.',
+    precio: '€',
+    disponible_es: true,
+  },
+  {
+    id: 'canna_hydro_vega',
+    nombre: 'Canna Hydro Vega A+B',
+    bandera: '🇳🇱',
+    partes: 2,
+    buffer: false,
+    sistema: 'drain_to_waste',
+    ecPorMl: 28,
+    ecObjetivo: [1000, 1800],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.2, 6.2],
+    pHIntervenir: [5.0, 6.4],
+    orden: ['Hydro Vega A', 'Hydro Vega B'],
+    dosis: { min: 2, max: 5, unidad: 'ml/L c/u', recomendado: 4 },
+    protocolo: [
+      '1. Agua destilada/ósmosis',
+      '2. Opción CalMag hasta ~400 µS/cm → remover',
+      '3. Añadir Hydro Vega A → B (no mezclar concentrados)',
+      '4. pH y EC según ficha Canna Hydro',
+    ],
+    detalle: 'A+B · Riego run-to-waste · Inerte',
+    nota: 'Más concentrada que Aqua en muchas tablas; hidro clásico Canna.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'atami_bcuzz_hydro',
+    nombre: "Atami B'cuzz Hydro A+B",
+    bandera: '🇳🇱',
+    partes: 2,
+    buffer: false,
+    sistema: 'recirculante',
+    ecPorMl: 24,
+    ecObjetivo: [1000, 1600],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.0],
+    pHIntervenir: [5.2, 6.5],
+    orden: ['B\'cuzz Hydro A', 'B\'cuzz Hydro B'],
+    dosis: { min: 1, max: 3, unidad: 'ml/L c/u', recomendado: 2 },
+    protocolo: [
+      '1. Agua blanda',
+      '2. CalMag opcional hasta ~400 µS/cm',
+      '3. A en agua, remover; luego B',
+      '4. pH 5,5–5,8 orientativo Atami',
+    ],
+    detalle: 'A+B · Atami · Hidro recirculante / inerte',
+    nota: 'Rango fabricante suele ser 1–3 ml/L por parte.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'hypro_hydro_ab',
+    nombre: 'Hy-Pro Hydro A+B',
+    bandera: '🇳🇱',
+    partes: 2,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 23,
+    ecObjetivo: [900, 1500],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.3, 6.7],
+    orden: ['Hy-Pro A', 'Hy-Pro B'],
+    dosis: { min: 1.5, max: 3.5, unidad: 'ml/L c/u', recomendado: 2.5 },
+    protocolo: [
+      '1. Completar con agua blanda',
+      '2. CalMag hasta ~400 µS/cm si procede',
+      '3. A y B en orden; no concentrado puro',
+      '4. Medir EC/pH',
+    ],
+    detalle: 'A+B · Hy-Pro · Hidropónico',
+    nota: 'Tabla app: ~2,5 ml/L por parte vegetativo.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'vitalink_hydro_max',
+    nombre: 'VitaLink Hydro Max Grow A+B',
+    bandera: '🇬🇧',
+    partes: 2,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 22,
+    ecObjetivo: [900, 1500],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.2, 6.6],
+    orden: ['Hydro Max A', 'Hydro Max B'],
+    dosis: { min: 2, max: 4, unidad: 'ml/L c/u', recomendado: 3 },
+    protocolo: [
+      '1. Agua blanda',
+      '2. CalMag opcional ~400 µS/cm',
+      '3. A, luego B',
+      '4. Ajustar pH',
+    ],
+    detalle: 'A+B · VitaLink Max · Crecimiento',
+    nota: 'Hidro Max vegetativo: orientación ~3 ml/L A y B.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'mills_basis_ab',
+    nombre: 'Mills Basis A/B',
+    bandera: '🇳🇱',
+    partes: 2,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 24,
+    ecObjetivo: [1000, 1600],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.3],
+    pHIntervenir: [5.2, 6.5],
+    orden: ['Basis A', 'Basis B'],
+    dosis: { min: 1, max: 4, unidad: 'ml/L c/u', recomendado: 2 },
+    protocolo: [
+      '1. Agua RO/blanda',
+      '2. CalMag a ~400 µS/cm',
+      '3. Basis A y B según tabla Mills (veg suele 1–2 ml/L)',
+      '4. Subir gradual semanas siguientes',
+    ],
+    detalle: 'A+B · Mills · Base mineral',
+    nota: 'Fabricante: 1–4 ml/L según fase; app veg ~2 ml/L.',
+    precio: '€€€',
+    disponible_es: true,
+  },
+  {
+    id: 'green_planet_hydro_fuel',
+    nombre: 'Green Planet Hydro Fuel Grow A/B',
+    bandera: '🇨🇦',
+    partes: 2,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 24,
+    ecObjetivo: [1000, 1550],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.2, 6.6],
+    orden: ['Hydro Fuel Grow A', 'Hydro Fuel Grow B'],
+    dosis: { min: 1, max: 3.5, unidad: 'ml/L c/u', recomendado: 2.25 },
+    protocolo: [
+      '1. Agua blanda',
+      '2. CalMag ~400 µS/cm',
+      '3. Parte A, remover; parte B',
+      '4. EC veg puede subir a ~3 ml/L A+B',
+    ],
+    detalle: 'A+B · Green Planet · Grow',
+    nota: 'Tabla fabricante 1–3 ml/L; referencia media veg ~2,25 ml/L.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'ionic_grow_hydro',
+    nombre: 'Ionic Grow Hydro',
+    bandera: '🇬🇧',
+    partes: 1,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 22,
+    ecObjetivo: [900, 1400],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.2],
+    pHIntervenir: [5.3, 6.5],
+    orden: ['Ionic Grow'],
+    dosis: { min: 2, max: 6, unidad: 'ml/L', recomendado: 4 },
+    protocolo: [
+      '1. Una sola botella (1 parte)',
+      '2. CalMag blando a ~400 µS/cm',
+      '3. Ionic Grow según envase',
+      '4. pH estable',
+    ],
+    detalle: '1 parte · Ionic · Grow hw',
+    nota: 'Mineral una botella; EC según cultivo.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'biobizz_bio_grow',
+    nombre: 'BioBizz Bio-Grow',
+    bandera: '🇳🇱',
+    partes: 1,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 20,
+    ecObjetivo: [700, 1100],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [6.0, 7.0],
+    pHIntervenir: [5.8, 7.2],
+    orden: ['Bio-Grow'],
+    dosis: { min: 2, max: 5, unidad: 'ml/L', recomendado: 3 },
+    protocolo: [
+      '1. Orgánico — EC más baja',
+      '2. CalMag en blanda hasta ~400 µS/cm',
+      '3. Bio-Grow según tabla',
+      '4. pH algo más alto',
+    ],
+    detalle: '1 parte · Orgánico · NPK suave',
+    nota: 'Distinto de Fish·Mix+Alg; solo Bio-Grow en esta entrada.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'hesi_hidro',
+    nombre: 'Hesi Hidro Crecimiento',
+    bandera: '🇩🇪',
+    partes: 1,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 22,
+    ecObjetivo: [900, 1500],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.2, 6.5],
+    orden: ['Hidro Crecimiento'],
+    dosis: { min: 3, max: 6, unidad: 'ml/L', recomendado: 4.5 },
+    protocolo: [
+      '1. Agua blanda',
+      '2. CalMag ~400 µS/cm',
+      '3. Hesi Hidro según vegetación',
+      '4. pH 5,5–6,5',
+    ],
+    detalle: '1 parte · línea Hidro Hesi',
+    nota: 'Distinto de TNT Complex; más N para hidro.',
+    precio: '€€',
+    disponible_es: true,
+  },
+  {
+    id: 'hortalan',
+    nombre: 'Hortalan Solución nutritiva',
+    bandera: '🇪🇸',
+    partes: 1,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 21,
+    ecObjetivo: [900, 1400],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.3, 6.5],
+    orden: ['Hortalan'],
+    dosis: { min: 3, max: 6, unidad: 'ml/L', recomendado: 4 },
+    protocolo: [
+      '1. Seguir envase Hortalan',
+      '2. CalMag blando ~400 µS/cm',
+      '3. Mezclar y medir',
+    ],
+    detalle: '1 parte · Marca española',
+    nota: 'Dosis orientativa; confirmar en envase.',
+    precio: '€',
+    disponible_es: true,
+  },
+  {
+    id: 'fox_farm_grow_big',
+    nombre: 'Fox Farm Grow Big (Trio)',
+    bandera: '🇺🇸',
+    partes: 1,
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 20,
+    ecObjetivo: [1000, 1600],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.2, 6.8],
+    orden: ['Grow Big'],
+    dosis: { min: 2, max: 5, unidad: 'ml/L', recomendado: 3 },
+    protocolo: [
+      '1. Trio Fox Farm o solo Grow Big',
+      '2. CalMag ~400 µS en blanda',
+      '3. Dosis conservadora; subir si EC baja',
+    ],
+    detalle: '1 parte · Fox Farm · Veg',
+    nota: 'ML/gal alto: app usa ~3 ml/L orientativo.',
+    precio: '€€€',
+    disponible_es: true,
+  },
+  {
+    id: 'campeador_hidro',
+    nombre: 'Campeador Hidro A+B',
+    bandera: '🇪🇸',
+    partes: 2,
+    buffer: false,
+    sistema: 'recirculante',
+    ecPorMl: 22,
+    ecObjetivo: [900, 1400],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.3, 6.6],
+    orden: ['Campeador Hidro A', 'Campeador Hidro B'],
+    dosis: { min: 1, max: 3, unidad: 'ml/L c/u', recomendado: 1.5 },
+    protocolo: [
+      '1. Consultar ficha Hidro (no confundir con línea Hoja)',
+      '2. CalMag ~400 µS/cm',
+      '3. A y B',
+    ],
+    detalle: 'A+B · Campeador · Hidro',
+    nota: 'Linea aparte de Campeador Hoja.',
+    precio: '€',
+    disponible_es: true,
+  },
+  {
+    id: 'masterblend_41838',
+    nombre: 'Masterblend 4-18-38 (polvo)',
+    bandera: '🇺🇸',
+    partes: 1,
+    tipoDosis: 'polvo',
+    buffer: false,
+    sistema: 'todos',
+    ecPorMl: 18,
+    ecObjetivo: [1000, 2200],
+    calmagNecesario: true,
+    calmagMl: 13,
+    pHBuffer: false,
+    pHRango: [5.5, 6.5],
+    pHIntervenir: [5.2, 6.8],
+    orden: ['Mezcla sales (receta)'],
+    dosis: { min: 1.6, max: 2.4, unidad: 'g/L total sales', recomendado: 1.9 },
+    protocolo: [
+      '1. Polvo: usar gramos y agua blanda',
+      '2. CalMag o Epsom según receta Masterblend',
+      '3. Chequear EC tras disolver (no usar solo ml de líquido)',
+    ],
+    detalle: '1 componente base sal · Receta típica 2-parte',
+    nota: 'En la app la tabla muestra gramos por litro orientativos.',
     precio: '€',
     disponible_es: true,
   },
@@ -8254,7 +8697,7 @@ let setupPagina = 0;
 let setupTipoTorre = 'custom';
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 let setupUbicacion = 'exterior';
-let setupNutriente = 'canna';
+let setupNutriente = 'canna_aqua';
 let setupCoordenadas = { lat: 39.9864, lon: -0.0495, ciudad: 'Castelló de la Plana' };
 
 const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
@@ -8597,17 +9040,16 @@ function calcularDosisSetup(nutId, vol, ecObj) {
   const mlCalMag = usarCalMagEnRecarga()
     ? Math.round(nut.calmagMl * (vol / 18) * 10) / 10
     : 0;
-  const ecCalMag = mlCalMag > 0 ? Math.round((nut.ecPorMl || 33) * mlCalMag) : 0;
+  const ecCalMag = estimarEcCalMagMicroS(mlCalMag, vol);
 
-  // A+B: cantidad necesaria para llegar a EC objetivo tras CalMag
-  // EC aportada por A+B también es proporcional a concentración:
-  // 33 µS/cm por ml en 18L → 33 µS/cm por ml × (18/vol) en volumen diferente
-  const partes = nut.partes || 2; // fallback a 2 si no definido
-  const ecPorMlAjustado = (nut.ecPorMl || 33) * (18 / vol);
-  const ecNecesaria = Math.max(0, ecMeta - ecCalMag);
-  const mlAB = Math.max(1, Math.round((ecNecesaria / ecPorMlAjustado) * 10) / 10);
+  const partes = nut.partes || 2;
+  const mlPorParte = [];
+  for (let i = 0; i < partes; i++) {
+    mlPorParte.push(mlNutrientePorParte(nut.id, i, vol));
+  }
+  const mlAB = mlPorParte[0];
 
-  return { nut, vol, mlCalMag, ecCalMag, mlAB, ecMeta, ecObjetivo };
+  return { nut, vol, mlCalMag, ecCalMag, mlAB, mlPorParte, ecMeta, ecObjetivo };
 }
 
 function renderDosisSetup() {
@@ -8643,30 +9085,31 @@ function renderDosisSetup() {
         d.mlCalMag + ' ml</span></div>';
   }
 
+  const mPart = d.mlPorParte || [d.mlAB];
   if (nut.partes === 1) {
     html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
       'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
       '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[0] + '</span>' +
       '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
-        d.mlAB + ' ml</span></div>';
+        mPart[0] + ' ml</span></div>';
   } else if (nut.partes === 2) {
     html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
       'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
       '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[0] + '</span>' +
       '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
-        d.mlAB + ' ml</span></div>';
+        mPart[0] + ' ml</span></div>';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
       'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
       '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + orden[1] + '</span>' +
       '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
-        d.mlAB + ' ml</span></div>';
+        mPart[1] + ' ml</span></div>';
   } else if (nut.partes === 3) {
-    [orden[0], orden[1], orden[2]].forEach(parte => {
+    [orden[0], orden[1], orden[2]].forEach((parte, idx) => {
       html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
         'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
         '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> ' + parte + '</span>' +
         '<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#15803d">' +
-          d.mlAB + ' ml</span></div>';
+          (mPart[idx] || d.mlAB) + ' ml</span></div>';
     });
   }
 
@@ -8877,17 +9320,13 @@ function preguntarIniciarChecklist() {
   const nombreTorre = torre?.nombre || 'Torre 1';
   const vol        = cfg.volDeposito || 18;
   const ecObj      = getECOptimaTorre();
-  const ecMeta     = getRecargaEcMetaMicroS();
 
-  // Calcular dosis con los datos reales de la torre
   const mlCalMag   = calcularMlCalMag();
-  const ecCalMag   = mlCalMag > 0 ? Math.round((nut.ecPorMl || 33) * mlCalMag) : 0;
-  const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / vol);
-  const ecNec      = Math.max(0, ecMeta - ecCalMag);
-  const mlAB       = Math.max(1, Math.round((ecNec / ecPorMlAdj) * 10)/10);
+  const ecCalMag   = estimarEcCalMagMicroS(mlCalMag, vol);
   const orden      = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
+  const mlCadaParte = [];
+  for (let i = 0; i < (nut.partes || 2); i++) mlCadaParte.push(mlNutrientePorParte(nut.id, i, vol));
 
-  // Construir resumen de dosis
   let dosisLineas = '';
   if (mlCalMag > 0) {
     dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
@@ -8896,17 +9335,17 @@ function preguntarIniciarChecklist() {
   let paso = mlCalMag > 0 ? 2 : 1;
   if (nut.partes === 1) {
     dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
-      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlCadaParte[0] + ' ml</span></div>';
   } else if (nut.partes === 2) {
     dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
-      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+      '<span>' + paso++ + '. ' + orden[0] + '</span><span style="font-weight:800;color:#15803d">' + mlCadaParte[0] + ' ml</span></div>';
     dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
-      '<span>' + paso++ + '. ' + orden[1] + '</span><span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+      '<span>' + paso++ + '. ' + orden[1] + '</span><span style="font-weight:800;color:#15803d">' + mlCadaParte[1] + ' ml</span></div>';
   } else if (nut.partes >= 3) {
     for (let i = 0; i < nut.partes; i++) {
       dosisLineas += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb">' +
         '<span>' + paso++ + '. ' + (orden[i]||'Parte '+(i+1)) + '</span>' +
-        '<span style="font-weight:800;color:#15803d">' + mlAB + ' ml</span></div>';
+        '<span style="font-weight:800;color:#15803d">' + (mlCadaParte[i]||0) + ' ml</span></div>';
     }
   }
   const pHMin = nut.pHRango?.[0] || 5.5;
@@ -9100,8 +9539,9 @@ function aplicarConfigTorre() {
 
   // Constantes de cálculo según nutriente activo (no solo cfg.nutriente por si quedó desincronizado)
   const nut = getNutrienteTorre();
-  if (nut && nut.ecPorMl != null) {
-    window.EC_POR_ML_AB_ACTIVO = nut.ecPorMl;
+  if (nut) {
+    const vAct = cfg.volDeposito || VOL_OBJETIVO;
+    window.EC_POR_ML_AB_ACTIVO = ecSubePorMlCorreccion(nut, vAct);
   }
   actualizarVisibilidadPanelInteriorGrow();
 }
@@ -11308,8 +11748,10 @@ const EC_POR_ML_AB      = 33;    // µS/cm por ml de A+B (1mlA+1mlB) en 18L
                                   // Dato real: 36ml A+B → +1200 µS sobre CalMag = 33.3 µS/ml
 const CALMAG_POR_ML     = 30;    // µS/cm por ml CalMag en 18L
                                   // Dato real: 13ml → 400 µS/cm = 30.8 µS/ml
-const EC_CALMAG_BASE    = 400;   // µS/cm objetivo tras CalMag (13ml en 18L)
-const CALMAG_ML_OBJETIVO = 13;   // ml de CalMag para llegar a EC_CALMAG_BASE en 18L
+const EC_CALMAG_BASE    = 400;   // µS/cm objetivo tras CalMag (agua destilada/ósmosis, EC ~0)
+const CALMAG_ML_OBJETIVO = 13;   // ml CalMag en 18 L ≈ 400 µS con CALMAG_POR_ML (referencia)
+/** EC media de referencia (µS/cm) para la que encajan las ml/L de la tabla fabricante; factor en práctica = 1 (no escalamos el abono por EC). Las correcciones usan tu EC meta. */
+const EC_REFERENCIA_DOSIS_MICROS = 1300;
 const PH_MINUS_POR_ML   = 0.40;  // unidades pH por ml de pH- (75-81%) en 18L
 const PH_PLUS_POR_ML    = 0.34;  // unidades pH por ml de pH+ (25-30%) en 18L
                                   // Dato real: 8ml pH+ subieron de 3.5 a ~6.2 en 19.5L ≈ 0.34/ml
@@ -11319,41 +11761,34 @@ const VOL_OBJETIVO      = 18;    // litros objetivo depósito
 // Descuenta el CalMag ya disuelto (EC_CALMAG_BASE)
 // EC objetivo Aqua Vega: 1400 - 400(CalMag) = 1000 µS/cm
 // ml = 1000 / EC_POR_ML_AB = 1000 / 33 ≈ 30 ml
-function calcularMlAB() {
-  const nut = getNutrienteTorre();
-  const cfg = state.configTorre || {};
-  const volObj = cfg.volDeposito || VOL_OBJETIVO;
-  let ecBase = 0;
-  if (usarCalMagEnRecarga()) {
-    const mlCM = calcularMlCalMag();
-    ecBase = Math.round((nut.ecPorMl || 33) * mlCM);
-  }
-  const ecObjetivo = getRecargaEcMetaMicroS();
-  const ecNecesaria = Math.max(0, ecObjetivo - ecBase);
-  return Math.max(1, Math.round(ecNecesaria / (nut.ecPorMl || 33)));
+// calcularMlAB / calcularMlParteNutriente: misma referencia que Consejos (getRefDosisFabricante)
+
+/** ml de CalMag para acercar agua destilada/ósmosis a ~EC_CALMAG_BASE µS/cm (misma lógica en toda la app). */
+function mlCalMagParaAguaBlanda(volLitros) {
+  const v = volLitros > 0 ? volLitros : VOL_OBJETIVO;
+  return Math.round((EC_CALMAG_BASE / CALMAG_POR_ML) * (v / VOL_OBJETIVO) * 10) / 10;
 }
 
 function calcularMlCalMag() {
   if (!usarCalMagEnRecarga()) return 0;
   const nut = getNutrienteTorre();
+  if (!nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
   const volObj = cfg.volDeposito || VOL_OBJETIVO;
-  const factorVol = volObj / 18;
-  return Math.round(nut.calmagMl * factorVol * 10) / 10;
+  return mlCalMagParaAguaBlanda(volObj);
 }
 
 function calcularDescAB(parte) {
   const nut = getNutrienteTorre();
-  const ml  = calcularMlAB();
   const orden = nut.orden || ['Parte A', 'Parte B'];
+  const suf = dosisSufijoNutriente(nut);
   if (nut.partes === 3) {
-    const nombres = { 0:'Micro', 1:'Grow', 2:'Bloom', grow:'Grow', micro:'Micro', bloom:'Bloom' };
-    if (parte === 'A') return 'Añadir ' + orden[0] + ' (' + ml + ' ml) → remover 2 min';
-    if (parte === 'B') return 'Añadir ' + orden[1] + ' (' + ml + ' ml) → remover 2 min';
-    if (parte === 'C') return 'Añadir ' + orden[2] + ' (' + ml + ' ml) → remover 3 min';
+    if (parte === 'A') return 'Añadir ' + orden[0] + ' (' + calcularMlParteNutriente(0) + suf + ') → remover 2 min';
+    if (parte === 'B') return 'Añadir ' + orden[1] + ' (' + calcularMlParteNutriente(1) + suf + ') → remover 2 min';
+    if (parte === 'C') return 'Añadir ' + orden[2] + ' (' + calcularMlParteNutriente(2) + suf + ') → remover 3 min';
   }
-  if (parte === 'A') return 'Agitar ' + (orden[0]||'Parte A') + '. Añadir ' + ml + ' ml — remover 2 min';
-  return 'Agitar ' + (orden[1]||'Parte B') + '. Añadir ' + ml + ' ml — remover 3 min';
+  if (parte === 'A') return 'Agitar ' + (orden[0]||'Parte A') + '. Añadir ' + calcularMlParteNutriente(0) + suf + ' — remover 2 min';
+  return 'Agitar ' + (orden[1]||'Parte B') + '. Añadir ' + calcularMlParteNutriente(1) + suf + ' — remover 3 min';
 }
 
 function evalParam() {
@@ -11395,8 +11830,6 @@ function evalEC(ec, vol) {
 
   const nut = getNutrienteTorre();
   const volActual  = isNaN(vol) ? (state.configTorre?.volDeposito || VOL_OBJETIVO) : vol;
-  const volBase    = state.configTorre?.volDeposito || VOL_OBJETIVO;
-  const factorVol  = volActual / volBase;
   // EC óptima según cultivos presentes (si no hay plantas, usa el nutriente)
   const ecOptima   = getECOptimaTorre();
   const ecMin      = ecOptima.min;
@@ -11415,9 +11848,9 @@ function evalEC(ec, vol) {
     showCorreccion('correccionEC','');
 
   } else if (ec < ecMin) {
-    const ecBase   = usarCalMagEnRecarga() ? Math.round(nut.ecPorMl * calcularMlCalMag()) : 0;
-    const deficit  = ecIdeal - Math.max(0, ec - ecBase);
-    const mlAB     = Math.max(1, Math.ceil(deficit / ((nut.ecPorMl || 30) * factorVol)));
+    const deficit  = Math.max(0, ecIdeal - ec);
+    const mlAB     = mlCorreccionEcBaja(nut, volActual, deficit);
+    const slopeEc  = ecSubePorMlCorreccion(nut, volActual);
     const nivel    = ec < ecCritica ? 'bad' : 'warn';
     const orden    = nut.orden || ['Parte A', 'Parte B'];
 
@@ -11425,18 +11858,19 @@ function evalEC(ec, vol) {
       ec < ecCritica ? 'EC crítica — deficiencias inminentes' : 'EC baja — añadir ' + nut.nombre);
     setCard('cardEC', ec < ecCritica ? 'alert' : 'warn');
 
+    const sufEc = dosisSufijoNutriente(nut);
     let correccionHtml = '<div class="correccion-title">💊 Corrección EC — ' + nut.nombre + '</div>';
     if (nut.partes === 1) {
-      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
     } else if (nut.partes === 2) {
-      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
-      correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
     } else if (nut.partes === 3) {
-      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
-      correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
-      correccionHtml += '<div class="correccion-item"><span>' + orden[2] + '</span><span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      correccionHtml += '<div class="correccion-item"><span>' + orden[2] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
     }
-    correccionHtml += '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * (nut.ecPorMl||30) * factorVol) + ' µS/cm</span></div>';
+    correccionHtml += '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
     showCorreccion('correccionEC', correccionHtml);
 
   } else {
@@ -11609,16 +12043,12 @@ function evalVol(vol, ec, ph) {
     const cfg = state.configTorre || {};
     const volObj = cfg.volDeposito || VOL_OBJETIVO;
     const litrosAnadir = Math.ceil((volObj - vol) * 10) / 10;
-    // Calcular nutrientes proporcionales al volumen a reponer
-    const EC_CALMAG = usarCalMagEnRecarga() ? 400 : 0;
-    const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / volObj);
-    const ecMetaRep = getRecargaEcMetaMicroS();
-    const ecNec = Math.max(0, ecMetaRep - EC_CALMAG);
-    const mlABPorLitro = Math.max(0.5, (ecNec / ecPorMlAdj) / volObj);
-    const calmagMl = usarCalMagEnRecarga()
-      ? Math.round(nut.calmagMl * (litrosAnadir / 18) * 10) / 10
+    const ref = getRefDosisFabricante(nut.id);
+    const calmagMl = usarCalMagEnRecarga() && nut.calmagNecesario
+      ? mlCalMagParaAguaBlanda(litrosAnadir)
       : 0;
     const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B'];
+    const sufRep = dosisSufijoNutriente(nut);
 
     const ecActual = isNaN(ec) ? 1350 : ec;
     const anadirNutrientes = ecActual < (nut.ecObjetivo?.[0] || 900);
@@ -11638,20 +12068,23 @@ function evalVol(vol, ec, ph) {
         correccionHtml += '<div class="correccion-item"><span>CalMag</span>' +
           '<span class="correccion-valor">+' + calmagMl + ' ml</span></div>';
       }
-      const mlAB = Math.max(1, Math.round(mlABPorLitro * litrosAnadir * 10)/10);
       if (nut.partes === 1) {
+        const mlR = Math.max(0.5, Math.round(ref.mlPorLitro[0] * litrosAnadir * 10) / 10);
         correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span>' +
-          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+          '<span class="correccion-valor">+' + mlR + sufRep + '</span></div>';
       } else if (nut.partes === 2) {
+        const mlA = Math.max(0.5, Math.round(ref.mlPorLitro[0] * litrosAnadir * 10) / 10);
+        const mlB = Math.max(0.5, Math.round(ref.mlPorLitro[1] * litrosAnadir * 10) / 10);
         correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span>' +
-          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+          '<span class="correccion-valor">+' + mlA + sufRep + '</span></div>';
         correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span>' +
-          '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
+          '<span class="correccion-valor">+' + mlB + sufRep + '</span></div>';
       } else {
-        nut.orden.slice(0, nut.partes).forEach(p => {
-          correccionHtml += '<div class="correccion-item"><span>' + p + '</span>' +
-            '<span class="correccion-valor">+' + mlAB + ' ml</span></div>';
-        });
+        for (let i = 0; i < nut.partes; i++) {
+          const mlP = Math.max(0.5, Math.round((ref.mlPorLitro[i] || 0) * litrosAnadir * 10) / 10);
+          correccionHtml += '<div class="correccion-item"><span>' + nut.orden[i] + '</span>' +
+            '<span class="correccion-valor">+' + mlP + sufRep + '</span></div>';
+        }
       }
     } else {
       correccionHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">' +
@@ -11696,12 +12129,15 @@ function generarPasosNutriente() {
   const cfg    = state.configTorre || {};
   const vol    = cfg.volDeposito || 18;
   const mlCM   = calcularMlCalMag();
-  const mlAB   = calcularMlAB();
-  const ecCM   = usarCalMagEnRecarga() && mlCM > 0 ? Math.round(nut.ecPorMl * mlCM) : 0;
+  const mlP0   = calcularMlParteNutriente(0);
+  const mlP1   = nut.partes >= 2 ? calcularMlParteNutriente(1) : mlP0;
+  const mlP2   = nut.partes >= 3 ? calcularMlParteNutriente(2) : mlP0;
+  const ecCM   = usarCalMagEnRecarga() && mlCM > 0 ? estimarEcCalMagMicroS(mlCM, vol) : 0;
   const ecFinal = getRecargaEcMetaMicroS();
   const tieneBuffer = nut.pHBuffer;
   const pHRango = nut.pHRango || [5.5, 6.5];
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
+  const suf    = dosisSufijoNutriente(nut);
   const pasos  = [];
 
   // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
@@ -11709,7 +12145,7 @@ function generarPasosNutriente() {
     pasos.push({
       id:'4.2', seccion:null, paso:'4.2',
       desc: 'Añadir CalMag: ' + mlCM + ' ml — remover 2 min',
-      nota: 'Objetivo EC ' + (ecCM/1000).toFixed(2) + ' mS/cm (' + ecCM + ' µS/cm).' +
+      nota: 'Con agua destilada u ósmosis el objetivo es ~' + EC_CALMAG_BASE + ' µS/cm (~' + (EC_CALMAG_BASE / 1000).toFixed(2) + ' mS/cm). Tras estos ml: ~' + ecCM + ' µS estimados. Con grifo, valorar si hace falta.' +
         (cfg.agua === 'grifo' ? ' Con agua del grifo, verificar si es necesario.' : ''),
       campos: [
         { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder: String(mlCM) },
@@ -11722,7 +12158,7 @@ function generarPasosNutriente() {
   if (nut.partes === 1) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
-      desc: 'Añadir ' + orden[0] + ': ' + mlAB + ' ml — remover 3 min',
+      desc: 'Añadir ' + orden[0] + ': ' + mlP0 + suf + ' — remover 3 min',
       nota: 'Dosis recomendada: ' + nut.dosis.recomendado + ' ' + nut.dosis.unidad +
         '. EC objetivo: ' + ecFinal + ' µS/cm.',
       campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
@@ -11730,31 +12166,31 @@ function generarPasosNutriente() {
   } else if (nut.partes === 2) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
-      desc: 'Agitar ' + orden[0] + '. Añadir ' + mlAB + ' ml — remover 2 min',
+      desc: 'Agitar ' + orden[0] + '. Añadir ' + mlP0 + suf + ' — remover 2 min',
       nota: '⚠️ NUNCA mezclar ' + orden[0] + ' y ' + orden[1] + ' puros — añade A primero',
       campos:[{ id:'clEcA', label:'EC tras ' + orden[0] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:((ecFinal/2)/1000).toFixed(2) }]
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
-      desc: 'Agitar ' + orden[1] + '. Añadir ' + mlAB + ' ml — remover 3 min',
+      desc: 'Agitar ' + orden[1] + '. Añadir ' + mlP1 + suf + ' — remover 3 min',
       nota: 'EC objetivo: ~' + (ecFinal/1000).toFixed(2) + ' mS/cm (' + ecFinal + ' µS/cm).',
       campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
     });
   } else if (nut.partes === 3) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
-      desc: 'Añadir ' + orden[0] + ' PRIMERO: ' + mlAB + ' ml — remover 2 min',
+      desc: 'Añadir ' + orden[0] + ' PRIMERO: ' + mlP0 + suf + ' — remover 2 min',
       nota: '⚠️ IMPORTANTE: ' + orden[0] + ' siempre primero. Nunca mezclar ' + orden[0] + ' con ' + (orden[2]||orden[1]) + ' directamente.',
       campos:[{ id:'clEcA', label:'EC tras ' + orden[0] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.5' }]
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
-      desc: 'Añadir ' + orden[1] + ': ' + mlAB + ' ml — remover 2 min',
+      desc: 'Añadir ' + orden[1] + ': ' + mlP1 + suf + ' — remover 2 min',
       campos:[{ id:'clEcB', label:'EC tras ' + orden[1] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.9' }]
     });
     pasos.push({
       id:'4.4b', seccion:null, paso:'4.4b',
-      desc: 'Añadir ' + orden[2] + ': ' + mlAB + ' ml — remover 3 min',
+      desc: 'Añadir ' + orden[2] + ': ' + mlP2 + suf + ' — remover 3 min',
       nota: 'EC objetivo: ~' + (ecFinal/1000).toFixed(2) + ' mS/cm.',
       campos:[{ id:'clEcAB', label:'EC tras ' + orden[2] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
     });
@@ -11819,25 +12255,23 @@ function construirTextoChecklistPreliminar() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
   const vol = cfg.volDeposito || VOL_OBJETIVO || 18;
-  const mlAB = calcularMlAB();
-  const mlCM = calcularMlCalMag();
   const partes = nut.partes || 2;
   const orden = (nut.orden && nut.orden.length >= partes)
     ? nut.orden
     : ['Parte A', 'Parte B', 'Parte C'];
-  const escala = 5 / Math.max(5, vol);
-  const mlAB5 = Math.max(0.5, Math.round(mlAB * escala * 10) / 10);
-  const mlCM5 = usarCalMagEnRecarga() ? Math.max(0, Math.round(mlCM * escala * 10) / 10) : 0;
+  const ref = getRefDosisFabricante(nut.id);
+  const mlCM5 = usarCalMagEnRecarga() && nut.calmagNecesario ? mlCalMagParaAguaBlanda(5) : 0;
+  const sufP = dosisSufijoNutriente(nut);
   const p1Partes = [];
-  if (mlCM5 > 0) p1Partes.push(mlCM5 + ' ml CalMag');
+  if (mlCM5 > 0) p1Partes.push(mlCM5 + ' ml CalMag (~400 µS/cm en ~5 L)');
   if (partes === 1) {
-    p1Partes.push(mlAB5 + ' ml de ' + orden[0]);
+    p1Partes.push(Math.max(0.5, Math.round(ref.mlPorLitro[0] * 5 * 10) / 10) + sufP + ' de ' + orden[0]);
   } else if (partes === 2) {
-    p1Partes.push(mlAB5 + ' ml ' + orden[0]);
-    p1Partes.push(mlAB5 + ' ml ' + orden[1]);
+    p1Partes.push(Math.max(0.5, Math.round(ref.mlPorLitro[0] * 5 * 10) / 10) + sufP + ' ' + orden[0]);
+    p1Partes.push(Math.max(0.5, Math.round(ref.mlPorLitro[1] * 5 * 10) / 10) + sufP + ' ' + orden[1]);
   } else {
     for (let i = 0; i < Math.min(3, partes); i++) {
-      p1Partes.push(mlAB5 + ' ml ' + (orden[i] || ('Parte ' + (i + 1))));
+      p1Partes.push(Math.max(0.5, Math.round((ref.mlPorLitro[i] || 0) * 5 * 10) / 10) + sufP + ' ' + (orden[i] || ('Parte ' + (i + 1))));
     }
   }
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
@@ -11875,7 +12309,7 @@ function getCLPasos() {
   if (nut.calmagNecesario) {
     paso40campos.push({
       id:'clUsarCalMag', type:'checkbox', checked: usarCalMagEnRecarga(),
-      label:'Incluir CalMag antes del abono (recomendado con agua blanda; con grifo suele omitirse). Las dosis del fabricante se recalculan al marcar o desmarcar.',
+      label:'Incluir CalMag antes del abono (recomendado con agua blanda; con grifo suele omitirse). El volumen de CalMag y las estimaciones de EC se actualizan al marcar o desmarcar; el abono A/B sigue la tabla ml/L de Consejos.',
       _clOnchange:'onChecklistRecargaPrefsChanged()',
     });
   }
@@ -12195,8 +12629,8 @@ async function finalizarChecklist() {
 
   // Guardar recarga completa en historial local
   if (!state.recargasLocal) state.recargasLocal = [];
-  const mlABCalculado = calcularMlAB();
   const nutR = getNutrienteTorre();
+  const mlP0 = calcularMlParteNutriente(0);
   const pMas46 = parseFloat(gCL('clPhMasPaso46')) || 0;
   const pMas6  = parseFloat(gCL('clPhMasP6')) || 0;
   const phMasTot = pMas46 + pMas6;
@@ -12212,8 +12646,9 @@ async function finalizarChecklist() {
     ecTrasAB:     gCL('clEcAB')        || '',
     phMedido:     gCL('clPhTrasMezcla') || gCL('clPhMedidoP6') || '',
     phMasMl:      phMasTot ? String(phMasTot) : '',
-    vegaAMl:      String(mlABCalculado),
-    vegaBMl:      String(mlABCalculado),
+    vegaAMl:      String(mlP0),
+    vegaBMl:      nutR.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
+    vegaCMl:      nutR.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
     ecFinal:      String(ecFinalNum),
     phFinal:      phFinal || '',
     tempFinal:    tempAgua || '',
@@ -12230,7 +12665,8 @@ async function finalizarChecklist() {
   // Guardar en registro general
   addRegistro('recarga', {
     ecFinal: String(ecFinalNum), phFinal, tempAgua, volFinal,
-    calmagMl: recargaData.calmagMl, vegaAMl: recargaData.vegaAMl,
+    calmagMl: recargaData.calmagMl,
+    vegaAMl: recargaData.vegaAMl, vegaBMl: recargaData.vegaBMl, vegaCMl: recargaData.vegaCMl,
     phMasMl: recargaData.phMasMl,
     colorAgua: recargaData.colorAgua,
     estadoPlantas: recargaData.estadoPlantas,
@@ -12260,8 +12696,8 @@ async function finalizarChecklist() {
         phFinal,
         tempAgua,
         calmagMl: gCL('clCalmagMl'),
-        vegaAMl: String(calcularMlAB()),
-        vegaBMl: String(calcularMlAB()),
+        vegaAMl: String(calcularMlParteNutriente(0)),
+        vegaBMl: getNutrienteTorre().partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
         phMasMl: phMasTot ? String(phMasTot) : '',
         nutriente: nutR.nombre,
         observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}`
@@ -12293,6 +12729,12 @@ async function finalizarChecklist() {
   a11yDialogClosed(co);
   updateDashboard();
   showToast('✅ Recarga registrada correctamente');
+
+  if (!clEsPrimeraVez) {
+    try {
+      abrirModalConsejosTablaPersonal(volFinal);
+    } catch (e) { console.error(e); }
+  }
 
   // Si era primera vez, ir al dashboard
   if (clEsPrimeraVez) goTab('inicio');
@@ -12613,7 +13055,7 @@ function renderRegistro() {
           e.ecFinal  ? '⚡ EC final: ' + e.ecFinal + ' µS' : '',
           e.phFinal  ? '🧪 pH: ' + e.phFinal              : '',
           e.calmagMl ? '💊 CalMag: ' + e.calmagMl + 'ml'   : '',
-          e.vegaAMl  ? '🌿 A+B: ' + e.vegaAMl + 'ml'       : '',
+          e.vegaAMl  ? '🌿 ' + [e.vegaAMl, e.vegaBMl, e.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') + ' ml' : '',
         ].filter(Boolean).join(' · ');
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'cosecha') {
@@ -12741,8 +13183,8 @@ function renderHistRecargas() {
             <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green)">${r.calmagMl || '—'}<span style="font-size:10px">ml</span></div>
           </div>
           <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">A+B</div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--blue)">${r.vegaAMl || '—'}<span style="font-size:10px">ml</span></div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Abono</div>
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--blue);line-height:1.25">${[r.vegaAMl, r.vegaBMl, r.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') || '—'}<span style="font-size:10px">ml</span></div>
           </div>
           <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">pH+</div>
@@ -13044,87 +13486,377 @@ function buildHtmlTablaEcPh() {
   `;
 }
 
-/** Tab resumen Consejos: dosis orientativas 18 L agua destilada EC 0, alineadas con ecPorMl de la app */
-const CONSEJO_TABLA_18L_EC_OBJETIVOS = [800, 1200, 1400];
-const CONSEJO_TABLA_18L_LITROS = 18;
+/** Consejos EC/pH: referencia por fabricante (ml/L → totales al volumen). CalMag en blanda escala desde dosis 18 L de la app. */
+const REF_DOSIS_LITROS_TABLA = VOL_OBJETIVO;
 
-function consejoMlAbonoParaEc18L(nut, ecObjetivoMicroS, usarCalMagStd) {
-  const ecP = nut.ecPorMl || 25;
-  let ecBase = 0;
-  if (usarCalMagStd && nut.calmagNecesario && nut.calmagMl > 0) {
-    ecBase = Math.round(ecP * nut.calmagMl);
-  }
-  const ecNec = Math.max(0, ecObjetivoMicroS - ecBase);
-  if (ecNec < 15) return 0;
-  return Math.max(1, Math.round(ecNec / ecP));
+const REF_DOSIS_FABRICANTE = {
+  canna_aqua: {
+    fuente: 'Canna Aqua Vega: 2–4 ml/L por parte (vegetativo), pH 5,2–6,2. Tabla: 2 ml/L A y B.',
+    mlPorLitro: [2, 2],
+    calmagGrifoNota: 'CalMag: de 0 ml hasta la dosis blanda según dureza; medir conductividad del grifo antes de mezclar.',
+  },
+  canna_substra_soft: {
+    fuente: 'Canna Substra Vega Soft Water: orientación ~4 ml/L cada parte (p. ej. 40 ml A + 40 ml B / 10 L en agua blanda).',
+    mlPorLitro: [4, 4],
+    calmagGrifoNota: 'Línea SOFT para agua blanda/ósmosis. Grifo muy duro: valorar la gama Hard del fabricante.',
+  },
+  advanced_ph_perfect: {
+    fuente: 'Advanced Nutrients pH Perfect GMB: vegetativo típico ~4 ml/L Micro, Grow y Bloom cada uno.',
+    mlPorLitro: [4, 4, 4],
+    calmagGrifoNota: 'Sin CalMag extra (Ca/Mg en Micro). Ajustar solo si el fabricante lo indica para tu agua.',
+  },
+  ghe_flora: {
+    fuente: 'GHE Flora Series: proporción lechuga vegetativo de esta app — Micro 2,6 + Gro 1,3 + Bloom 1,3 ml/L.',
+    mlPorLitro: [2.6, 1.3, 1.3],
+    calmagGrifoNota: 'CalMag: reducir u omitir si el grifo aporta minerales; medir tras mezclar.',
+  },
+  plagron_hydro: {
+    fuente: 'Plagron Hydro A+B (web): máx. 2,5 ml/L de A y la misma cantidad de B (1:400).',
+    mlPorLitro: [2.5, 2.5],
+    calmagGrifoNota: 'CalMag: menos o ninguno si el agua es dura; contrastar con EC base.',
+  },
+  hesi_tnt: {
+    fuente: 'Hesi TNT Complex: plena vegetación orientativa ~5 ml/L (plántulas menos).',
+    mlPorLitro: [5],
+    calmagGrifoNota: 'CalMag: suele reducirse con grifo duro; parte siempre de la EC del agua base.',
+  },
+  biobizz: {
+    fuente: 'BioBizz Fish·Mix + Alg·A·Mic: referencia media 3 ml/L Fish + 2 ml/L Alg (rango según fase).',
+    mlPorLitro: [3, 2],
+    calmagGrifoNota: 'Orgánico: EC baja; CalMag solo si hay carencias y según etiqueta.',
+  },
+  campeador: {
+    fuente: 'Campeador Solución Hoja (ficha tienda): ~1 ml/L de cada parte A y B (madres diluidas).',
+    mlPorLitro: [1, 1],
+    calmagGrifoNota: 'CalMag: como con cualquier base — menos si el grifo aporta dureza.',
+  },
+  canna_hydro_vega: {
+    fuente: 'Canna Hydro Vega (run-to-waste): orientación 4–5 ml/L por parte; tabla app 4 ml/L A y B.',
+    mlPorLitro: [4, 4],
+    calmagGrifoNota: 'Grifo: a menos CalMag; subir A+B según EC base.',
+  },
+  atami_bcuzz_hydro: {
+    fuente: "Atami B'cuzz Hydro A+B: 1–3 ml/L por parte; referencia media 2 ml/L.",
+    mlPorLitro: [2, 2],
+    calmagGrifoNota: 'CalMag según conductividad del grifo.',
+  },
+  hypro_hydro_ab: {
+    fuente: 'Hy-Pro Hydro A+B: referencia vegetativo ~2,5 ml/L por parte (ajustar por EC).',
+    mlPorLitro: [2.5, 2.5],
+    calmagGrifoNota: 'Reducir suplemento Ca/Mg con agua dura.',
+  },
+  vitalink_hydro_max: {
+    fuente: 'VitaLink Hydro Max Grow: vegetativo ~3 ml/L A y B (tablas tienda).',
+    mlPorLitro: [3, 3],
+    calmagGrifoNota: 'CalMag opcional según dureza.',
+  },
+  mills_basis_ab: {
+    fuente: 'Mills Basis A/B: vegetativo 1–2 ml/L por parte; referencia app 2 ml/L.',
+    mlPorLitro: [2, 2],
+    calmagGrifoNota: 'Seguir carta fabricante en floración (más ml/L).',
+  },
+  green_planet_hydro_fuel: {
+    fuente: 'Green Planet Hydro Fuel Grow A+B: 1–3 ml/L; referencia veg ~2,25 ml/L A y B.',
+    mlPorLitro: [2.25, 2.25],
+    calmagGrifoNota: 'Medir tras mezcla; grifo duro = menos CalMag.',
+  },
+  ionic_grow_hydro: {
+    fuente: 'Ionic Grow (una botella): orientación ~4 ml/L en blanda.',
+    mlPorLitro: [4],
+    calmagGrifoNota: 'Una parte; ajustar por EC del grifo.',
+  },
+  biobizz_bio_grow: {
+    fuente: 'BioBizz Bio-Grow orgánico: ~3 ml/L referencia media.',
+    mlPorLitro: [3],
+    calmagGrifoNota: 'Orgánico — EC más baja; CalMag prudente.',
+  },
+  hesi_hidro: {
+    fuente: 'Hesi Hidro Crecimiento: orientación ~4,5 ml/L (línea hidro, no TNT).',
+    mlPorLitro: [4.5],
+    calmagGrifoNota: 'CalMag proporcional a dureza.',
+  },
+  hortalan: {
+    fuente: 'Hortalan: orientativa ~4 ml/L; confirmar envase.',
+    mlPorLitro: [4],
+    calmagGrifoNota: 'Medir EC base del grifo.',
+  },
+  fox_farm_grow_big: {
+    fuente: 'Fox Farm Grow Big: orientación ~3 ml/L (trío / solo Grow Big).',
+    mlPorLitro: [3],
+    calmagGrifoNota: 'Muy concentrado; subir con cuidado.',
+  },
+  campeador_hidro: {
+    fuente: 'Campeador Hidro A+B: referencia ~1,5 ml/L por parte (ajustar por ficha).',
+    mlPorLitro: [1.5, 1.5],
+    calmagGrifoNota: 'Distinto de línea Hoja; ver envase.',
+  },
+  masterblend_41838: {
+    fuente: 'Masterblend 4-18-38 + receta típica Ca(NO₃)₂ + MgSO₄: gramos/L orient. 1,9 g/L total sales disueltas (no ml).',
+    mlPorLitro: [1.9],
+    calmagGrifoNota: 'Polvo: no usar tabla ml; grifo = ajustar sales y medir.',
+  },
+  otro: {
+    fuente: 'Referencia genérica A+B 2 ml/L por parte hasta consultar el envase.',
+    mlPorLitro: [2, 2],
+    calmagGrifoNota: 'Seguir siempre la etiqueta y la EC del agua base.',
+  },
+};
+
+function getRefDosisFabricante(nutId) {
+  return REF_DOSIS_FABRICANTE[nutId] || REF_DOSIS_FABRICANTE.otro;
 }
 
-function consejoFormatoMlPartes(nut, ml) {
-  if (!ml) return '<span style="opacity:0.55">—</span>';
+function dosisSufijoNutriente(nut) {
+  return nut && nut.tipoDosis === 'polvo' ? ' g' : ' ml';
+}
+
+/** ml (o g si tipoDosis polvo) de la parte `partIndex` según tabla fabricante y volumen. */
+function mlNutrientePorParte(nutId, partIndex, volLitros) {
+  const ref = getRefDosisFabricante(nutId);
+  const arr = ref.mlPorLitro;
+  const idx = Math.min(Math.max(0, partIndex), arr.length - 1);
+  const v = volLitros > 0 ? volLitros : VOL_OBJETIVO;
+  return Math.max(0.1, Math.round(arr[idx] * v * 10) / 10);
+}
+
+function calcularMlParteNutriente(partIndex) {
+  const nut = getNutrienteTorre();
+  const cfg = state.configTorre || {};
+  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  return mlNutrientePorParte(nut.id, partIndex, volObj);
+}
+
+/** Compatibilidad: primera parte; el checklist usa calcularMlParteNutriente por índice. */
+function calcularMlAB() {
+  return calcularMlParteNutriente(0);
+}
+
+/** EC (µS/cm) aportada por CalMag a volumen V, calibrado como CALMAG_POR_ML en 18 L. */
+function estimarEcCalMagMicroS(mlCM, volLitros) {
+  if (!mlCM || mlCM <= 0) return 0;
+  const v = volLitros > 0 ? volLitros : VOL_OBJETIVO;
+  return Math.round(CALMAG_POR_ML * mlCM * (VOL_OBJETIVO / v));
+}
+
+/**
+ * Pendiente EC del abono tras CalMag y pendiente «meta de recarga», para pendientes de corrección.
+ * Para 2 partes / 1 parte: µS/cm por ml de esa parte (asumiendo proporción fabricante).
+ * Para 3 partes: µS/cm por «1 ml en cada botella» a la vez (aprox.).
+ */
+function ecSubePorMlCorreccion(nut, volLitros) {
+  const v = volLitros > 0 ? volLitros : VOL_OBJETIVO;
+  const ref = getRefDosisFabricante(nut.id);
+  const ecMeta = getRecargaEcMetaMicroS();
+  const mlCM = nut.calmagNecesario && usarCalMagEnRecarga() ? calcularMlCalMag() : 0;
+  const ecCal = estimarEcCalMagMicroS(mlCM, v);
+  const ecN = Math.max(60, ecMeta - ecCal);
   const p = nut.partes || 2;
-  if (p === 1) return ml + ' ml';
-  if (p === 2) return ml + ' + ' + ml + ' ml';
-  return ml + ' ml × ' + p + ' partes';
+  const sumMl = ref.mlPorLitro.reduce((s, x) => s + x * v, 0);
+  if (sumMl <= 0 || ecN <= 0) return nut.ecPorMl || 25;
+  if (p === 1) return ecN / (ref.mlPorLitro[0] * v);
+  if (p === 2) return ecN / (ref.mlPorLitro[0] * v);
+  return (ecN * 3) / sumMl;
 }
 
-function consejoCeldaPreparacion18L(nut, ecT, conCalMag) {
-  if (conCalMag && !nut.calmagNecesario) {
-    return '<span style="opacity:0.55" title="Esta línea lleva Ca/Mg en la fórmula; no se calcula paso CalMag separado">—</span>';
-  }
-  const mlAb = consejoMlAbonoParaEc18L(nut, ecT, conCalMag);
-  if (conCalMag && nut.calmagNecesario) {
-    const cm = Math.round(nut.calmagMl * 10) / 10;
-    const parte = consejoFormatoMlPartes(nut, mlAb);
-    return '<span style="color:#15803d;font-weight:700">' + cm + ' ml</span> CM<br>+ ' + parte;
-  }
-  return consejoFormatoMlPartes(nut, mlAb);
+function mlCorreccionEcBaja(nut, volLitros, deficitMicroS) {
+  const slope = ecSubePorMlCorreccion(nut, volLitros);
+  if (!slope || slope <= 0) return 1;
+  return Math.max(1, Math.ceil(deficitMicroS / slope));
 }
 
-function buildHtmlTablaPreparacion18LResumen() {
-  const headCols = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(ec => `
-    <th colspan="2">${ec} µS/cm</th>
-  `).join('');
-  const subHead = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(() => `
-    <th>Sin CalMag</th>
-    <th>Con CalMag</th>
-  `).join('');
+function fmtMlConsejo(v) {
+  if (v == null || isNaN(v)) return '0';
+  const r = Math.round(v * 10) / 10;
+  return Math.abs(r - Math.round(r)) < 1e-6 ? String(Math.round(r)) : r.toFixed(1);
+}
 
+/**
+ * @param {'soft'|'grifo'} modo — soft = destilada u ósmosis (EC ~0)
+ */
+function buildLineasCeldaDosis(ref, nut, volL, modo) {
+  const lines = [];
+  const scale = volL / REF_DOSIS_LITROS_TABLA;
+  const orden = nut.orden || [];
+  const nPartes = ref.mlPorLitro.length;
+
+  if (modo === 'soft') {
+    if (nut.calmagNecesario) {
+      const cmSoft = mlCalMagParaAguaBlanda(volL);
+      lines.push(`<span class="consejo-dosis18-k">CalMag</span> ${fmtMlConsejo(cmSoft)} ml → ~${EC_CALMAG_BASE} µS/cm`);
+    } else if (!nut.calmagNecesario) {
+      lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.72">no necesario</span>`);
+    }
+  } else {
+    lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="font-size:10px;line-height:1.35;display:inline-block;max-width:100%">${meteoEscHtml(ref.calmagGrifoNota)}</span>`);
+  }
+
+  const suf = dosisSufijoNutriente(nut);
+  for (let i = 0; i < nPartes; i++) {
+    const mlL = ref.mlPorLitro[i];
+    const label = orden[i] || ('Parte ' + String.fromCharCode(65 + i));
+    lines.push(`<span class="consejo-dosis18-k">${meteoEscHtml(label)}</span> ${fmtMlConsejo(mlL * volL)}${suf}`);
+  }
+
+  if (modo === 'grifo') {
+    lines.push('<span style="font-size:10px;opacity:.82;display:block;margin-top:5px;line-height:1.35">Abono: mismas ml que en agua blanda si partes de agua casi sin sales; si no, resta la EC del grifo al objetivo.</span>');
+  }
+
+  return lines.join('<br>');
+}
+
+function buildHtmlTablaPreparacionFabricante18L() {
+  const V = REF_DOSIS_LITROS_TABLA;
   const rows = NUTRIENTES_DB.map(nut => {
-    const celdas = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(ec => `
-      <td>${consejoCeldaPreparacion18L(nut, ec, false)}</td>
-      <td>${consejoCeldaPreparacion18L(nut, ec, true)}</td>
-    `).join('');
+    const ref = getRefDosisFabricante(nut.id);
+    const cSoft = buildLineasCeldaDosis(ref, nut, V, 'soft');
+    const cGrifo = buildLineasCeldaDosis(ref, nut, V, 'grifo');
     return `
       <tr>
-        <td>${meteoEscHtml(nut.bandera || '')} ${meteoEscHtml(nut.nombre)}</td>
-        ${celdas}
+        <td>${meteoEscHtml(nut.bandera || '')} ${meteoEscHtml(nut.nombre)}
+          <div class="consejo-dosis18-fuente">${meteoEscHtml(ref.fuente)}</div>
+        </td>
+        <td class="consejo-dosis18-cell">${cSoft}</td>
+        <td class="consejo-dosis18-cell">${cSoft}</td>
+        <td class="consejo-dosis18-cell">${cGrifo}</td>
       </tr>`;
   }).join('');
 
   return `
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
-      <div class="consejo-titulo" style="margin-bottom:8px">Preparación orientativa · ${CONSEJO_TABLA_18L_LITROS} L agua destilada (EC ≈ 0)</div>
+      <div class="consejo-titulo" style="margin-bottom:8px">Recordatorio de mezcla · ${V} L (por marca)</div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Cifras calculadas con las mismas <strong>constantes de la app</strong> (<code>ecPorMl</code>) que el checklist y Mediciones.
-        Con CalMag = dosis estándar indicada por marca en la base de datos (${CONSEJO_TABLA_18L_LITROS} L), después el abono en el <strong>orden del fabricante</strong>.
-        Valores <strong>orientativos</strong>: mide EC/pH reales y ajusta. Tres objetivos de ejemplo: <strong>800, 1200 y 1400 µS/cm</strong>.
+        Dosis (ml/L o g/L por parte) basadas en <strong>fichas y webs de fabricantes</strong> (marzo 2026). <strong>Factor de referencia EC:</strong> las cantidades de la tabla encajan con una EC media típica de vegetativo (≈ ${EC_REFERENCIA_DOSIS_MICROS} µS/cm); <strong>no escalamos</strong> el abono del checklist al subir o bajar tu EC meta — el factor efectivo es 1. Las <strong>correcciones</strong> en Mediciones sí usan tu EC objetivo.
+        Columna blanda = destilada u ósmosis (EC ≈ 0): si activas CalMag, se calcula lo necesario para acercar la base a ~${EC_CALMAG_BASE} µS/cm (<strong>misma lógica</strong> en checklist, tabla y recarga). Columna grifo: mismas unidades de abono; nota Ca/Mg según dureza.
+        Siempre <strong>mide EC y pH</strong> tras preparar.
       </div>
       <table class="consejo-dosis18-table">
         <thead>
           <tr>
-            <th rowspan="2">Nutriente</th>
-            ${headCols}
+            <th>Nutriente</th>
+            <th>Destilada<br>${V} L</th>
+            <th>Ósmosis<br>${V} L</th>
+            <th>Grifo<br>${V} L</th>
           </tr>
-          <tr>${subHead}</tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="consejo-ecph-note" style="margin-top:10px;margin-bottom:0">
-        <strong>2 partes:</strong> la cantidad se repite en A y B por igual · <strong>3 partes:</strong> misma ml en cada botella (orden del protocolo).
-        «Con CalMag —» indica que la línea no usa suplemento Ca/Mg aparte en esta app.
+        Hesi (1 parte): una sola columna de ml · Líneas 3 partes: orden de la fila = <strong>${meteoEscHtml('Micro → Grow → Bloom')}</strong> o equivalente en la app.
       </div>
     </div>
   `;
+}
+
+function buildHtmlTablaConsejosPersonal() {
+  const t = state.consejosTablaPersonal;
+  if (!t || t.volL == null || !t.nutrienteId) {
+    return `
+      <div class="consejo-dosis18-wrap consejo-dosis18-miTorre" style="margin-top:14px">
+        <div class="consejo-titulo" style="margin-bottom:6px">Tu tabla (volumen a medida)</div>
+        <div class="consejo-ecph-note">
+          Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
+          Verás las mismas filas que arriba pero <strong>escaladas</strong> a tu volumen.
+        </div>
+      </div>`;
+  }
+  const nut = NUTRIENTES_DB.find(n => n.id === t.nutrienteId);
+  if (!nut) return '';
+  const ref = getRefDosisFabricante(t.nutrienteId);
+  const vol = Number(t.volL);
+  const cSoft = buildLineasCeldaDosis(ref, nut, vol, 'soft');
+  const cGrifo = buildLineasCeldaDosis(ref, nut, vol, 'grifo');
+  let fecha = '';
+  try {
+    fecha = t.updated ? new Date(t.updated).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  } catch (e) { fecha = ''; }
+
+  return `
+    <div class="consejo-dosis18-wrap consejo-dosis18-miTorre" id="consejos-tabla-personal" style="margin-top:14px">
+      <div class="consejo-titulo" style="margin-bottom:8px">Mi torre · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
+      <div class="consejo-ecph-note" style="margin-bottom:10px">
+        Referencia fabricante escalada a tu depósito. Actualizado: ${meteoEscHtml(fecha || '—')}
+      </div>
+      <table class="consejo-dosis18-table">
+        <thead><tr><th>Agua base</th><th>Preparación (ml)</th></tr></thead>
+        <tbody>
+          <tr><td>Destilada (EC ≈ 0)</td><td class="consejo-dosis18-cell">${cSoft}</td></tr>
+          <tr><td>Ósmosis (EC ≈ 0)</td><td class="consejo-dosis18-cell">${cSoft}</td></tr>
+          <tr><td>Grifo</td><td class="consejo-dosis18-cell">${cGrifo}</td></tr>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="borrarConsejosTablaPersonal()">Quitar tabla guardada</button>
+    </div>`;
+}
+
+function ensureCtpNutrienteOptions() {
+  const sel = document.getElementById('ctpNutrienteId');
+  if (!sel || sel.dataset.filled === '1') return;
+  sel.dataset.filled = '1';
+  sel.innerHTML = NUTRIENTES_DB.map(n =>
+    `<option value="${n.id}">${meteoEscHtml(n.nombre)}</option>`
+  ).join('');
+}
+
+function abrirModalConsejosTablaPersonal(volSugerido) {
+  const m = document.getElementById('modalConsejosTablaPersonal');
+  if (!m) return;
+  ensureCtpNutrienteOptions();
+  const cfg = state.configTorre || {};
+  const vIn = document.getElementById('ctpVolLitros');
+  const sel = document.getElementById('ctpNutrienteId');
+  const vs = parseFloat(volSugerido);
+  if (vIn) {
+    vIn.value = (!isNaN(vs) && vs > 0) ? String(vs) : String(cfg.volDeposito || VOL_OBJETIVO);
+  }
+  if (sel) {
+    try {
+      const nut = getNutrienteTorre();
+      sel.value = nut.id;
+    } catch (e) {
+      sel.selectedIndex = 0;
+    }
+  }
+  m.classList.add('open');
+  a11yDialogOpened(m);
+}
+
+function cerrarModalConsejosTablaPersonal(ev) {
+  const m = document.getElementById('modalConsejosTablaPersonal');
+  if (!m || !m.classList.contains('open')) return;
+  if (ev && ev.currentTarget === m && ev.target !== m) return;
+  m.classList.remove('open');
+  a11yDialogClosed(m);
+}
+
+function guardarConsejosTablaPersonal() {
+  const vIn = document.getElementById('ctpVolLitros');
+  const sel = document.getElementById('ctpNutrienteId');
+  const vol = parseFloat(vIn && vIn.value);
+  if (!vol || isNaN(vol) || vol < 1 || vol > 500) {
+    showToast('Indica un volumen válido (1–500 L)', true);
+    return;
+  }
+  const nid = sel && sel.value;
+  if (!nid) {
+    showToast('Elige un nutriente', true);
+    return;
+  }
+  state.consejosTablaPersonal = {
+    volL: Math.round(vol * 10) / 10,
+    nutrienteId: nid,
+    updated: new Date().toISOString(),
+  };
+  saveState();
+  cerrarModalConsejosTablaPersonal();
+  showToast('📋 Tabla guardada en Consejos (EC / pH)');
+  if (typeof consejoCatActiva !== 'undefined' && consejoCatActiva === 'ecph') renderConsejosLista();
+}
+
+function borrarConsejosTablaPersonal() {
+  delete state.consejosTablaPersonal;
+  saveState();
+  showToast('Tabla personal eliminada');
+  if (typeof consejoCatActiva !== 'undefined' && consejoCatActiva === 'ecph') renderConsejosLista();
 }
 
 function mostrarTabConsejos(tab) {
@@ -13260,9 +13992,8 @@ function buildConsejosAguaNutrienteDinamico() {
     : 'Ajusta el pH al rango <strong>' + nut.pHRango[0] + '–' + nut.pHRango[1] + '</strong> indicado para ' + meteoEscHtml(nut.nombre) + '.';
 
   const mlCM = calcularMlCalMag();
-  const mlAB = calcularMlAB();
+  const ref = getRefDosisFabricante(nut.id);
   const cmPL = volObj > 0 ? mlCM / volObj : 0;
-  const abPL = volObj > 0 ? mlAB / volObj : 0;
   const rnd = x => Math.round(x * 100) / 100;
 
   const partesRepos = [];
@@ -13270,13 +14001,13 @@ function buildConsejosAguaNutrienteDinamico() {
     partesRepos.push(rnd(cmPL) + ' ml CalMag');
   }
   if (nut.partes === 1 && nut.orden && nut.orden[0]) {
-    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[0]);
+    partesRepos.push(rnd(ref.mlPorLitro[0]) + ' ml ' + nut.orden[0]);
   } else if (nut.partes === 2 && nut.orden && nut.orden.length >= 2) {
-    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[0]);
-    partesRepos.push(rnd(abPL) + ' ml ' + nut.orden[1]);
+    partesRepos.push(rnd(ref.mlPorLitro[0]) + ' ml ' + nut.orden[0]);
+    partesRepos.push(rnd(ref.mlPorLitro[1]) + ' ml ' + nut.orden[1]);
   } else if (nut.partes >= 3 && nut.orden) {
-    nut.orden.slice(0, nut.partes).forEach(o => {
-      partesRepos.push(rnd(abPL) + ' ml ' + o);
+    nut.orden.slice(0, nut.partes).forEach((o, i) => {
+      partesRepos.push(rnd(ref.mlPorLitro[i] || 0) + ' ml ' + o);
     });
   }
 
@@ -13313,7 +14044,7 @@ function renderConsejosLista() {
   const lista = document.getElementById('consejosLista');
 
   if (cat.soloTabla) {
-    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacion18LResumen();
+    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlTablaConsejosPersonal();
     return;
   }
 
@@ -15210,9 +15941,13 @@ async function guardarMedicion() {
     rsw.className = 'toggle-switch';
     rsw.setAttribute('aria-checked', 'false');
     if (!state.recargasLocal) state.recargasLocal = [];
+    const _nr = getNutrienteTorre();
     state.recargasLocal.unshift({
       fecha, hora, ecFinal: ec, phFinal: ph, tempFinal: temp, volFinal: vol,
-      calmagMl: '', vegaAMl: String(calcularMlAB()), vegaBMl: String(calcularMlAB()),
+      calmagMl: '',
+      vegaAMl: String(calcularMlParteNutriente(0)),
+      vegaBMl: _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
+      vegaCMl: _nr.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
       phMasMl: '', notas
     });
   }
