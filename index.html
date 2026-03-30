@@ -6455,11 +6455,160 @@ function setModo(modo) {
   renderTorre();
 }
 
+/** Solo las cestas de un nivel (girar sin regenerar depósito/defs/animaciones). */
+function generarSVGTorreCestasNivelHTML(n, rot) {
+  const cfg = state.configTorre || {};
+  const numCestas = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS;
+  const SVG_W     = 360;
+  const CX        = SVG_W / 2;
+  const NIVEL_H   = 62;
+  const NIVEL_GAP = 14;
+  const CESTA_R   = 14;
+  const MARG_T    = 54;
+  const TORRE_RX  = 86;
+  const TORRE_RY  = 18;
+  const ny        = MARG_T + n * (NIVEL_H + NIVEL_GAP) + NIVEL_H / 2;
+  const phase     = n * 0.55 + rot;
+  const baskets   = [];
+
+  for (let c = 0; c < numCestas; c++) {
+    const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'', fotos:[] };
+    const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+    const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
+    const diasT = DIAS_COSECHA[dat.variedad] || 50;
+    const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
+
+    let fill, stroke, emoji;
+    if (!dat.variedad)           { fill='#f9fafb'; stroke='#d1d5db'; emoji=''; }
+    else if (est==='plantula')   { fill='#eff6ff'; stroke='#3b82f6'; emoji='🌱'; }
+    else if (est==='crecimiento'){ fill='#f0fdf4'; stroke='#16a34a'; emoji=getEmoji(est); }
+    else if (est==='madurez')    { fill='#fffbeb'; stroke='#d97706'; emoji=getEmoji(est); }
+    else                         { fill='#fff5f5'; stroke='#dc2626'; emoji='✂️'; }
+
+    const ang = (Math.PI * 2 * (c / numCestas)) + phase;
+    const z = (Math.sin(ang) + 1) / 2;
+    const scale = 0.78 + 0.34 * z;
+    const opacity = 0.35 + 0.65 * z;
+    const cx2 = CX + Math.cos(ang) * TORRE_RX;
+    const cy2 = ny + Math.sin(ang) * TORRE_RY;
+
+    const fotos = (dat.fotos || []).filter(f => f && f.data);
+    const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
+
+    baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, emoji, pct, est, dias, ultimaFoto });
+  }
+
+  let out = '';
+  baskets.sort((a, b) => a.z - b.z).forEach((b) => {
+    const r = (CESTA_R * b.scale);
+    const clipId = `clip_${n}_${b.c}`;
+    const isSelected = !!(window.editingCesta && editingCesta.nivel === b.n && editingCesta.cesta === b.c);
+    const caraFrontal = b.z >= 0.42;
+    const interact = caraFrontal ? 'all' : 'none';
+    const multiKey = b.n + ',' + b.c;
+    const isMultiSel = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+
+    out += `<ellipse cx="${b.cx2.toFixed(1)}" cy="${(b.cy2 + 3.5).toFixed(1)}" rx="${(r*1.05).toFixed(1)}" ry="${(r*0.65).toFixed(1)}"
+      fill="rgba(0,0,0,${(0.06 + 0.10*b.z).toFixed(3)})" opacity="${b.opacity.toFixed(2)}"/>`;
+
+    const datAria = (state.torre[b.n] && state.torre[b.n][b.c]) ? state.torre[b.n][b.c] : {};
+    const varTxt = datAria.variedad ? String(datAria.variedad) : 'vacía';
+    const ariaCesta = caraFrontal
+      ? escAriaAttr(`Cesta nivel ${b.n + 1} número ${b.c + 1}, ${varTxt}` +
+          (b.dias ? ', día ' + b.dias + ' de cultivo' : '') + '. Pulsa para abrir ficha o asignar cultivo.')
+      : '';
+    const a11yAttrs = caraFrontal
+      ? ` role="button" tabindex="0" aria-label="${ariaCesta}"`
+      : ' aria-hidden="true" focusable="false"';
+    out += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta"${a11yAttrs}
+      style="cursor:${caraFrontal ? 'pointer' : 'default'};pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
+
+    out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
+
+    if (isMultiSel) {
+      out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+5).toFixed(1)}"
+        fill="none" stroke="#f59e0b" stroke-width="${(2.8*b.scale).toFixed(1)}" stroke-dasharray="4 3" opacity="0.95"/>`;
+    }
+    if (isSelected) {
+      out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+4).toFixed(1)}"
+        fill="none" stroke="#22c55e" stroke-width="${(2.6*b.scale).toFixed(1)}" opacity="0.9"/>`;
+      out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+7.5).toFixed(1)}"
+        fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="${(5.5*b.scale).toFixed(1)}" opacity="0.8"/>`;
+    }
+
+    if (b.ultimaFoto?.data) {
+      out += `<defs><clipPath id="${clipId}"><circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-1.6).toFixed(1)}"/></clipPath></defs>`;
+      out += `<image href="${b.ultimaFoto.data}" x="${(b.cx2-r).toFixed(1)}" y="${(b.cy2-r).toFixed(1)}"
+        width="${(r*2).toFixed(1)}" height="${(r*2).toFixed(1)}" preserveAspectRatio="xMidYMid slice"
+        clip-path="url(#${clipId})" opacity="${(0.92).toFixed(2)}"></image>`;
+      out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-0.6).toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="${(1.2*b.scale).toFixed(1)}"/>`;
+    }
+
+    if (b.pct > 0 && b.pct < 100) {
+      const r2   = r + 5.2;
+      const ang2  = (b.pct / 100) * 2 * Math.PI - Math.PI / 2;
+      const x1e  = b.cx2 + r2 * Math.cos(-Math.PI/2);
+      const y1e  = b.cy2 + r2 * Math.sin(-Math.PI/2);
+      const x2e  = b.cx2 + r2 * Math.cos(ang2);
+      const y2e  = b.cy2 + r2 * Math.sin(ang2);
+      out += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2.toFixed(1)},${r2.toFixed(1)} 0 ${b.pct>50?1:0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
+        fill="none" stroke="${b.stroke}" stroke-width="${(2.0*b.scale).toFixed(1)}" stroke-linecap="round" opacity="0.55"/>`;
+    }
+
+    if (b.emoji) {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 6).toFixed(1)}" font-size="${(14*b.scale).toFixed(1)}" text-anchor="middle">${b.emoji}</text>`;
+    } else {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2+5).toFixed(1)}" font-size="${(15*b.scale).toFixed(1)}" text-anchor="middle" fill="#d1d5db">+</text>`;
+    }
+
+    if (b.dias && b.dias > 0 && b.emoji) {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
+        font-size="${(8*b.scale).toFixed(1)}" font-weight="700" fill="${b.stroke}" text-anchor="middle">${b.dias}d</text>`;
+    } else {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
+        font-size="${(8*b.scale).toFixed(1)}" fill="#d1d5db" text-anchor="middle">${b.c+1}</text>`;
+    }
+
+    const hasFotos = !!(b.ultimaFoto?.data);
+    const hasNotas = !!(state.torre?.[b.n]?.[b.c]?.notas && String(state.torre[b.n][b.c].notas).trim().length > 0);
+    if (hasFotos) {
+      const bx = b.cx2 - r + 5;
+      const by = b.cy2 - r + 5;
+      out += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
+        fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
+      out += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
+        text-anchor="middle" fill="#111827">📸</text>`;
+    }
+    if (hasNotas) {
+      const bx = b.cx2 + r - 5;
+      const by = b.cy2 - r + 5;
+      out += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
+        fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
+      out += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
+        text-anchor="middle" fill="#111827">📝</text>`;
+    }
+
+    if (b.est === 'cosecha') {
+      out += `<circle cx="${(b.cx2 + r - 2).toFixed(1)}" cy="${(b.cy2 - r + 2).toFixed(1)}" r="${(5*b.scale).toFixed(1)}" fill="#dc2626">
+        <animate attributeName="r" from="${(4*b.scale).toFixed(1)}" to="${(6*b.scale).toFixed(1)}" dur="0.7s" repeatCount="indefinite" direction="alternate"/>
+      </circle>`;
+      out += `<text x="${(b.cx2 + r - 2).toFixed(1)}" y="${(b.cy2 - r + 6).toFixed(1)}" font-size="${(7*b.scale).toFixed(1)}" text-anchor="middle" fill="white">!</text>`;
+    }
+
+    if (caraFrontal) {
+      out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r * 1.55).toFixed(1)}"
+        fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
+    }
+
+    out += `</g>`;
+  });
+  return out;
+}
+
 function generarSVGTorre() {
   // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
-  const numCestas  = cfg.numCestas  || window.NUM_CESTAS_ACTIVO  || NUM_CESTAS;
   const nivelesActivos = Array.from({length: numNiveles}, (_, i) => i);
   const rot = (cfg._torreRotRad || 0);
 
@@ -6468,7 +6617,6 @@ function generarSVGTorre() {
   const CX        = SVG_W / 2;
   const NIVEL_H   = 62;
   const NIVEL_GAP = 14;
-  const CESTA_R   = 14;
   const EJE_W     = 12;
   const MARG_T    = 54;   // espacio para rociador
   const DEP_H     = 90;   // altura depósito
@@ -6576,153 +6724,8 @@ function generarSVGTorre() {
 
     if (!activo) continue;
 
-    // Cestas alrededor del cilindro (2.5D): dibujar de atrás→delante
-    const phase = n * 0.55 + rot; // helicoidal suave + rotación por swipe
-    const baskets = [];
-
-    for (let c = 0; c < numCestas; c++) {
-      const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'', fotos:[] };
-      const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
-      const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
-      const diasT = DIAS_COSECHA[dat.variedad] || 50;
-      const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
-
-      let fill, stroke, emoji;
-      if (!dat.variedad)           { fill='#f9fafb'; stroke='#d1d5db'; emoji=''; }
-      else if (est==='plantula')   { fill='#eff6ff'; stroke='#3b82f6'; emoji='🌱'; }
-      else if (est==='crecimiento'){ fill='#f0fdf4'; stroke='#16a34a'; emoji=getEmoji(est); }
-      else if (est==='madurez')    { fill='#fffbeb'; stroke='#d97706'; emoji=getEmoji(est); }
-      else                         { fill='#fff5f5'; stroke='#dc2626'; emoji='✂️'; }
-
-      const ang = (Math.PI * 2 * (c / numCestas)) + phase;
-      const z = (Math.sin(ang) + 1) / 2; // 0 detrás, 1 delante
-      const scale = 0.78 + 0.34 * z;
-      const opacity = 0.35 + 0.65 * z;
-      const cx2 = CX + Math.cos(ang) * TORRE_RX;
-      const cy2 = ny + Math.sin(ang) * TORRE_RY;
-
-      const fotos = (dat.fotos || []).filter(f => f && f.data);
-      const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
-
-      baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, emoji, pct, est, dias, ultimaFoto });
-    }
-
-    baskets.sort((a, b) => a.z - b.z).forEach((b) => {
-      const r = (CESTA_R * b.scale);
-      const clipId = `clip_${n}_${b.c}`;
-      const isSelected = !!(window.editingCesta && editingCesta.nivel === b.n && editingCesta.cesta === b.c);
-      // Solo la cara frontal recibe toques (evita activar la cesta equivocada al fondo)
-      const caraFrontal = b.z >= 0.42;
-      const interact = caraFrontal ? 'all' : 'none';
-      const multiKey = b.n + ',' + b.c;
-      const isMultiSel = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
-
-      // Sombra (más fuerte al frente)
-      s += `<ellipse cx="${b.cx2.toFixed(1)}" cy="${(b.cy2 + 3.5).toFixed(1)}" rx="${(r*1.05).toFixed(1)}" ry="${(r*0.65).toFixed(1)}"
-        fill="rgba(0,0,0,${(0.06 + 0.10*b.z).toFixed(3)})" opacity="${b.opacity.toFixed(2)}"/>`;
-
-      const datAria = (state.torre[b.n] && state.torre[b.n][b.c]) ? state.torre[b.n][b.c] : {};
-      const varTxt = datAria.variedad ? String(datAria.variedad) : 'vacía';
-      const ariaCesta = caraFrontal
-        ? escAriaAttr(`Cesta nivel ${b.n + 1} número ${b.c + 1}, ${varTxt}` +
-            (b.dias ? ', día ' + b.dias + ' de cultivo' : '') + '. Pulsa para abrir ficha o asignar cultivo.')
-        : '';
-      const a11yAttrs = caraFrontal
-        ? ` role="button" tabindex="0" aria-label="${ariaCesta}"`
-        : ' aria-hidden="true" focusable="false"';
-      // Cesta pulsable (pointer-events en cara trasera off — gira la torre para editarlas)
-      s += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta"${a11yAttrs}
-        style="cursor:${caraFrontal ? 'pointer' : 'default'};pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
-
-      // Base
-      s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
-
-      // Resalte: ficha abierta (verde) · selección múltiple en modo asignar (ámbar)
-      if (isMultiSel) {
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+5).toFixed(1)}"
-          fill="none" stroke="#f59e0b" stroke-width="${(2.8*b.scale).toFixed(1)}" stroke-dasharray="4 3" opacity="0.95"/>`;
-      }
-      if (isSelected) {
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+4).toFixed(1)}"
-          fill="none" stroke="#22c55e" stroke-width="${(2.6*b.scale).toFixed(1)}" opacity="0.9"/>`;
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r+7.5).toFixed(1)}"
-          fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="${(5.5*b.scale).toFixed(1)}" opacity="0.8"/>`;
-      }
-
-      // Foto si existe (recorte circular)
-      if (b.ultimaFoto?.data) {
-        s += `<defs><clipPath id="${clipId}"><circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-1.6).toFixed(1)}"/></clipPath></defs>`;
-        s += `<image href="${b.ultimaFoto.data}" x="${(b.cx2-r).toFixed(1)}" y="${(b.cy2-r).toFixed(1)}"
-          width="${(r*2).toFixed(1)}" height="${(r*2).toFixed(1)}" preserveAspectRatio="xMidYMid slice"
-          clip-path="url(#${clipId})" opacity="${(0.92).toFixed(2)}"></image>`;
-        // Borde para que se lea bien
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r-0.6).toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="${(1.2*b.scale).toFixed(1)}"/>`;
-      }
-
-      // Arco de progreso
-      if (b.pct > 0 && b.pct < 100) {
-        const r2   = r + 5.2;
-        const ang2  = (b.pct / 100) * 2 * Math.PI - Math.PI / 2;
-        const x1e  = b.cx2 + r2 * Math.cos(-Math.PI/2);
-        const y1e  = b.cy2 + r2 * Math.sin(-Math.PI/2);
-        const x2e  = b.cx2 + r2 * Math.cos(ang2);
-        const y2e  = b.cy2 + r2 * Math.sin(ang2);
-        s += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2.toFixed(1)},${r2.toFixed(1)} 0 ${b.pct>50?1:0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
-          fill="none" stroke="${b.stroke}" stroke-width="${(2.0*b.scale).toFixed(1)}" stroke-linecap="round" opacity="0.55"/>`;
-      }
-
-      // Emoji o +
-      if (b.emoji) {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 6).toFixed(1)}" font-size="${(14*b.scale).toFixed(1)}" text-anchor="middle">${b.emoji}</text>`;
-      } else {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2+5).toFixed(1)}" font-size="${(15*b.scale).toFixed(1)}" text-anchor="middle" fill="#d1d5db">+</text>`;
-      }
-
-      // Días / número
-      if (b.dias && b.dias > 0 && b.emoji) {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
-          font-size="${(8*b.scale).toFixed(1)}" font-weight="700" fill="${b.stroke}" text-anchor="middle">${b.dias}d</text>`;
-      } else {
-        s += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
-          font-size="${(8*b.scale).toFixed(1)}" fill="#d1d5db" text-anchor="middle">${b.c+1}</text>`;
-      }
-
-      // Badges funcionales (fotos / notas)
-      const hasFotos = !!(b.ultimaFoto?.data);
-      const hasNotas = !!(state.torre?.[b.n]?.[b.c]?.notas && String(state.torre[b.n][b.c].notas).trim().length > 0);
-      if (hasFotos) {
-        const bx = b.cx2 - r + 5;
-        const by = b.cy2 - r + 5;
-        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-          text-anchor="middle" fill="#111827">📸</text>`;
-      }
-      if (hasNotas) {
-        const bx = b.cx2 + r - 5;
-        const by = b.cy2 - r + 5;
-        s += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-          fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-        s += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-          text-anchor="middle" fill="#111827">📝</text>`;
-      }
-
-      // Badge cosecha
-      if (b.est === 'cosecha') {
-        s += `<circle cx="${(b.cx2 + r - 2).toFixed(1)}" cy="${(b.cy2 - r + 2).toFixed(1)}" r="${(5*b.scale).toFixed(1)}" fill="#dc2626">
-          <animate attributeName="r" from="${(4*b.scale).toFixed(1)}" to="${(6*b.scale).toFixed(1)}" dur="0.7s" repeatCount="indefinite" direction="alternate"/>
-        </circle>`;
-        s += `<text x="${(b.cx2 + r - 2).toFixed(1)}" y="${(b.cy2 - r + 6).toFixed(1)}" font-size="${(7*b.scale).toFixed(1)}" text-anchor="middle" fill="white">!</text>`;
-      }
-
-      // Área de toque amplia (encima del dibujo) para menos fat-finger errors
-      if (caraFrontal) {
-        s += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${(r * 1.55).toFixed(1)}"
-          fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
-      }
-
-      s += `</g>`;
-    });
+    // Cestas por nivel en <g> propio: al girar solo se actualiza este fragmento (mucho más fluido).
+    s += `<g id="hc-baskets-n-${n}">${generarSVGTorreCestasNivelHTML(n, rot)}</g>`;
   }
 
   // ── DEPÓSITO ──────────────────────────────────────────────────────────────
@@ -7429,6 +7432,7 @@ function initTorreGestos(wrap) {
   let startX = 0;
   let startRot = 0;
   let dragging = false;
+  let dragRotating = false;
   let moved = 0;
   let raf = 0;
 
@@ -7452,17 +7456,35 @@ function initTorreGestos(wrap) {
     return x;
   };
 
+  const pintarSoloCestas = () => {
+    const cfg = state.configTorre || {};
+    const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
+    const rot = cfg._torreRotRad || 0;
+    for (let ni = 0; ni < numNiveles; ni++) {
+      const g = wrap.querySelector('#hc-baskets-n-' + ni);
+      if (g) g.innerHTML = generarSVGTorreCestasNivelHTML(ni, rot);
+    }
+  };
+
   const schedule = () => {
     if (raf) return;
     raf = requestAnimationFrame(() => {
       raf = 0;
-      wrap.innerHTML = generarSVGTorre();
-      bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
+      if (!wrap.isConnected) return;
+      if (dragRotating && wrap.querySelector('#hc-baskets-n-0')) {
+        pintarSoloCestas();
+      } else {
+        wrap.innerHTML = generarSVGTorre();
+        if (!dragRotating) {
+          bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
+        }
+      }
     });
   };
 
   const onDown = (clientX) => {
     dragging = true;
+    dragRotating = false;
     moved = 0;
     startX = clientX;
     startRot = getRot();
@@ -7471,29 +7493,42 @@ function initTorreGestos(wrap) {
     if (!dragging) return;
     const dx = clientX - startX;
     moved = Math.max(moved, Math.abs(dx));
-    const rot = startRot + (dx / 220) * (2 * Math.PI); // 220px ≈ vuelta completa
+    if (moved > 1) dragRotating = true;
+    const rot = startRot + (dx / 280) * (2 * Math.PI);
     setRot(rot);
     schedule();
   };
-  const onUp = () => {
+  const onUp = (e) => {
     if (!dragging) return;
     dragging = false;
-    if (moved > 10) {
+    if (e && typeof e.pointerId === 'number') {
+      try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+    const didDrag = moved > 10;
+    const wasLayerDrag = dragRotating;
+    dragRotating = false;
+    if (didDrag) {
       setRot(normRot(snapRot(getRot())));
       saveState();
-      schedule();
-      setTimeout(() => { moved = 0; }, 0);
     }
+    if (wasLayerDrag && wrap.querySelector('#hc-baskets-n-0')) {
+      pintarSoloCestas();
+      bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
+    } else if (moved > 0 || didDrag) {
+      schedule();
+    }
+    setTimeout(() => { moved = 0; }, 0);
   };
 
   wrap.addEventListener('pointerdown', (e) => {
     if (e.target.closest && e.target.closest('.hc-cesta')) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
     onDown(e.clientX);
   }, { passive: true });
   wrap.addEventListener('pointermove', (e) => onMove(e.clientX), { passive: true });
-  wrap.addEventListener('pointerup', onUp, { passive: true });
-  wrap.addEventListener('pointercancel', onUp, { passive: true });
+  wrap.addEventListener('pointerup', (e) => onUp(e), { passive: true });
+  wrap.addEventListener('pointercancel', (e) => onUp(e), { passive: true });
 }
 
 function bindTorreCestas(wrap, opts = {}) {
@@ -8455,6 +8490,33 @@ function getECOptimaTorre() {
   };
 }
 
+/** EC meta (µS/cm) para recarga / checklist: manual en torre o intermedio óptimo automático */
+function getRecargaEcMetaMicroS() {
+  const cfg = state.configTorre || {};
+  const manual = cfg.checklistEcObjetivoUs;
+  if (Number.isFinite(manual) && manual >= 200 && manual <= 6000) {
+    return Math.round(manual);
+  }
+  const o = getECOptimaTorre();
+  return Math.round((o.min + o.max) / 2);
+}
+
+/**
+ * CalMag opcional: el usuario puede marcarlo en el checklist; si no ha tocado el ajuste,
+ * por defecto ON con agua blanda (destilada/ósmosis) y OFF con grifo — si la línea no lleva CalMag, siempre false.
+ */
+function usarCalMagEnRecarga() {
+  const nut = getNutrienteTorre();
+  if (!nut.calmagNecesario) return false;
+  const cfg = state.configTorre || {};
+  const v = cfg.checklistUsarCalMag;
+  if (v === true) return true;
+  if (v === false) return false;
+  const agua = cfg.agua || 'destilada';
+  if (agua === 'grifo') return false;
+  return true;
+}
+
 function getSetupVolumen() {
   return parseInt(document.getElementById('sliderVol')?.value || 20);
 }
@@ -8489,13 +8551,10 @@ function calcularDosisSetup(nutId, vol, ecObj) {
   const ecObjetivo = ecObj || getSetupECObjetivo();
   const ecMeta = Math.round((ecObjetivo.min + ecObjetivo.max) / 2); // EC central del rango
 
-  // CalMag: la EC que aporta es de CONCENTRACIÓN, no de cantidad total
-  // 13ml en 18L → 400 µS/cm. En 50L → 36ml pero sigue siendo 400 µS/cm (misma concentración)
-  const EC_CALMAG_FIJA = 400; // µS/cm que aporta CalMag a su concentración estándar
-  const mlCalMag = nut.calmagNecesario
+  const mlCalMag = usarCalMagEnRecarga()
     ? Math.round(nut.calmagMl * (vol / 18) * 10) / 10
     : 0;
-  const ecCalMag = nut.calmagNecesario ? EC_CALMAG_FIJA : 0;
+  const ecCalMag = mlCalMag > 0 ? Math.round((nut.ecPorMl || 33) * mlCalMag) : 0;
 
   // A+B: cantidad necesaria para llegar a EC objetivo tras CalMag
   // EC aportada por A+B también es proporcional a concentración:
@@ -8533,7 +8592,7 @@ function renderDosisSetup() {
 
   // Pasos de adición en orden
   let paso = 1;
-  if (nut.calmagNecesario && d.mlCalMag > 0) {
+  if (usarCalMagEnRecarga() && d.mlCalMag > 0) {
     html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
       'padding:7px 0;border-bottom:1px solid #e5e7eb">' +
       '<span style="font-size:12px;color:#374151"><strong>' + paso++ + '.</strong> CalMag</span>' +
@@ -8775,12 +8834,11 @@ function preguntarIniciarChecklist() {
   const nombreTorre = torre?.nombre || 'Torre 1';
   const vol        = cfg.volDeposito || 18;
   const ecObj      = getECOptimaTorre();
-  const ecMeta     = Math.round((ecObj.min + ecObj.max) / 2);
+  const ecMeta     = getRecargaEcMetaMicroS();
 
   // Calcular dosis con los datos reales de la torre
-  const EC_CALMAG  = 400;
-  const mlCalMag   = nut.calmagNecesario ? Math.round(nut.calmagMl * (vol/18) * 10)/10 : 0;
-  const ecCalMag   = nut.calmagNecesario ? EC_CALMAG : 0;
+  const mlCalMag   = calcularMlCalMag();
+  const ecCalMag   = mlCalMag > 0 ? Math.round((nut.ecPorMl || 33) * mlCalMag) : 0;
   const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / vol);
   const ecNec      = Math.max(0, ecMeta - ecCalMag);
   const mlAB       = Math.max(1, Math.round((ecNec / ecPorMlAdj) * 10)/10);
@@ -11222,18 +11280,19 @@ function calcularMlAB() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
   const volObj = cfg.volDeposito || VOL_OBJETIVO;
-  const ecBase = nut.calmagNecesario ? (nut.ecPorMl * nut.calmagMl) : 0;
-  const ecObjetivo = (nut.ecObjetivo ? nut.ecObjetivo[1] : 1400);
-  const ecNecesaria = ecObjetivo - ecBase;
-  const mlPorL = nut.dosis?.recomendado || 2;
-  // Para sistemas 2 partes: ml de cada parte
-  // Para sistemas 3 partes: ml total dividido en 3
+  let ecBase = 0;
+  if (usarCalMagEnRecarga()) {
+    const mlCM = calcularMlCalMag();
+    ecBase = Math.round((nut.ecPorMl || 33) * mlCM);
+  }
+  const ecObjetivo = getRecargaEcMetaMicroS();
+  const ecNecesaria = Math.max(0, ecObjetivo - ecBase);
   return Math.max(1, Math.round(ecNecesaria / (nut.ecPorMl || 33)));
 }
 
 function calcularMlCalMag() {
+  if (!usarCalMagEnRecarga()) return 0;
   const nut = getNutrienteTorre();
-  if (!nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
   const volObj = cfg.volDeposito || VOL_OBJETIVO;
   const factorVol = volObj / 18;
@@ -11313,7 +11372,7 @@ function evalEC(ec, vol) {
     showCorreccion('correccionEC','');
 
   } else if (ec < ecMin) {
-    const ecBase   = nut.calmagNecesario ? Math.round(nut.ecPorMl * nut.calmagMl) : 0;
+    const ecBase   = usarCalMagEnRecarga() ? Math.round(nut.ecPorMl * calcularMlCalMag()) : 0;
     const deficit  = ecIdeal - Math.max(0, ec - ecBase);
     const mlAB     = Math.max(1, Math.ceil(deficit / ((nut.ecPorMl || 30) * factorVol)));
     const nivel    = ec < ecCritica ? 'bad' : 'warn';
@@ -11508,11 +11567,14 @@ function evalVol(vol, ec, ph) {
     const volObj = cfg.volDeposito || VOL_OBJETIVO;
     const litrosAnadir = Math.ceil((volObj - vol) * 10) / 10;
     // Calcular nutrientes proporcionales al volumen a reponer
-    const EC_CALMAG = 400;
+    const EC_CALMAG = usarCalMagEnRecarga() ? 400 : 0;
     const ecPorMlAdj = (nut.ecPorMl || 33) * (18 / volObj);
-    const ecNec = Math.max(0, 1150 - EC_CALMAG); // EC meta - CalMag
+    const ecMetaRep = getRecargaEcMetaMicroS();
+    const ecNec = Math.max(0, ecMetaRep - EC_CALMAG);
     const mlABPorLitro = Math.max(0.5, (ecNec / ecPorMlAdj) / volObj);
-    const calmagMl = nut.calmagNecesario ? Math.round(nut.calmagMl * (litrosAnadir / 18) * 10) / 10 : 0;
+    const calmagMl = usarCalMagEnRecarga()
+      ? Math.round(nut.calmagMl * (litrosAnadir / 18) * 10) / 10
+      : 0;
     const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B'];
 
     const ecActual = isNaN(ec) ? 1350 : ec;
@@ -11592,15 +11654,15 @@ function generarPasosNutriente() {
   const vol    = cfg.volDeposito || 18;
   const mlCM   = calcularMlCalMag();
   const mlAB   = calcularMlAB();
-  const ecCM   = nut.calmagNecesario ? Math.round(nut.ecPorMl * mlCM) : 0;
-  const ecFinal = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+  const ecCM   = usarCalMagEnRecarga() && mlCM > 0 ? Math.round(nut.ecPorMl * mlCM) : 0;
+  const ecFinal = getRecargaEcMetaMicroS();
   const tieneBuffer = nut.pHBuffer;
   const pHRango = nut.pHRango || [5.5, 6.5];
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
   const pasos  = [];
 
-  // PASO 4.2 — CalMag (solo si necesario)
-  if (nut.calmagNecesario && mlCM > 0) {
+  // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
+  if (usarCalMagEnRecarga() && mlCM > 0) {
     pasos.push({
       id:'4.2', seccion:null, paso:'4.2',
       desc: 'Añadir CalMag: ' + mlCM + ' ml — remover 2 min',
@@ -11722,7 +11784,7 @@ function construirTextoChecklistPreliminar() {
     : ['Parte A', 'Parte B', 'Parte C'];
   const escala = 5 / Math.max(5, vol);
   const mlAB5 = Math.max(0.5, Math.round(mlAB * escala * 10) / 10);
-  const mlCM5 = nut.calmagNecesario ? Math.max(0, Math.round(mlCM * escala * 10) / 10) : 0;
+  const mlCM5 = usarCalMagEnRecarga() ? Math.max(0, Math.round(mlCM * escala * 10) / 10) : 0;
   const p1Partes = [];
   if (mlCM5 > 0) p1Partes.push(mlCM5 + ' ml CalMag');
   if (partes === 1) {
@@ -11739,7 +11801,7 @@ function construirTextoChecklistPreliminar() {
     p1Partes.join(' + ') + '. Remover bien.';
   const stockExtra = orden.slice(0, partes).join(', ');
   const p2 = 'Verificar stock: agua destilada u ósmosis' +
-    (nut.calmagNecesario ? ', CalMag' : '') +
+    (usarCalMagEnRecarga() ? ', CalMag' : '') +
     ', ' + stockExtra + ', pH+, agua oxigenada 3%, esponja';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
@@ -11756,11 +11818,25 @@ function getCLPasos() {
   const pHR = nut.pHRango || [5.5, 6.5];
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
   const ecMed = Math.round((ecMin + ecMax) / 2);
+  const ecRecTarget = getRecargaEcMetaMicroS();
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const shCl = ensureSensoresHardware();
   const hwLista = [shCl.ec && 'EC', shCl.ph && 'pH', shCl.humedad && 'humedad'].filter(Boolean);
   const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Medir y ajustar';
+  const paso40campos = [
+    { id:'clEcObjetivoRecarga', label:'EC objetivo de esta recarga', type:'number', step:'10',
+      unit:'µS/cm', placeholder:String(ecMed), value:getRecargaEcMetaMicroS(),
+      _clOninput:'onChecklistRecargaPrefsChanged()' },
+  ];
+  if (nut.calmagNecesario) {
+    paso40campos.push({
+      id:'clUsarCalMag', type:'checkbox', checked: usarCalMagEnRecarga(),
+      label:'Incluir CalMag antes del abono (recomendado con agua blanda; con grifo suele omitirse). Las dosis del fabricante se recalculan al marcar o desmarcar.',
+      _clOnchange:'onChecklistRecargaPrefsChanged()',
+    });
+  }
+
   const pasosPrev6 = hwLista.length ? [{
     id:'6.0hw',
     seccion:'📊 Paso 6 — Medir y ajustar',
@@ -11820,7 +11896,13 @@ function getCLPasos() {
     desc:'Envolver exterior con bolsa negra opaca o film negro completamente',
     nota:'Previene algas y oxidación del hierro' },
 
-  { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
+  { id:'4.0', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.0',
+    desc:'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
+    nota:'Si cambias el valor o CalMag, los pasos siguientes se actualizan al instante.',
+    extraHtml:'<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="irConsejosTablaResumenEc()">📊 Ver tabla resumen EC / pH en Consejos</button>',
+    campos: paso40campos },
+
+  { id:'4.1', seccion:null, paso:'4.1',
     desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu torre',
     campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
   ...generarPasosNutriente(),
@@ -11843,8 +11925,8 @@ function getCLPasos() {
   ...pasosPrev6,
 
   { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
-    desc:'Medir EC — objetivo ' + ecMin + '–' + ecMax + ' µS/cm (cultivos y ' + nut.nombre + ')',
-    campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecMed) }] },
+    desc:'Medir EC — rango cultivos ' + ecMin + '–' + ecMax + ' µS/cm · meta de esta recarga ~' + ecRecTarget + ' µS/cm (' + nut.nombre + ')',
+    campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) }] },
   { id:'6.2', seccion:null, paso:'6.2',
     desc:'Medir pH — objetivo ~' + phObj + ' (rango ' + pHR[0] + '–' + pHR[1] + ' con ' + nut.nombre + ')',
     campos:[{ id:'clPhMedidoP6', label:'pH medido:', type:'number', step:'0.1', placeholder: phObj }] },
@@ -11854,7 +11936,7 @@ function getCLPasos() {
   { id:'6.4', seccion:null, paso:'6.4',
     desc:'Medición final — valores definitivos para el registro',
     campos:[
-      { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecMed) },
+      { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) },
       { id:'clPhFinalReg', label:'pH final:', type:'number', step:'0.1', placeholder: phObj },
       { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
       { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
@@ -11898,6 +11980,37 @@ function cerrarChecklist() {
   a11yDialogClosed(co);
 }
 
+function onChecklistRecargaPrefsChanged() {
+  if (!state.configTorre) state.configTorre = {};
+  const ecInp = document.getElementById('clEcObjetivoRecarga');
+  if (ecInp) {
+    const raw = ecInp.value.trim();
+    const ec = parseFloat(raw);
+    if (raw === '' || !Number.isFinite(ec)) {
+      delete state.configTorre.checklistEcObjetivoUs;
+    } else if (ec >= 200 && ec <= 6000) {
+      state.configTorre.checklistEcObjetivoUs = Math.round(ec);
+    }
+  }
+  const cm = document.getElementById('clUsarCalMag');
+  if (cm) state.configTorre.checklistUsarCalMag = cm.checked;
+  guardarEstadoTorreActual();
+  saveState();
+  renderChecklist();
+}
+
+function irConsejosTablaResumenEc() {
+  try { cerrarChecklist(); } catch (_) {}
+  const pq = document.getElementById('checklistPreguntaOverlay');
+  if (pq) pq.remove();
+  consejoCatActiva = 'ecph';
+  goTab('consejos');
+  renderConsejos();
+  setTimeout(() => {
+    document.getElementById('consejos-resumen-ec-ph')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
 function renderChecklist() {
   const el = document.getElementById('checklistContent');
   let html = '';
@@ -11918,11 +12031,25 @@ function renderChecklist() {
           </select>
         </div>`;
       }
+      if (c.type === 'checkbox') {
+        return `<label class="cl-field" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px">
+          <input type="checkbox" id="${c.id}" style="margin-top:3px;flex-shrink:0;width:18px;height:18px;accent-color:#15803d"
+            ${c.checked ? 'checked' : ''}
+            ${c._clOnchange ? ' onchange="' + c._clOnchange + '"' : ''}>
+          <span style="font-size:12px;line-height:1.45;color:var(--muted)">${c.label || ''}</span>
+        </label>`;
+      }
+      const valAttr = (c.value != null && c.value !== '')
+        ? ' value="' + String(c.value).replace(/"/g, '&quot;') + '"'
+        : '';
+      const inpExtra = c._clOninput ? ' oninput="' + c._clOninput + '"' : '';
       return `<div class="cl-field">
         <label>${c.label}</label>
         <input type="${c.type}" id="${c.id}" step="${c.step||'1'}"
           placeholder="${c.placeholder||''}"
           class="${c.clase||''}"
+          ${valAttr}
+          ${inpExtra}
           ${c.type === 'number' ? 'inputmode="decimal"' : ''}>
         ${c.unit ? `<span class="unit">${c.unit}</span>` : ''}
       </div>`;
@@ -11941,12 +12068,25 @@ function renderChecklist() {
           <div class="cl-step${p.alert ? ' alert' : ''}">${p.paso}</div>
           <div class="cl-desc">${p.desc}</div>
           ${p.nota ? `<div class="cl-note">${p.nota}</div>` : ''}
+          ${p.extraHtml || ''}
           ${campos}
         </div>
       </div>`;
   });
 
   el.innerHTML = html;
+  const validIds = new Set(getCLPasos().map(p => p.id));
+  clChecked = new Set([...clChecked].filter(id => validIds.has(id)));
+  clChecked.forEach(id => {
+    const cb = document.getElementById('clCb-' + id);
+    const item = document.getElementById('clItem-' + id);
+    if (cb && item) {
+      cb.classList.add('checked');
+      item.classList.add('checked');
+      cb.setAttribute('aria-pressed', 'true');
+    }
+  });
+  updateClProgress();
 }
 
 function clToggle(id) {
@@ -12842,7 +12982,7 @@ function buildHtmlTablaEcPh() {
     </tr>
   `).join('');
   return `
-    <div class="consejo-ecph-wrap">
+    <div class="consejo-ecph-wrap" id="consejos-resumen-ec-ph">
       <div class="consejo-titulo" style="margin-bottom:8px">Referencia rápida hidroponía</div>
       <div class="consejo-ecph-note">
         Valores medios habituales en bibliografía y tablas de cultivos (EC en <strong>µS/cm</strong> como en esta app; pH de la solución).
@@ -13000,7 +13140,7 @@ function buildConsejosAguaNutrienteDinamico() {
   const rnd = x => Math.round(x * 100) / 100;
 
   const partesRepos = [];
-  if (nut.calmagNecesario && cmPL > 0) {
+  if (usarCalMagEnRecarga() && cmPL > 0) {
     partesRepos.push(rnd(cmPL) + ' ml CalMag');
   }
   if (nut.partes === 1 && nut.orden && nut.orden[0]) {
