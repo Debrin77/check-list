@@ -8117,7 +8117,7 @@ const NUTRIENTES_DB = [
     pHRango: [5.5, 6.5],
     pHIntervenir: [5.5, 6.5],
     orden: ['Substra A', 'Substra B'],
-    dosis: { min: 1.5, max: 4.0, unidad: 'ml/L', recomendado: 2.5 }, // 25ml/10L
+    dosis: { min: 1.5, max: 4.0, unidad: 'ml/L c/u (A y B)', recomendado: 2.5 },
     protocolo: [
       '1. Llenar con agua blanda/ósmosis',
       '2. Añadir CalMag → remover',
@@ -8270,11 +8270,11 @@ const NUTRIENTES_DB = [
     pHRango: [6.0, 7.0],      // orgánico — pH más alto
     pHIntervenir: [5.8, 7.2],
     orden: ['Fish·Mix', 'Alg·A·Mic'],
-    dosis: { min: 1, max: 4, unidad: 'ml/L', recomendado: 3 },
+    dosis: { min: 1, max: 4, unidad: 'ml/L Fish·Mix + Alg·A·Mic aparte', recomendado: 2 },
     protocolo: [
       '1. Llenar con agua a temperatura ambiente',
-      '2. Añadir Fish·Mix (2ml/L) → remover',
-      '3. Añadir Alg·A·Mic (1ml/L) → remover',
+      '2. Añadir Fish·Mix (2 ml/L) → remover',
+      '3. Añadir Alg·A·Mic (1 ml/L) → remover',
       '4. pH objetivo más alto: 6.0-7.0 (orgánico)',
       '5. EC esperada más baja — normal en orgánico',
     ],
@@ -8435,15 +8435,15 @@ const NUTRIENTES_DB = [
     pHRango: [5.5, 6.3],
     pHIntervenir: [5.2, 6.5],
     orden: ['Basis A', 'Basis B'],
-    dosis: { min: 1, max: 4, unidad: 'ml/L c/u', recomendado: 2 },
+    dosis: { min: 1, max: 4, unidad: 'ml/L c/u (A y B iguales)', recomendado: 2 },
     protocolo: [
       '1. Agua RO/blanda',
       '2. CalMag a ~400 µS/cm',
-      '3. Basis A y B según tabla Mills (veg suele 1–2 ml/L)',
-      '4. Subir gradual semanas siguientes',
+      '3. Basis A y B: mismas ml/L cada una (1 ml/L c/u ~2 primeras semanas; luego 2 ml/L c/u en veg)',
+      '4. Subir según carta Mills en floración',
     ],
     detalle: 'A+B · Mills · Base mineral',
-    nota: 'Fabricante: 1–4 ml/L según fase; app veg ~2 ml/L.',
+    nota: 'Mills: igual ml en A y B. Plántulas: mitad de dosis veg en tabla.',
     precio: '€€€',
     disponible_es: true,
   },
@@ -8462,15 +8462,15 @@ const NUTRIENTES_DB = [
     pHRango: [5.5, 6.5],
     pHIntervenir: [5.2, 6.6],
     orden: ['Hydro Fuel Grow A', 'Hydro Fuel Grow B'],
-    dosis: { min: 1, max: 3.5, unidad: 'ml/L c/u', recomendado: 2.25 },
+    dosis: { min: 1, max: 3.5, unidad: 'ml/L c/u (A y B)', recomendado: 2 },
     protocolo: [
       '1. Agua blanda',
       '2. CalMag ~400 µS/cm',
-      '3. Parte A, remover; parte B',
-      '4. EC veg puede subir a ~3 ml/L A+B',
+      '3. Parte A, remover; luego parte B (misma filosofía ml/L por botella)',
+      '4. En pleno veg el fabricante llega a ~3 ml/L de A y ~3 ml/L de B',
     ],
     detalle: 'A+B · Green Planet · Grow',
-    nota: 'Tabla fabricante 1–3 ml/L; referencia media veg ~2,25 ml/L.',
+    nota: 'Hydro Fuel: 1–3 ml/L por parte A y por parte B; app usa ~2 ml/L c/u en veg.',
     precio: '€€',
     disponible_es: true,
   },
@@ -8622,11 +8622,11 @@ const NUTRIENTES_DB = [
     pHRango: [5.5, 6.5],
     pHIntervenir: [5.3, 6.6],
     orden: ['Campeador Hidro A', 'Campeador Hidro B'],
-    dosis: { min: 1, max: 3, unidad: 'ml/L c/u', recomendado: 1.5 },
+    dosis: { min: 1, max: 3, unidad: 'ml/L c/u', recomendado: 1 },
     protocolo: [
-      '1. Consultar ficha Hidro (no confundir con línea Hoja)',
-      '2. CalMag ~400 µS/cm',
-      '3. A y B',
+      '1. Ficha Hidro: 1–3 ml/L por parte A y B (no confundir con línea Hoja)',
+      '2. CalMag ~400 µS/cm en blanda',
+      '3. Ej. 18 L · EC ~1100–1200 µS: ~18 ml A + 18 ml B (≈1 ml/L c/u)',
     ],
     detalle: 'A+B · Campeador · Hidro',
     nota: 'Linea aparte de Campeador Hoja.',
@@ -13489,15 +13489,19 @@ function buildHtmlTablaEcPh() {
 /** Consejos EC/pH: referencia por fabricante (ml/L → totales al volumen). CalMag en blanda escala desde dosis 18 L de la app. */
 const REF_DOSIS_LITROS_TABLA = VOL_OBJETIVO;
 
+/**
+ * REF dosis: cada valor es ml/L (o g/L en polvo) de **esa botella/parte**.
+ * Líneas A+B habituales en Europa: la ficha da la **misma ml/L para A y para B** (no son “ml/L totales” a repartir 50/50 salvo que el envase lo indique así).
+ */
 const REF_DOSIS_FABRICANTE = {
   canna_aqua: {
-    fuente: 'Canna Aqua Vega: 2–4 ml/L por parte (vegetativo), pH 5,2–6,2. Tabla: 2 ml/L A y B.',
+    fuente: 'Canna Aqua Vega: **2 ml/L de botella A y 2 ml/L de botella B** en referencia vegetativo (misma dosis en cada parte; no sumar como una sola cifra para partir). Rango fabricante hasta ~4 ml/L c/u en otros contextos.',
     mlPorLitro: [2, 2],
     calmagGrifoNota: 'CalMag: de 0 ml hasta la dosis blanda según dureza; medir conductividad del grifo antes de mezclar.',
   },
   canna_substra_soft: {
-    fuente: 'Canna Substra Vega Soft Water: orientación ~4 ml/L cada parte (p. ej. 40 ml A + 40 ml B / 10 L en agua blanda).',
-    mlPorLitro: [4, 4],
+    fuente: 'Canna Substra Vega Soft Water: tabla suele ir de ~2,5 a 4 ml/L **de A** y la **misma ml/L de B** (ej. 25–40 ml de cada una en 10 L). La app usa **2,5 ml/L** por parte como dosis media veg; subir hasta 4 ml/L c/u en plena vegetación si la EC lo pide.',
+    mlPorLitro: [2.5, 2.5],
     calmagGrifoNota: 'Línea SOFT para agua blanda/ósmosis. Grifo muy duro: valorar la gama Hard del fabricante.',
   },
   advanced_ph_perfect: {
@@ -13511,7 +13515,7 @@ const REF_DOSIS_FABRICANTE = {
     calmagGrifoNota: 'CalMag: reducir u omitir si el grifo aporta minerales; medir tras mezclar.',
   },
   plagron_hydro: {
-    fuente: 'Plagron Hydro A+B (web): máx. 2,5 ml/L de A y la misma cantidad de B (1:400).',
+    fuente: 'Plagron Hydro A+B: **2,5 ml/L de Hydro A y 2,5 ml/L de Hydro B** (partes iguales; dilución 1:400). No es “2,5 ml/L total” repartidos: son **2,5 + 2,5** por litro de agua de riego.',
     mlPorLitro: [2.5, 2.5],
     calmagGrifoNota: 'CalMag: menos o ninguno si el agua es dura; contrastar con EC base.',
   },
@@ -13521,8 +13525,8 @@ const REF_DOSIS_FABRICANTE = {
     calmagGrifoNota: 'CalMag: suele reducirse con grifo duro; parte siempre de la EC del agua base.',
   },
   biobizz: {
-    fuente: 'BioBizz Fish·Mix + Alg·A·Mic: referencia media 3 ml/L Fish + 2 ml/L Alg (rango según fase).',
-    mlPorLitro: [3, 2],
+    fuente: 'BioBizz Fish·Mix + Alg·A·Mic: **dos botellas distintas** — no es A=B. Referencia veg suave **2 ml/L Fish·Mix + 1 ml/L Alg·A·Mic** (subir Fish hasta ~4 ml/L y Alg hasta ~2 ml/L según fase y envase).',
+    mlPorLitro: [2, 1],
     calmagGrifoNota: 'Orgánico: EC baja; CalMag solo si hay carencias y según etiqueta.',
   },
   campeador: {
@@ -13551,13 +13555,13 @@ const REF_DOSIS_FABRICANTE = {
     calmagGrifoNota: 'CalMag opcional según dureza.',
   },
   mills_basis_ab: {
-    fuente: 'Mills Basis A/B: vegetativo 1–2 ml/L por parte; referencia app 2 ml/L.',
+    fuente: 'Mills Basis A/B: **misma cantidad en A y en B**. Carta Mills — las 2 primeras semanas **1 ml/L de A y 1 ml/L de B**; después en veg típico **2 ml/L de cada parte**. La app usa **2 ml/L** como referencia de vegetativo ya iniciado; en plantas muy jóvenes bajar a 1 ml/L c/u.',
     mlPorLitro: [2, 2],
     calmagGrifoNota: 'Seguir carta fabricante en floración (más ml/L).',
   },
   green_planet_hydro_fuel: {
-    fuente: 'Green Planet Hydro Fuel Grow A+B: 1–3 ml/L; referencia veg ~2,25 ml/L A y B.',
-    mlPorLitro: [2.25, 2.25],
+    fuente: 'Green Planet Hydro Fuel Grow A+B: fabricante indica **1–3 ml/L por parte** (añadir A, remover, luego B; misma banda en cada botella). Referencia veg media **2 ml/L A y 2 ml/L B**.',
+    mlPorLitro: [2, 2],
     calmagGrifoNota: 'Medir tras mezcla; grifo duro = menos CalMag.',
   },
   ionic_grow_hydro: {
@@ -13586,9 +13590,9 @@ const REF_DOSIS_FABRICANTE = {
     calmagGrifoNota: 'Muy concentrado; subir con cuidado.',
   },
   campeador_hidro: {
-    fuente: 'Campeador Hidro A+B: referencia ~1,5 ml/L por parte (ajustar por ficha).',
-    mlPorLitro: [1.5, 1.5],
-    calmagGrifoNota: 'Distinto de línea Hoja; ver envase.',
+    fuente: 'Campeador Hidro A+B (web fabricante): 1–3 ml/L por parte; ejemplo 18 L con EC 1100–1200 µS ≈ 18 ml A + 18 ml B (~1 ml/L). La app usa 1 ml/L como base checklist (subir hasta 3 ml/L si EC queda baja).',
+    mlPorLitro: [1, 1],
+    calmagGrifoNota: 'Distinto de línea Hoja; grifo: misma ml/L tras medir EC base.',
   },
   masterblend_41838: {
     fuente: 'Masterblend 4-18-38 + receta típica Ca(NO₃)₂ + MgSO₄: gramos/L orient. 1,9 g/L total sales disueltas (no ml).',
