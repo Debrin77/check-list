@@ -883,7 +883,67 @@ body::before { display: none; }
   gap: 10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
-.deposito-icon { font-size: 20px; opacity: 0.92; }
+.deposito-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: linear-gradient(165deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 900;
+  color: #475569;
+  letter-spacing: 0.05em;
+}
+.deposito-icon::after { content: 'DEP'; }
+.torre-nutriente-strip .torre-strip-flag {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.torre-section-heading .section-title-accent {
+  display: inline-block;
+  width: 4px;
+  height: 1.1em;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--green);
+  vertical-align: -0.15em;
+}
+.torre-info-banner-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.compat-alert-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(180, 83, 9, 0.15);
+  color: #b45309;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
 .deposito-info { flex: 1; }
 .deposito-title {
   font-family: var(--font-display);
@@ -3338,17 +3398,18 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 /* ══ ROTACIÓN ESCALONADA ══ */
 .rotacion-card {
   background: var(--bg2);
-  border: 2px solid #2563eb;
+  border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
-  box-shadow: 0 2px 12px rgba(37,99,235,0.12);
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.06);
 }
 .rotacion-title {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 800;
-  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -3371,6 +3432,19 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
+}
+.rotacion-fase-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
+  border: 1.5px solid;
 }
 .rotacion-nivel-info { flex: 1; }
 .rotacion-nivel-titulo {
@@ -4392,12 +4466,12 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
     <!-- TAB 3: TORRE ══════════════════════════════════ -->
     <div class="tab-panel" id="tab-torre" role="tabpanel" aria-labelledby="btn-torre" aria-hidden="true">
 
-      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span>🌿 Torre <span class="accent" id="torreTabTitle">—</span></span>
+      <div class="section-title torre-section-heading" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span><span class="section-title-accent" aria-hidden="true"></span>Torre <span class="accent" id="torreTabTitle">—</span></span>
         <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
           style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:8px;border:1.5px solid #e5e7eb;
           background:#fff;color:#15803d;cursor:pointer;font-family:var(--font-display)">
-          📖 Guía pantalla
+          Guía de pantalla
         </button>
       </div>
 
@@ -4413,7 +4487,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </div>
         <div class="stat-box">
           <div class="stat-value" id="statCosechas" style="color:var(--red)">0</div>
-          <div class="stat-label">✂️ Cosechar</div>
+          <div class="stat-label">Cosechar</div>
         </div>
       </div>
 
@@ -4422,38 +4496,38 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       <!-- Selector modo cultivo -->
       <div class="modo-selector" id="modoSelector">
-        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">🥬 Lechugas</button>
-        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">🌿 Mixto</button>
-        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">⚡ Intensivo</button>
-        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">🌱 Mini</button>
+        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">Lechugas</button>
+        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">Mixto</button>
+        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">Intensivo</button>
+        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">Compacto</button>
       </div>
 
       <!-- Info modo actual -->
       <div class="info-banner" id="modoInfo">
-        <span>💡</span>
+        <span class="torre-info-banner-icon" aria-hidden="true"></span>
         <span id="modoInfoText">Niveles 1, 3 y 5 activos. Óptimo para EC 1300-1400 µS/cm</span>
       </div>
 
       <!-- Modo interacción cestas: editar ficha vs asignar cultivo en bloque -->
-      <div id="torreInteraccionBar" style="background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:14px;
+      <div id="torreInteraccionBar" style="background:#f8fafc;border:1px solid rgba(15,23,42,0.08);border-radius:14px;
         padding:12px 14px;margin-top:10px">
-        <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:8px;letter-spacing:0.4px;text-transform:uppercase">
+        <div style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase">
           Cestas en la torre
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
           <button type="button" id="torreModoEditar" onclick="setTorreInteraccionModo('editar')"
             class="modo-btn active" style="padding:8px 12px;font-size:12px;border-radius:10px"
-            aria-pressed="true">✏️ Editar ficha</button>
+            aria-pressed="true">Editar ficha</button>
           <button type="button" id="torreModoAsignar" onclick="setTorreInteraccionModo('asignar')"
             class="modo-btn" style="padding:8px 12px;font-size:12px;border-radius:10px"
-            aria-pressed="false">🌱 Asignar cultivo</button>
+            aria-pressed="false">Asignar cultivo</button>
         </div>
         <div id="torreEditarExtra" style="display:block;margin-bottom:10px">
           <div id="torreEditarAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
           <button type="button" onclick="abrirTutorialEditarCultivo({ force: true })"
             style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #93c5fd;
             background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#1d4ed8;cursor:pointer">
-            📖 Ver tutorial de edición
+            Tutorial · edición de ficha
           </button>
         </div>
         <div id="torreAssignPanel" style="display:none">
@@ -4480,14 +4554,14 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
             style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #86efac;
             background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
-            📖 Ver tutorial de asignación
+            Tutorial · asignación en bloque
           </button>
         </div>
       </div>
 
       <!-- Alerta compatibilidad -->
       <div id="compatAlert" style="display:none" class="info-banner" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)">
-        <span>⚠️</span>
+        <span class="compat-alert-mark" aria-hidden="true">!</span>
         <span id="compatAlertText"></span>
       </div>
 
@@ -4496,7 +4570,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <!-- Badge nutriente activo junto al SVG -->
         <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip">
           <div style="display:flex;align-items:center;gap:10px;min-width:0">
-            <span style="font-size:17px;line-height:1" id="torreBadgeBandera" aria-hidden="true">🧪</span>
+            <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
             <div class="torre-strip-meta">
               <div id="torreBadgeStripNombre"
                 style="font-family:var(--font-display);font-size:12px;font-weight:900;color:#0f172a;letter-spacing:-0.01em">—</div>
@@ -4560,7 +4634,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <!-- Depósito + Nutriente -->
         <div class="torre-deposito" style="flex-direction:column;gap:6px">
           <div style="display:flex;align-items:center;gap:10px;width:100%">
-            <div class="deposito-icon">🪣</div>
+            <div class="deposito-icon" aria-hidden="true"></div>
             <div class="deposito-info" style="flex:1">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
               <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
@@ -4591,7 +4665,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               appearance:none;-webkit-appearance:none;box-sizing:border-box;
               box-shadow:0 1px 3px rgba(15,23,42,0.05)"
             onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
-            <span id="torreBadgeFlag" style="font-size:18px;line-height:1" aria-hidden="true">🧪</span>
+            <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:10px;font-weight:800;color:#64748b;
                 text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
@@ -6334,7 +6408,7 @@ const MODOS_CULTIVO = {
   lechuga:   { niveles: [0,2,4], nombre: 'Lechugas (3 niveles)', desc: 'Óptimo para EC 1300-1400 µS/cm' },
   intensivo: { niveles: [0,1,2,3,4], nombre: 'Intensivo (5 niveles)', desc: 'Solo hojas verdes compatibles' },
   mixto:     { niveles: [0,2,4], nombre: 'Mixto (3 niveles)', desc: 'Lechugas + asiáticas + hierbas' },
-  mini:      { niveles: [0,2], nombre: 'Mini (2 niveles)', desc: 'Producción reducida o plántulas' },
+  mini:      { niveles: [0,2], nombre: 'Compacto (2 niveles)', desc: 'Producción reducida o plántulas' },
 };
 
 // ══════════════════════════════════════════════════
@@ -6951,7 +7025,7 @@ function torreOnCestaActivada(n, c) {
       setTimeout(renderCompatGrid, 50);
       const cult = getCultivoDB(v);
       mostrarBarraSeleccionCesta(n, c);
-      showToast(((cult && cult.emoji) ? cult.emoji + ' ' : '🌱 ') + v + ' · N' + (n + 1) + ' C' + (c + 1));
+      showToast('Asignado: ' + v + ' · N' + (n + 1) + ' C' + (c + 1));
     } else {
       const k = n + ',' + c;
       if (torreCestasMultiSel.has(k)) torreCestasMultiSel.delete(k);
@@ -6990,12 +7064,13 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const diasT = DIAS_COSECHA[dat.variedad] || 50;
     const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
 
-    let fill, stroke, emoji;
-    if (!dat.variedad)           { fill='#f9fafb'; stroke='#d1d5db'; emoji=''; }
-    else if (est==='plantula')   { fill='#eff6ff'; stroke='#3b82f6'; emoji='🌱'; }
-    else if (est==='crecimiento'){ fill='#f0fdf4'; stroke='#16a34a'; emoji=getEmoji(est); }
-    else if (est==='madurez')    { fill='#fffbeb'; stroke='#d97706'; emoji=getEmoji(est); }
-    else                         { fill='#fff5f5'; stroke='#dc2626'; emoji='✂️'; }
+    /** Etiqueta fase cultivada (P/V/M/C) — legible y sobria, sin emoji decorativos */
+    let fill, stroke, phaseTag;
+    if (!dat.variedad)            { fill='#f8fafc'; stroke='#cbd5e1'; phaseTag=''; }
+    else if (est==='plantula')    { fill='#eff6ff'; stroke='#2563eb'; phaseTag='P'; }
+    else if (est==='crecimiento') { fill='#f0fdf4'; stroke='#15803d'; phaseTag='V'; }
+    else if (est==='madurez')     { fill='#fffbeb'; stroke='#b45309'; phaseTag='M'; }
+    else                          { fill='#fef2f2'; stroke='#b91c1c'; phaseTag='C'; }
 
     const ang = (Math.PI * 2 * (c / numCestas)) + phase;
     const z = (Math.sin(ang) + 1) / 2;
@@ -7007,7 +7082,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const fotos = (dat.fotos || []).filter(f => f && f.data);
     const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
 
-    baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, emoji, pct, est, dias, ultimaFoto });
+    baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, phaseTag, pct, est, dias, ultimaFoto });
   }
 
   let out = '';
@@ -7067,13 +7142,13 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
         fill="none" stroke="${b.stroke}" stroke-width="${(2.0*b.scale).toFixed(1)}" stroke-linecap="round" opacity="0.55"/>`;
     }
 
-    if (b.emoji) {
-      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 6).toFixed(1)}" font-size="${(14*b.scale).toFixed(1)}" text-anchor="middle">${b.emoji}</text>`;
-    } else {
-      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2+5).toFixed(1)}" font-size="${(15*b.scale).toFixed(1)}" text-anchor="middle" fill="#d1d5db">+</text>`;
+    if (b.phaseTag) {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 5).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(9*b.scale).toFixed(1)}" font-weight="800" fill="${b.stroke}" text-anchor="middle" opacity="0.9">${b.phaseTag}</text>`;
+    } else if (!b.ultimaFoto?.data) {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + 3.5).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(12*b.scale).toFixed(1)}" font-weight="600" text-anchor="middle" fill="#cbd5e1">·</text>`;
     }
 
-    if (b.dias && b.dias > 0 && b.emoji) {
+    if (b.dias && b.dias > 0 && b.phaseTag) {
       out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
         font-size="${(8*b.scale).toFixed(1)}" font-weight="700" fill="${b.stroke}" text-anchor="middle">${b.dias}d</text>`;
     } else {
@@ -7086,18 +7161,22 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     if (hasFotos) {
       const bx = b.cx2 - r + 5;
       const by = b.cy2 - r + 5;
-      out += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-        fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-      out += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-        text-anchor="middle" fill="#111827">📸</text>`;
+      const pw = (14 * b.scale);
+      const ph = (10 * b.scale);
+      out += `<rect x="${(bx - pw / 2).toFixed(1)}" y="${(by - ph / 2).toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" rx="${(2.2 * b.scale).toFixed(1)}"
+        fill="#0f172a" opacity="0.88" stroke="rgba(255,255,255,0.25)" stroke-width="${(0.6*b.scale).toFixed(1)}"/>`;
+      out += `<text x="${bx.toFixed(1)}" y="${(by + 3.2*b.scale).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(7*b.scale).toFixed(1)}" font-weight="800"
+        text-anchor="middle" fill="#f8fafc">F</text>`;
     }
     if (hasNotas) {
       const bx = b.cx2 + r - 5;
       const by = b.cy2 - r + 5;
-      out += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(6*b.scale).toFixed(1)}"
-        fill="rgba(255,255,255,0.9)" stroke="rgba(0,0,0,0.08)" stroke-width="${(1*b.scale).toFixed(1)}"/>`;
-      out += `<text x="${bx.toFixed(1)}" y="${(by+3.3*b.scale).toFixed(1)}" font-size="${(8*b.scale).toFixed(1)}"
-        text-anchor="middle" fill="#111827">📝</text>`;
+      const pw = (14 * b.scale);
+      const ph = (10 * b.scale);
+      out += `<rect x="${(bx - pw / 2).toFixed(1)}" y="${(by - ph / 2).toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" rx="${(2.2 * b.scale).toFixed(1)}"
+        fill="#334155" opacity="0.9" stroke="rgba(255,255,255,0.2)" stroke-width="${(0.6*b.scale).toFixed(1)}"/>`;
+      out += `<text x="${bx.toFixed(1)}" y="${(by + 3.2*b.scale).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(7*b.scale).toFixed(1)}" font-weight="800"
+        text-anchor="middle" fill="#f8fafc">N</text>`;
     }
 
     if (b.est === 'cosecha') {
@@ -7200,8 +7279,9 @@ function generarSVGTorre() {
 
   // ── ROCIADOR ──────────────────────────────────────────────────────────────
   s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
-    fill="#ecfdf5" stroke="#94a3b8" stroke-width="1.25"/>`;
-  s += `<text x="${CX}" y="${ejeTop+4}" font-size="12" text-anchor="middle" opacity="0.88">💧</text>`;
+    fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>`;
+  s += `<text x="${CX}" y="${ejeTop+4}" font-family="Inconsolata,monospace" font-size="6.5" font-weight="800"
+    fill="#64748b" text-anchor="middle" letter-spacing="0.24em">IRR</text>`;
   // Gotas (solo con animación)
   if (ta) {
     const gotas = [-20,-10,0,10,20];
@@ -7277,7 +7357,7 @@ function generarSVGTorre() {
     s += `<circle cx="${hx}" cy="${DEP_Y+DEP_H-44}" r="4" fill="#fbbf24">
       ${ta ? `<animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
     </circle>`;
-    s += `<text x="${hx}" y="${DEP_Y+DEP_H-52}" font-size="9" text-anchor="middle" fill="#ea580c" font-weight="700">🌡️</text>`;
+    s += `<text x="${hx}" y="${DEP_Y+DEP_H-50}" font-family="Inconsolata,monospace" font-size="6.5" text-anchor="middle" fill="#c2410c" font-weight="800" letter-spacing="0.08em">ΔT</text>`;
     s += `<text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
       font-size="8" fill="#ea580c" text-anchor="middle" font-weight="600">CAL</text>`;
   }
@@ -7334,15 +7414,15 @@ function generarSVGTorre() {
 
   // ── NOTA INFERIOR ─────────────────────────────────────────────────────────
   // Etiqueta depósito configurado
-  s += `<text x="${DEP_X+10}" y="${DEP_Y+14}" font-family="Syne,sans-serif"
-    font-size="8.5" font-weight="800" fill="#64748b" text-anchor="start" letter-spacing="0.03em">
-    🪣 ${volConfig}L · nominal</text>`;
+  s += `<text x="${DEP_X+10}" y="${DEP_Y+14}" font-family="Inconsolata,monospace"
+    font-size="8" font-weight="700" fill="#64748b" text-anchor="start" letter-spacing="0.04em">
+    VOL ${volConfig}L · nominal</text>`;
 
   // Etiqueta nutriente activo junto al depósito
   const nutLabel = (nut.nombre || 'Nutriente').slice(0,22);
   s += `<text x="${DEP_X+10}" y="${DEP_Y+26}" font-family="Syne,sans-serif"
-    font-size="8" font-weight="800" fill="#166534" text-anchor="start">
-    🧪 ${nutLabel}</text>`;
+    font-size="8" font-weight="800" fill="#166534" text-anchor="start" letter-spacing="0.02em">
+    NUT · ${nutLabel}</text>`;
 
   const pieTxt = torreInteraccionModo === 'asignar'
     ? 'Asignar: cultivo arriba → toca cestas (esquema o lista). En el dibujo, desliza para el reverso.'
@@ -8121,9 +8201,9 @@ function bindTorreCestas(wrap, opts = {}) {
         const fotos = (dat.fotos || []).length;
         const notas = (dat.notas || '').trim();
         const meta = [
-          dias !== null ? `📅 ${dias} días` : '',
-          fotos ? `📸 ${fotos}` : '',
-          notas ? '📝' : ''
+          dias !== null ? `${dias} d` : '',
+          fotos ? `${fotos} foto${fotos === 1 ? '' : 's'}` : '',
+          notas ? 'Notas' : ''
         ].filter(Boolean).join(' · ');
 
         showTip(
@@ -8479,7 +8559,7 @@ function guardarVolDepositoDesdeTorre() {
   actualizarBadgesNutriente();
   updateDashboard();
   updateTorreStats();
-  showToast('🪣 Depósito: ' + v + ' L · mezclas y checklist usan este volumen');
+  showToast('Depósito: ' + v + ' L · mezclas y checklist usan este volumen');
   refreshConsejosSiVisible();
 }
 
@@ -10043,18 +10123,18 @@ function calcularRotacion() {
     const diasRestantes = Math.round(diasTotalMedia - info.diasMedia);
     const pct = Math.min(100, Math.round((info.diasMedia / diasTotalMedia) * 100));
 
-    // Determinar estado
-    let estado, colorBg, colorText, colorBorder, emoji;
+    // Determinar estado (marcador tipográfico · sin emoji decorativo)
+    let estado, colorBg, colorText, colorBorder, faseMark;
     if (diasRestantes <= 0) {
-      estado = '✂️ COSECHAR'; colorBg = '#fee2e2'; colorText = '#7f1d1d'; colorBorder = '#b91c1c'; emoji = '✂️';
+      estado = 'Listo para cosechar'; colorBg = '#fee2e2'; colorText = '#7f1d1d'; colorBorder = '#b91c1c'; faseMark = 'C';
     } else if (diasRestantes <= 5) {
-      estado = `Cosecha en ${diasRestantes}d`; colorBg = '#fef3c7'; colorText = '#78350f'; colorBorder = '#d97706'; emoji = '🔶';
+      estado = `Cosecha en ${diasRestantes} d`; colorBg = '#fef3c7'; colorText = '#78350f'; colorBorder = '#d97706'; faseMark = '!';
     } else if (pct >= 66) {
-      estado = `Madurez — ${diasRestantes}d para cosecha`; colorBg = '#fffbeb'; colorText = '#92400e'; colorBorder = '#d97706'; emoji = '🥬';
+      estado = `Madurez · ${diasRestantes} d restantes`; colorBg = '#fffbeb'; colorText = '#92400e'; colorBorder = '#d97706'; faseMark = 'M';
     } else if (pct >= 33) {
-      estado = `Crecimiento — ${diasRestantes}d para cosecha`; colorBg = '#f0fdf4'; colorText = '#14532d'; colorBorder = '#16a34a'; emoji = '🌿';
+      estado = `Crecimiento · ${diasRestantes} d restantes`; colorBg = '#f0fdf4'; colorText = '#14532d'; colorBorder = '#16a34a'; faseMark = 'V';
     } else {
-      estado = `Plántula — ${diasRestantes}d para cosecha`; colorBg = '#eff6ff'; colorText = '#1e40af'; colorBorder = '#2563eb'; emoji = '🌱';
+      estado = `Plántula · ${diasRestantes} d restantes`; colorBg = '#eff6ff'; colorText = '#1e40af'; colorBorder = '#2563eb'; faseMark = 'P';
     }
 
     // Nombre legible del nivel
@@ -10070,14 +10150,14 @@ function calcularRotacion() {
           <div class="rotacion-nivel-titulo">${nombreNivel} — ${Math.round(info.diasMedia)} días</div>
           <div class="rotacion-nivel-dias">${info.plantas.length} plantas · ${estado}</div>
         </div>
-        <div style="font-size:20px">${emoji}</div>
+        <div class="rotacion-fase-mark" style="background:${colorBg};color:${colorText};border-color:${colorBorder}">${faseMark}</div>
       </div>`;
 
     // Generar alerta si hay acción pendiente
     if (diasRestantes <= 0 && esUltimo) {
-      alertas.push({ tipo: 'urgente', texto: `✂️ <strong>Nivel ${numNivel} listo para cosechar.</strong> Cosechar, rotar niveles y trasplantar plántulas nuevas en nivel superior.` });
+      alertas.push({ tipo: 'urgente', texto: `<strong>Cosecha · nivel ${numNivel}.</strong> Cosechar, rotar niveles y trasplantar plántulas nuevas en nivel superior.` });
     } else if (diasRestantes <= 5 && esUltimo) {
-      alertas.push({ tipo: 'pronto', texto: `🔶 <strong>Cosecha próxima en ${diasRestantes} días.</strong> Prepara las nuevas plántulas para trasplantar al nivel ${edadesPorNivel[0].nivel + 1}.` });
+      alertas.push({ tipo: 'pronto', texto: `<strong>Cosecha en ${diasRestantes} d.</strong> Prepara plántulas nuevas para el nivel ${edadesPorNivel[0].nivel + 1}.` });
     }
   });
 
@@ -10089,9 +10169,9 @@ function calcularRotacion() {
 
   if (alertas.length === 0) {
     if (diasParaRotacion <= 10) {
-      alertas.push({ tipo: 'pronto', texto: `🔄 Rotación en aproximadamente <strong>${diasParaRotacion} días</strong>. Ve preparando plántulas nuevas.` });
+      alertas.push({ tipo: 'pronto', texto: `Rotación aprox. en <strong>${diasParaRotacion} d</strong>. Prepara plántulas nuevas.` });
     } else {
-      alertas.push({ tipo: 'ok', texto: `✅ Cultivo escalonado en buen ritmo. Próxima rotación en <strong>${diasParaRotacion} días</strong>.` });
+      alertas.push({ tipo: 'ok', texto: `Ritmo correcto. Próxima rotación aprox. en <strong>${diasParaRotacion} d</strong>.` });
     }
   }
 
@@ -10103,7 +10183,7 @@ function calcularRotacion() {
   card.innerHTML = `
     <div class="rotacion-card">
       <div class="rotacion-title">
-        🔄 Rotación escalonada
+        Rotación escalonada
       </div>
       ${htmlConFlechas}
       ${alertas.map(a => `
@@ -10112,7 +10192,7 @@ function calcularRotacion() {
         </div>`).join('')}
       ${diasParaRotacion <= 0 ? `
       <button class="btn btn-primary" onclick="iniciarRotacion()" style="margin-top:10px;font-size:14px">
-        🔄 Iniciar rotación de niveles
+        Iniciar rotación de niveles
       </button>` : ''}
     </div>`;
 }
@@ -17586,7 +17666,7 @@ function seleccionarNutrienteRapido(id) {
   updateDashboard();
   updateTorreStats();
   const nut = getNutrienteTorre();
-  showToast('🧪 ' + nut.nombre + ' activado · dosis y checklist usan esta marca');
+  showToast('Nutriente activo: ' + nut.nombre + ' · dosis y checklist actualizados');
 }
 
 // ══════════════════════════════════════════════════
