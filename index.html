@@ -8989,19 +8989,39 @@ function getRecargaEcMetaMicroS() {
 }
 
 /**
+ * Preferencia global CalMag (checklist / tipo de agua), sin mirar una marca concreta.
+ * Usar en tablas que listan todas las marcas (p. ej. Consejos).
+ */
+function usarPreferenciaCalMagRecargaGlobal() {
+  const cfg = state.configTorre || {};
+  const v = cfg.checklistUsarCalMag;
+  if (v === true) return true;
+  if (v === false) return false;
+  const agua = cfg.agua || state.configAgua || 'destilada';
+  if (agua === 'grifo') return false;
+  return true;
+}
+
+/**
+ * ¿Incluir CalMag en esta fila de Consejos (columna destilada/ósmosis)? Respeta marca + config torre.
+ * Si tu agua en Mediciones es **grifo**, las columnas blandas siguen mostrando la guía «agua blanda + CalMag».
+ */
+function usarCalMagConsejosFilaBlanda(nut) {
+  if (!nut || !nut.calmagNecesario) return false;
+  const cfg = state.configTorre || {};
+  const agua = cfg.agua || state.configAgua || 'destilada';
+  if (agua === 'grifo') return true;
+  return usarPreferenciaCalMagRecargaGlobal();
+}
+
+/**
  * CalMag opcional: el usuario puede marcarlo en el checklist; si no ha tocado el ajuste,
  * por defecto ON con agua blanda (destilada/ósmosis) y OFF con grifo — si la línea no lleva CalMag, siempre false.
  */
 function usarCalMagEnRecarga() {
   const nut = getNutrienteTorre();
   if (!nut.calmagNecesario) return false;
-  const cfg = state.configTorre || {};
-  const v = cfg.checklistUsarCalMag;
-  if (v === true) return true;
-  if (v === false) return false;
-  const agua = cfg.agua || 'destilada';
-  if (agua === 'grifo') return false;
-  return true;
+  return usarPreferenciaCalMagRecargaGlobal();
 }
 
 function getSetupVolumen() {
@@ -13760,11 +13780,16 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
   const orden = nut.orden || [];
   const nPartes = ref.mlPorLitro.length;
   const ecMeta = getRecargaEcMetaMicroS();
+  const usarCMFila = modo === 'soft' && usarCalMagConsejosFilaBlanda(nut);
 
   if (modo === 'soft') {
     if (nut.calmagNecesario) {
-      const cmSoft = mlCalMagParaAguaBlanda(volL);
-      lines.push(`<span class="consejo-dosis18-k">CalMag</span> ${fmtMlConsejo(cmSoft)} ml → ~${EC_CALMAG_BASE} µS/cm`);
+      if (usarCMFila) {
+        const cmSoft = mlCalMagParaAguaBlanda(volL);
+        lines.push(`<span class="consejo-dosis18-k">CalMag</span> ${fmtMlConsejo(cmSoft)} ml → ~${EC_CALMAG_BASE} µS/cm`);
+      } else {
+        lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.82">omitido (pref. checklist / agua blanda sin CalMag)</span>`);
+      }
     } else {
       lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.72">no necesario</span>`);
     }
@@ -13773,7 +13798,7 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
   }
 
   const suf = dosisSufijoNutriente(nut);
-  const usarCM = modo === 'soft' && !!nut.calmagNecesario;
+  const usarCM = modo === 'soft' && usarCMFila;
   for (let i = 0; i < nPartes; i++) {
     const label = orden[i] || ('Parte ' + String.fromCharCode(65 + i));
     const mlVal = mlAbonoParteDinamica(nut, i, volL, ecMeta, {
@@ -13791,6 +13816,16 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const Vraw = (cfg.volDeposito != null && cfg.volDeposito > 0) ? cfg.volDeposito : VOL_OBJETIVO;
   const V = Math.round(Vraw * 10) / 10;
   const ecUsada = getRecargaEcMetaMicroS();
+  const aguaK = cfg.agua || state.configAgua || 'destilada';
+  const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
+  const ecManual = cfg.checklistEcObjetivoUs;
+  const ecOrigen = (Number.isFinite(ecManual) && ecManual >= 200 && ecManual <= 6000)
+    ? 'objetivo manual (checklist paso 6)'
+    : 'óptimo automático (cultivos / nutriente activo)';
+  const prefCM = usarPreferenciaCalMagRecargaGlobal();
+  const leyendaBlanda = aguaK === 'grifo'
+    ? `Columnas destilada/ósmosis = guía si mezclas con <strong>agua blanca</strong> (con CalMag en filas que lo requieren). Tu tipo de agua en Mediciones: <strong>${aguaNom}</strong>.`
+    : `Tipo de agua (torre/Mediciones): <strong>${aguaNom}</strong>. CalMag en esas columnas: <strong>${prefCM ? 'sí' : 'no'}</strong> (pref. checklist).`;
   const rows = NUTRIENTES_DB.map(nut => {
     const ref = getRefDosisFabricante(nut.id);
     const cSoft = buildLineasCeldaDosis(ref, nut, V, 'soft');
@@ -13808,12 +13843,11 @@ function buildHtmlTablaPreparacionFabricante18L() {
 
   return `
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
-      <div class="consejo-titulo" style="margin-bottom:8px">Recordatorio de mezcla · <strong>${V} L</strong> depósito · EC objetivo <strong>${ecUsada} µS/cm</strong></div>
+      <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Totales por marca con la <strong>misma lógica que el checklist</strong>: volumen del depósito (Torre / config), <strong>EC objetivo de recarga</strong> (paso 6 del checklist o rango óptimo automático) y modelo lineal con <code>ecPorMl</code> por nutriente.
-        Destilada/ósmosis: CalMag recomendado hasta ~${EC_CALMAG_BASE} µS/cm para las filas que lo necesitan. Grifo: se resta la <strong>EC base</strong> guardada en Mediciones (o valor por defecto zona).
-        <strong>A+B en partes iguales</strong> y <strong>1 parte</strong>: ml dinámicos. <strong>3 botellas</strong> y <strong>A+B con ml/L distintas</strong> (p. ej. BioBizz Fish + Alg): se muestra la <strong>tabla fabricante</strong> × volumen (sin modelo EC por botella aquí).
-        La columna «orientación» de fichas sigue en cada fila. Verifica siempre con el <strong>medidor</strong>.
+        Valores <strong>ml/g por marca</strong> con la misma regla que el checklist: volumen del depósito, EC arriba y <code>ecPorMl</code>. ${leyendaBlanda}
+        Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). Ficha debajo de cada nombre = orientación fabricante.
+        <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
       </div>
       <table class="consejo-dosis18-table">
         <thead>
