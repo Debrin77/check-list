@@ -2392,6 +2392,49 @@ button.checklist-close {
 }
 .consejo-ecph-table tr:last-child td { border-bottom: none; }
 
+.consejo-dosis18-wrap {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.consejo-dosis18-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.consejo-dosis18-table th {
+  text-align: center;
+  padding: 8px 5px;
+  background: var(--bg3);
+  color: var(--white);
+  font-weight: 800;
+  border: 1px solid var(--border);
+  line-height: 1.35;
+  vertical-align: middle;
+}
+.consejo-dosis18-table th:first-child {
+  text-align: left;
+  min-width: 140px;
+}
+.consejo-dosis18-table td {
+  padding: 6px 5px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.consejo-dosis18-table td:first-child {
+  font-weight: 700;
+  color: var(--white);
+  font-size: 11px;
+}
+.consejo-dosis18-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
 /* ══ CONFIGURACIÓN AGUA / SUSTRATO ══ */
 .config-section {
   background: var(--bg2);
@@ -13001,6 +13044,89 @@ function buildHtmlTablaEcPh() {
   `;
 }
 
+/** Tab resumen Consejos: dosis orientativas 18 L agua destilada EC 0, alineadas con ecPorMl de la app */
+const CONSEJO_TABLA_18L_EC_OBJETIVOS = [800, 1200, 1400];
+const CONSEJO_TABLA_18L_LITROS = 18;
+
+function consejoMlAbonoParaEc18L(nut, ecObjetivoMicroS, usarCalMagStd) {
+  const ecP = nut.ecPorMl || 25;
+  let ecBase = 0;
+  if (usarCalMagStd && nut.calmagNecesario && nut.calmagMl > 0) {
+    ecBase = Math.round(ecP * nut.calmagMl);
+  }
+  const ecNec = Math.max(0, ecObjetivoMicroS - ecBase);
+  if (ecNec < 15) return 0;
+  return Math.max(1, Math.round(ecNec / ecP));
+}
+
+function consejoFormatoMlPartes(nut, ml) {
+  if (!ml) return '<span style="opacity:0.55">—</span>';
+  const p = nut.partes || 2;
+  if (p === 1) return ml + ' ml';
+  if (p === 2) return ml + ' + ' + ml + ' ml';
+  return ml + ' ml × ' + p + ' partes';
+}
+
+function consejoCeldaPreparacion18L(nut, ecT, conCalMag) {
+  if (conCalMag && !nut.calmagNecesario) {
+    return '<span style="opacity:0.55" title="Esta línea lleva Ca/Mg en la fórmula; no se calcula paso CalMag separado">—</span>';
+  }
+  const mlAb = consejoMlAbonoParaEc18L(nut, ecT, conCalMag);
+  if (conCalMag && nut.calmagNecesario) {
+    const cm = Math.round(nut.calmagMl * 10) / 10;
+    const parte = consejoFormatoMlPartes(nut, mlAb);
+    return '<span style="color:#15803d;font-weight:700">' + cm + ' ml</span> CM<br>+ ' + parte;
+  }
+  return consejoFormatoMlPartes(nut, mlAb);
+}
+
+function buildHtmlTablaPreparacion18LResumen() {
+  const headCols = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(ec => `
+    <th colspan="2">${ec} µS/cm</th>
+  `).join('');
+  const subHead = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(() => `
+    <th>Sin CalMag</th>
+    <th>Con CalMag</th>
+  `).join('');
+
+  const rows = NUTRIENTES_DB.map(nut => {
+    const celdas = CONSEJO_TABLA_18L_EC_OBJETIVOS.map(ec => `
+      <td>${consejoCeldaPreparacion18L(nut, ec, false)}</td>
+      <td>${consejoCeldaPreparacion18L(nut, ec, true)}</td>
+    `).join('');
+    return `
+      <tr>
+        <td>${meteoEscHtml(nut.bandera || '')} ${meteoEscHtml(nut.nombre)}</td>
+        ${celdas}
+      </tr>`;
+  }).join('');
+
+  return `
+    <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
+      <div class="consejo-titulo" style="margin-bottom:8px">Preparación orientativa · ${CONSEJO_TABLA_18L_LITROS} L agua destilada (EC ≈ 0)</div>
+      <div class="consejo-ecph-note" style="margin-bottom:10px">
+        Cifras calculadas con las mismas <strong>constantes de la app</strong> (<code>ecPorMl</code>) que el checklist y Mediciones.
+        Con CalMag = dosis estándar indicada por marca en la base de datos (${CONSEJO_TABLA_18L_LITROS} L), después el abono en el <strong>orden del fabricante</strong>.
+        Valores <strong>orientativos</strong>: mide EC/pH reales y ajusta. Tres objetivos de ejemplo: <strong>800, 1200 y 1400 µS/cm</strong>.
+      </div>
+      <table class="consejo-dosis18-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Nutriente</th>
+            ${headCols}
+          </tr>
+          <tr>${subHead}</tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="consejo-ecph-note" style="margin-top:10px;margin-bottom:0">
+        <strong>2 partes:</strong> la cantidad se repite en A y B por igual · <strong>3 partes:</strong> misma ml en cada botella (orden del protocolo).
+        «Con CalMag —» indica que la línea no usa suplemento Ca/Mg aparte en esta app.
+      </div>
+    </div>
+  `;
+}
+
 function mostrarTabConsejos(tab) {
   const panelC = document.getElementById('panelConsejos');
   const panelD = document.getElementById('panelDiagnostico');
@@ -13187,7 +13313,7 @@ function renderConsejosLista() {
   const lista = document.getElementById('consejosLista');
 
   if (cat.soloTabla) {
-    lista.innerHTML = buildHtmlTablaEcPh();
+    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacion18LResumen();
     return;
   }
 
