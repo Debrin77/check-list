@@ -8064,6 +8064,7 @@ function guardarVolDepositoDesdeTorre() {
   updateDashboard();
   updateTorreStats();
   showToast('🪣 Depósito: ' + v + ' L · mezclas y checklist usan este volumen');
+  refreshConsejosSiVisible();
 }
 
 // ══════════════════════════════════════════════════
@@ -11220,6 +11221,7 @@ function setAgua(tipo) {
 
   actualizarRangoEC();
   cargarLocalidadMeteoUI();
+  refreshConsejosSiVisible();
 }
 
 function setSustrato(tipo) {
@@ -11657,7 +11659,9 @@ function actualizarECBase() {
   const val = parseInt(document.getElementById('inputECBaseGrifo').value) || 850;
   if (state.configAgua === 'grifo') {
     CONFIG_AGUA.grifo.ecBase = val;
+    state.configAguaEC = val;
     actualizarRangoEC();
+    refreshConsejosSiVisible();
   }
 }
 
@@ -12485,6 +12489,7 @@ function onChecklistRecargaPrefsChanged() {
   guardarEstadoTorreActual();
   saveState();
   renderChecklist();
+  refreshConsejosSiVisible();
 }
 
 function irConsejosTablaResumenEc() {
@@ -13634,25 +13639,43 @@ function mlNutrientePorParte(nutId, partIndex, volLitros) {
   return Math.max(0.1, Math.round(arr[idx] * v * 10) / 10);
 }
 
-function calcularMlParteNutriente(partIndex) {
-  const nut = getNutrienteTorre();
-  const cfg = state.configTorre || {};
-  const volObj = cfg.volDeposito || VOL_OBJETIVO;
-  const mlTab = mlNutrientePorParte(nut.id, partIndex, volObj);
+/**
+ * EC (µS/cm) que ya lleva el agua o la solución **antes** del abono principal (CalMag en blanda, o EC del grifo).
+ */
+function getEcBaseAguaPreAbonoMicroS(volLitros, nut, modoSoft, usarCalMag) {
+  if (modoSoft && nut.calmagNecesario && usarCalMag) {
+    const mlCM = mlCalMagParaAguaBlanda(volLitros);
+    return mlCM > 0 ? estimarEcCalMagMicroS(mlCM, volLitros) : 0;
+  }
+  if (!modoSoft) {
+    const g = Number(state.configAguaEC);
+    if (Number.isFinite(g) && g >= 0) return Math.round(g);
+    return Math.round(CONFIG_AGUA.grifo?.ecBase || 0);
+  }
+  return 0;
+}
+
+/**
+ * ml (o g) por parte: **misma regla** en checklist y Consejos (A+B simétricos y 1 parte = dinámico por EC meta;
+ * resto = tabla fabricante × volumen). `ctx`: { modoSoft, usarCalMag }.
+ */
+function mlAbonoParteDinamica(nut, partIndex, volLitros, ecMetaMicroS, ctx) {
+  if (!nut) return 0.1;
+  const modoSoft = ctx.modoSoft !== false;
+  const usarCalMag = !!ctx.usarCalMag;
+  const mlTab = mlNutrientePorParte(nut.id, partIndex, volLitros);
   const ref = getRefDosisFabricante(nut.id);
   const arr = ref.mlPorLitro || [];
 
   if (nut.tipoDosis === 'polvo' || nut.partes === 3) return mlTab;
 
-  const ecMeta = getRecargaEcMetaMicroS();
-  const mlCM = nut.calmagNecesario && usarCalMagEnRecarga() ? calcularMlCalMag() : 0;
-  const ecCal = mlCM > 0 ? estimarEcCalMagMicroS(mlCM, volObj) : 0;
-  let pendiente = ecMeta - ecCal;
-  if (!Number.isFinite(pendiente)) pendiente = ecMeta;
+  const ecBase = getEcBaseAguaPreAbonoMicroS(volLitros, nut, modoSoft, usarCalMag);
+  let pendiente = ecMetaMicroS - ecBase;
+  if (!Number.isFinite(pendiente)) pendiente = ecMetaMicroS;
   pendiente = Math.max(50, pendiente);
 
   if (nut.partes === 2 && arr.length >= 2 && Math.abs(arr[0] - arr[1]) < 1e-6) {
-    const slope = ecSubePorMlParABEnVolumen(nut, volObj);
+    const slope = ecSubePorMlParABEnVolumen(nut, volLitros);
     if (slope > 0) {
       let mlEc = pendiente / slope;
       mlEc = Math.round(mlEc * 10) / 10;
@@ -13662,7 +13685,7 @@ function calcularMlParteNutriente(partIndex) {
   }
 
   if (nut.partes === 1 && arr.length >= 1) {
-    const slope = ecSubePorMlParABEnVolumen(nut, volObj);
+    const slope = ecSubePorMlParABEnVolumen(nut, volLitros);
     if (slope > 0) {
       let mlEc = pendiente / slope;
       mlEc = Math.round(mlEc * 10) / 10;
@@ -13672,6 +13695,17 @@ function calcularMlParteNutriente(partIndex) {
   }
 
   return mlTab;
+}
+
+function calcularMlParteNutriente(partIndex) {
+  const nut = getNutrienteTorre();
+  const cfg = state.configTorre || {};
+  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  const aguaGrifo = (cfg.agua || state.configAgua || 'destilada') === 'grifo';
+  return mlAbonoParteDinamica(nut, partIndex, volObj, getRecargaEcMetaMicroS(), {
+    modoSoft: !aguaGrifo,
+    usarCalMag: !!(nut.calmagNecesario && usarCalMagEnRecarga()),
+  });
 }
 
 /** Compatibilidad: primera parte; el checklist usa calcularMlParteNutriente por índice. */
@@ -13719,19 +13753,19 @@ function fmtMlConsejo(v) {
 }
 
 /**
- * @param {'soft'|'grifo'} modo — soft = destilada u ósmosis (EC ~0)
+ * @param {'soft'|'grifo'} modo — soft = destilada u ósmosis (EC ~0). Mismas reglas dinámicas que el checklist (volumen, EC meta, CalMag / base grifo).
  */
 function buildLineasCeldaDosis(ref, nut, volL, modo) {
   const lines = [];
-  const scale = volL / REF_DOSIS_LITROS_TABLA;
   const orden = nut.orden || [];
   const nPartes = ref.mlPorLitro.length;
+  const ecMeta = getRecargaEcMetaMicroS();
 
   if (modo === 'soft') {
     if (nut.calmagNecesario) {
       const cmSoft = mlCalMagParaAguaBlanda(volL);
       lines.push(`<span class="consejo-dosis18-k">CalMag</span> ${fmtMlConsejo(cmSoft)} ml → ~${EC_CALMAG_BASE} µS/cm`);
-    } else if (!nut.calmagNecesario) {
+    } else {
       lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.72">no necesario</span>`);
     }
   } else {
@@ -13739,21 +13773,24 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
   }
 
   const suf = dosisSufijoNutriente(nut);
+  const usarCM = modo === 'soft' && !!nut.calmagNecesario;
   for (let i = 0; i < nPartes; i++) {
-    const mlL = ref.mlPorLitro[i];
     const label = orden[i] || ('Parte ' + String.fromCharCode(65 + i));
-    lines.push(`<span class="consejo-dosis18-k">${meteoEscHtml(label)}</span> ${fmtMlConsejo(mlL * volL)}${suf}`);
-  }
-
-  if (modo === 'grifo') {
-    lines.push('<span style="font-size:10px;opacity:.82;display:block;margin-top:5px;line-height:1.35">Abono: mismas ml que en agua blanda si partes de agua casi sin sales; si no, resta la EC del grifo al objetivo.</span>');
+    const mlVal = mlAbonoParteDinamica(nut, i, volL, ecMeta, {
+      modoSoft: modo === 'soft',
+      usarCalMag: usarCM,
+    });
+    lines.push(`<span class="consejo-dosis18-k">${meteoEscHtml(label)}</span> ${fmtMlConsejo(mlVal)}${suf}`);
   }
 
   return lines.join('<br>');
 }
 
 function buildHtmlTablaPreparacionFabricante18L() {
-  const V = REF_DOSIS_LITROS_TABLA;
+  const cfg = state.configTorre || {};
+  const Vraw = (cfg.volDeposito != null && cfg.volDeposito > 0) ? cfg.volDeposito : VOL_OBJETIVO;
+  const V = Math.round(Vraw * 10) / 10;
+  const ecUsada = getRecargaEcMetaMicroS();
   const rows = NUTRIENTES_DB.map(nut => {
     const ref = getRefDosisFabricante(nut.id);
     const cSoft = buildLineasCeldaDosis(ref, nut, V, 'soft');
@@ -13771,12 +13808,12 @@ function buildHtmlTablaPreparacionFabricante18L() {
 
   return `
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
-      <div class="consejo-titulo" style="margin-bottom:8px">Recordatorio de mezcla · ${V} L (por marca)</div>
+      <div class="consejo-titulo" style="margin-bottom:8px">Recordatorio de mezcla · <strong>${V} L</strong> depósito · EC objetivo <strong>${ecUsada} µS/cm</strong></div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Dosis (ml/L o g/L por parte) basadas en <strong>fichas y webs de fabricantes</strong> (marzo 2026). Esta tabla es <strong>referencia fija ml/L</strong> (vegetativo tipo, ≈ ${EC_REFERENCIA_DOSIS_MICROS} µS/cm de orientación).
-        En el <strong>checklist de recarga</strong>, los ml de abono para líneas <strong>A+B en partes iguales</strong> y <strong>1 parte</strong> se <strong>recalculan</strong> con tu <strong>EC objetivo</strong> (paso 6) y el <strong>CalMag estimado</strong>, usando la pendiente µS/cm por ml del nutriente (modelo lineal; contrasta siempre con el medidor).
-        Columna blanda: CalMag hasta ~${EC_CALMAG_BASE} µS/cm. Partes 3 botellas y mezclas asimétricas A+B: el checklist sigue la tabla hasta disponer de modelo por parte.
-        Columna grifo: mismas unidades; ajustar por EC del agua. Siempre <strong>mide EC y pH</strong> tras preparar.
+        Totales por marca con la <strong>misma lógica que el checklist</strong>: volumen del depósito (Torre / config), <strong>EC objetivo de recarga</strong> (paso 6 del checklist o rango óptimo automático) y modelo lineal con <code>ecPorMl</code> por nutriente.
+        Destilada/ósmosis: CalMag recomendado hasta ~${EC_CALMAG_BASE} µS/cm para las filas que lo necesitan. Grifo: se resta la <strong>EC base</strong> guardada en Mediciones (o valor por defecto zona).
+        <strong>A+B en partes iguales</strong> y <strong>1 parte</strong>: ml dinámicos. <strong>3 botellas</strong> y <strong>A+B con ml/L distintas</strong> (p. ej. BioBizz Fish + Alg): se muestra la <strong>tabla fabricante</strong> × volumen (sin modelo EC por botella aquí).
+        La columna «orientación» de fichas sigue en cada fila. Verifica siempre con el <strong>medidor</strong>.
       </div>
       <table class="consejo-dosis18-table">
         <thead>
@@ -13790,7 +13827,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
         <tbody>${rows}</tbody>
       </table>
       <div class="consejo-ecph-note" style="margin-top:10px;margin-bottom:0">
-        Hesi (1 parte): una sola columna de ml · Líneas 3 partes: orden de la fila = <strong>${meteoEscHtml('Micro → Grow → Bloom')}</strong> o equivalente en la app.
+        Líneas <strong>3 partes</strong>: totales = tabla × volumen (orden <strong>${meteoEscHtml('Micro → Grow → Bloom')}</strong> o equivalente). <strong>1 parte</strong> líquido: dinámico como en checklist si aplica modelo EC; polvo = gramos tabla.
       </div>
     </div>
   `;
@@ -13823,7 +13860,7 @@ function buildHtmlTablaConsejosPersonal() {
     <div class="consejo-dosis18-wrap consejo-dosis18-miTorre" id="consejos-tabla-personal" style="margin-top:14px">
       <div class="consejo-titulo" style="margin-bottom:8px">Mi torre · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Referencia fabricante escalada a tu depósito. Actualizado: ${meteoEscHtml(fecha || '—')}
+        Misma lógica dinámica que la tabla general (EC objetivo recarga, CalMag/blanca, grifo con EC base). Actualizado: ${meteoEscHtml(fecha || '—')}
       </div>
       <table class="consejo-dosis18-table">
         <thead><tr><th>Agua base</th><th>Preparación (ml)</th></tr></thead>
@@ -13950,6 +13987,12 @@ function a11yConsejosTablistKeydown(ev) {
     ev.preventDefault();
     tabs[tabs.length - 1].focus();
   }
+}
+
+/** Refresca la pestaña Consejos si está visible (EC, volumen, agua, checklist). */
+function refreshConsejosSiVisible() {
+  const p = document.getElementById('tab-consejos');
+  if (p && p.classList.contains('active')) renderConsejos();
 }
 
 function renderConsejos() {
