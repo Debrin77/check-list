@@ -579,15 +579,241 @@ body::before { display: none; }
   border-color: var(--green);
   color: var(--green);
 }
+.torre-vista-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #f8fafc;
+  color: #64748b;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.torre-vista-btn.active {
+  background: #fff;
+  border-color: rgba(21, 128, 61, 0.45);
+  color: var(--green);
+  box-shadow: 0 0 0 1px rgba(21, 128, 61, 0.2), 0 2px 8px rgba(21, 128, 61, 0.1);
+}
+#torreSVGWrap svg g.hc-cesta {
+  transition: filter 0.12s ease;
+}
+#torreSVGWrap svg g.hc-cesta.hc-cesta-tapflash {
+  filter: brightness(0.92);
+}
+
+/* Panel torre — diagrama / maqueta */
+.torre-nutriente-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(145deg, #fafbfc 0%, #f1f5f9 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 11px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+.torre-strip-meta { min-width: 0; }
+.torre-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.torre-icon-btn {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 10px;
+  padding: 6px 11px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.torre-icon-btn:hover {
+  background: #f0fdf4;
+  border-color: rgba(21, 128, 61, 0.35);
+}
+.torre-esquema-intro {
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #64748b;
+  padding: 0 10px 12px;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.torre-esquema-intro strong {
+  color: #334155;
+  font-weight: 800;
+}
+.torre-diagram-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.torre-diagram-legend {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  line-height: 1.45;
+  flex: 1;
+  min-width: min(100%, 12rem);
+}
+.torre-diagram-legend .k-dep { color: #2563eb; font-weight: 800; letter-spacing: 0.03em; }
+.torre-diagram-legend .k-niv { color: #15803d; font-weight: 800; letter-spacing: 0.03em; }
+.torre-diagram-legend .k-ces { color: #475569; font-weight: 800; letter-spacing: 0.03em; text-transform: none; }
+.torre-diagram-legend .k-hint {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 9px;
+  opacity: 0.9;
+}
+.torre-diagram-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.torre-anim-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+}
+#torreCestaFocusBar {
+  display: none;
+  margin-bottom: 10px;
+  padding: 11px 15px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 55%, #d1fae5 100%);
+  border: 1px solid rgba(21, 128, 61, 0.24);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.07);
+}
+#torreCestaFocusBar .torre-focus-title {
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: #0f172a;
+}
+#torreCestaFocusBar .torre-focus-meta {
+  color: #475569;
+  font-weight: 600;
+}
+#torreSVGWrap.torre-svg-canvas {
+  width: 100%;
+  overflow-x: auto;
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #e8edf3 100%);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 16px;
+  padding: 14px 10px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram {
+  filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
+}
+.torre-swipe-hint {
+  text-align: center;
+  margin: 11px 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.torre-lista-wrap { padding: 6px 2px 12px; }
+.torre-lista-block { display: flex; flex-direction: column; gap: 14px; }
+.torre-lista-nivel-title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  color: #64748b;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 0 2px 10px;
+  border-left: 3px solid #15803d;
+}
+.torre-lista-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 10px;
+}
+.torre-lista-cesta-btn {
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  min-height: 54px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.torre-lista-cesta-btn:hover {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
+  transform: translateY(-2px);
+}
+.torre-lista-cesta-btn:active {
+  transform: translateY(0);
+}
+.torre-lista-cesta-btn .tl-c { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.04em; }
+.torre-lista-cesta-btn .tl-t {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 4px;
+  line-height: 1.3;
+  font-family: var(--font-display);
+}
+.torre-lista-cesta-btn .tl-s { font-size: 10px; color: #64748b; margin-top: 6px; font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .torre-lista-cesta-btn:hover,
+  .torre-lista-cesta-btn:active {
+    transform: none;
+  }
+}
 
 /* ══ TORRE VISUAL ══ */
 .torre-container {
   background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow:
+    0 4px 28px rgba(15, 23, 42, 0.06),
+    0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .torre-wrapper {
@@ -647,30 +873,31 @@ body::before { display: none; }
 
 /* Depósito */
 .torre-deposito {
-  margin-top: 8px;
-  background: #eff6ff;
-  border: 1.5px solid #93c5fd;
-  border-radius: 12px;
-  padding: 10px 14px;
+  margin-top: 12px;
+  background: linear-gradient(180deg, #fafbfc 0%, #f8fafc 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
-.deposito-icon { font-size: 22px; }
+.deposito-icon { font-size: 20px; opacity: 0.92; }
 .deposito-info { flex: 1; }
 .deposito-title {
   font-family: var(--font-display);
   font-size: 12px;
   font-weight: 800;
-  color: #1d4ed8;
-  letter-spacing: 0.3px;
+  color: #1e40af;
+  letter-spacing: 0.02em;
 }
 .deposito-stats {
   font-size: 11px;
-  color: #374151;
-  margin-top: 3px;
+  color: #475569;
+  margin-top: 4px;
   font-weight: 500;
+  font-family: var(--font-mono);
 }
 
 .torre-level {
@@ -902,22 +1129,23 @@ body::before { display: none; }
 .leyenda {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #e5e7eb;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 .leyenda-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: #374151;
-  background: #f9fafb;
-  padding: 3px 8px;
-  border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  font-weight: 600;
+  gap: 6px;
+  font-size: 10px;
+  color: #475569;
+  background: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 .leyenda-dot {
   width: 8px; height: 8px;
@@ -4266,46 +4494,68 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <!-- Torre visual SVG -->
       <div class="torre-container">
         <!-- Badge nutriente activo junto al SVG -->
-        <div id="torreSVGNutrienteBadge"
-          style="display:flex;align-items:center;justify-content:space-between;
-                 background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;
-                 padding:8px 12px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:18px" id="torreBadgeBandera">🧪</span>
-            <div>
-              <div id="torreBadgeNombre"
-                style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#15803d">—</div>
+        <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <span style="font-size:17px;line-height:1" id="torreBadgeBandera" aria-hidden="true">🧪</span>
+            <div class="torre-strip-meta">
+              <div id="torreBadgeStripNombre"
+                style="font-family:var(--font-display);font-size:12px;font-weight:900;color:#0f172a;letter-spacing:-0.01em">—</div>
               <div id="torreBadgeEC"
-                style="font-size:10px;color:#4b5563">EC · pH —</div>
+                style="font-size:10px;color:#64748b;font-weight:600;margin-top:3px;font-family:var(--font-mono)">EC · pH —</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button type="button" onclick="rotarTorrePaso(1)"
+          <div class="torre-strip-actions">
+            <button type="button" class="torre-icon-btn" onclick="rotarTorrePaso(1)"
               aria-label="Girar torre (una posición)"
-              style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
-                     padding:4px 8px;font-size:14px;font-weight:800;color:#15803d;cursor:pointer;min-width:38px">
+              style="min-width:40px;padding:6px 10px;font-size:15px;line-height:1">
               ⟲
             </button>
-            <button type="button" onclick="cambiarNutriente()"
-              aria-label="Cambiar nutriente de esta torre"
-              style="background:#fff;border:1.5px solid #86efac;border-radius:8px;
-                     padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+            <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
+              aria-label="Cambiar nutriente de esta torre">
               Cambiar
             </button>
           </div>
         </div>
 
-        <!-- SVG generado dinámicamente -->
-        <div id="torreSVGWrap" style="width:100%;overflow-x:auto" role="img" aria-label="Torre hidropónica. Desliza para girar. Las cestas de cara responden al toque; gira para las del reverso.">
-          <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">Cargando torre...</div>
+        <div id="torreEsquemaSub" class="torre-esquema-intro">
+          <strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real).
+          En el dibujo, desliza para girar y ver todas las cestas.
         </div>
+        <div id="torreDiagramToolbar" class="torre-diagram-toolbar">
+          <div class="torre-diagram-legend" aria-hidden="true">
+            <span class="k-dep">Depósito</span>
+            <span style="color:#cbd5e1;font-weight:400">·</span>
+            <span class="k-niv">Niveles</span>
+            <span style="color:#cbd5e1;font-weight:400">·</span>
+            <span class="k-ces">Cestas</span>
+            <span class="k-hint"> · tocar</span>
+          </div>
+          <div class="torre-diagram-tools">
+            <button type="button" id="btnTorreVistaEsquema" class="torre-vista-btn active"
+              onclick="setTorreVistaModo('esquema')" aria-pressed="true"
+              aria-label="Ver esquema visual">Esquema</button>
+            <button type="button" id="btnTorreVistaLista" class="torre-vista-btn"
+              onclick="setTorreVistaModo('lista')" aria-pressed="false"
+              aria-label="Ver lista de cestas">Lista</button>
+            <label class="torre-anim-label" title="Gotas, agua y burbujas en el esquema. Si el sistema tiene «reducir movimiento», se apagan aunque esté marcado.">
+              <input type="checkbox" id="torreChkAnimSuaves" checked onchange="setTorreAnimSuaves(this.checked)"
+                aria-label="Animaciones suaves en el esquema del depósito y el riego">
+              <span>Animaciones</span>
+            </label>
+          </div>
+        </div>
+        <div id="torreCestaFocusBar" role="status" aria-live="polite"></div>
+        <!-- SVG o lista -->
+        <div id="torreSVGWrap" class="torre-svg-canvas" role="img"
+          aria-label="Esquema de torre hidropónica. Desliza para girar la maqueta. Las cestas visibles de frente responden al toque.">
+          <div style="text-align:center;padding:28px 16px;color:#94a3b8;font-size:12px;font-weight:600;letter-spacing:0.04em">Cargando esquema…</div>
+        </div>
+        <div id="torreListaVista" class="torre-lista-wrap" style="display:none" aria-label="Lista de cestas por nivel"></div>
         <div id="torreQuickTip" style="position:fixed;z-index:9999;display:none;pointer-events:none;
           background:rgba(17,24,39,0.95);color:#fff;border:1px solid rgba(255,255,255,0.12);
           border-radius:12px;padding:10px 12px;max-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
           font-size:12px;line-height:1.35"></div>
-        <div style="text-align:center;margin:6px 0 2px;color:#6b7280;font-size:11px;font-weight:700;letter-spacing:0.2px">
-          Desliza para girar
-        </div>
+        <div id="torreSwipeHint" class="torre-swipe-hint">Desliza para girar el esquema</div>
 
         <!-- Depósito + Nutriente -->
         <div class="torre-deposito" style="flex-direction:column;gap:6px">
@@ -4335,21 +4585,22 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </div>
           <!-- Nutriente activo de esta torre -->
           <button type="button" id="torreBadgeNutriente"
-            style="display:flex;align-items:center;gap:8px;background:#f0fdf4;
-              border:1.5px solid #86efac;border-radius:10px;padding:8px 12px;
+            style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
+              border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;
               cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
-              appearance:none;-webkit-appearance:none;box-sizing:border-box"
+              appearance:none;-webkit-appearance:none;box-sizing:border-box;
+              box-shadow:0 1px 3px rgba(15,23,42,0.05)"
             onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
-            <span id="torreBadgeFlag" style="font-size:18px">🧪</span>
+            <span id="torreBadgeFlag" style="font-size:18px;line-height:1" aria-hidden="true">🧪</span>
             <div style="flex:1;min-width:0">
-              <div style="font-size:10px;font-weight:700;color:#6b7280;
-                text-transform:uppercase;letter-spacing:0.5px">Nutriente activo</div>
+              <div style="font-size:10px;font-weight:800;color:#64748b;
+                text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
               <div id="torreBadgeNombre"
-                style="font-family:var(--font-display);font-size:13px;font-weight:800;
-                  color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                style="font-family:var(--font-display);font-size:13px;font-weight:900;
+                  color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
                 —</div>
             </div>
-            <span style="font-size:11px;color:#15803d;font-weight:700;
+            <span style="font-size:11px;color:#15803d;font-weight:800;
               white-space:nowrap">Cambiar ›</span>
           </button>
         </div>
@@ -5754,6 +6005,8 @@ const TUTORIAL_ASIGNAR_LS = 'cultiva_tutorial_asignar_v1';
 const TUTORIAL_EDITAR_LS = 'cultiva_tutorial_editar_v1';
 /** Bienvenida pestaña Torre (1 = ya no auto-mostrar al entrar en Torre) */
 const TUTORIAL_TORRE_TAB_LS = 'cultiva_tutorial_torre_pestana_v1';
+/** Ocultar texto “desliza para girar” tras primera interacción con el esquema */
+const TORRE_SWIPE_HINT_LS = 'cultiva_torre_swipe_hint_v1';
 
 // Torre: 5 niveles, 5 cestas cada uno
 // Niveles activos: 1, 3 y 5 (índice 0, 2, 4)
@@ -6252,6 +6505,7 @@ function resetApp() {
     localStorage.removeItem(TUTORIAL_ASIGNAR_LS);
     localStorage.removeItem(TUTORIAL_EDITAR_LS);
     localStorage.removeItem(TUTORIAL_TORRE_TAB_LS);
+    localStorage.removeItem(TORRE_SWIPE_HINT_LS);
   } catch(e) {}
 
   // Reiniciar estado
@@ -6559,8 +6813,162 @@ function setModo(modo) {
   renderTorre();
 }
 
+/** Animaciones SMIL del esquema (preferencia + “reducir movimiento” del sistema). */
+function torreSvgAnimacionesActivas() {
+  if (state.configTorre && state.configTorre.torreAnimSvg === false) return false;
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  } catch (_) {}
+  return true;
+}
+
+function ocultarTorreQuickTip() {
+  const tipEl = document.getElementById('torreQuickTip');
+  if (tipEl) tipEl.style.display = 'none';
+}
+
+let _torreFocusBarTimer = 0;
+function mostrarBarraSeleccionCesta(n, c) {
+  const bar = document.getElementById('torreCestaFocusBar');
+  if (!bar) return;
+  const dat = state.torre?.[n]?.[c];
+  const vRaw = dat?.variedad ? String(dat.variedad) : 'Cesta vacía';
+  const vEsc = vRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  bar.innerHTML = '<span class="torre-focus-title">Nivel ' + (n + 1) + ' · Cesta ' + (c + 1) + '</span>' +
+    '<span class="torre-focus-meta"> · ' + vEsc + '</span>';
+  bar.style.display = 'block';
+  if (_torreFocusBarTimer) clearTimeout(_torreFocusBarTimer);
+  _torreFocusBarTimer = setTimeout(() => {
+    bar.style.display = 'none';
+    _torreFocusBarTimer = 0;
+  }, 4200);
+}
+
+function setTorreAnimSuaves(on) {
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.torreAnimSvg = !!on;
+  saveState();
+  renderTorre();
+}
+
+function aplicarVistaTorreUI() {
+  const lista = state.configTorre?.torreVistaModo === 'lista';
+  const w = document.getElementById('torreSVGWrap');
+  const lv = document.getElementById('torreListaVista');
+  const bE = document.getElementById('btnTorreVistaEsquema');
+  const bL = document.getElementById('btnTorreVistaLista');
+  const swipe = document.getElementById('torreSwipeHint');
+  let swipeHidden = false;
+  try {
+    swipeHidden = localStorage.getItem(TORRE_SWIPE_HINT_LS) === '1';
+  } catch (_) {}
+  if (w) w.style.display = lista ? 'none' : '';
+  if (lv) lv.style.display = lista ? 'block' : 'none';
+  if (swipe) {
+    if (lista) swipe.style.display = 'none';
+    else if (swipeHidden) swipe.style.display = 'none';
+    else swipe.style.display = '';
+  }
+  if (bE) {
+    bE.classList.toggle('active', !lista);
+    bE.setAttribute('aria-pressed', lista ? 'false' : 'true');
+  }
+  if (bL) {
+    bL.classList.toggle('active', lista);
+    bL.setAttribute('aria-pressed', lista ? 'true' : 'false');
+  }
+}
+
+function setTorreVistaModo(modo) {
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.torreVistaModo = modo === 'lista' ? 'lista' : 'esquema';
+  saveState();
+  renderTorre();
+}
+
+function torreListaColorCesta(n, c) {
+  const dat = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad: '', fecha: '' };
+  const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+  const est = dat.variedad ? getEstado(dat.variedad, dias) : '';
+  if (!dat.variedad) return { border: 'rgba(15,23,42,0.12)', bg: '#f8fafc' };
+  if (est === 'plantula') return { border: 'rgba(37,99,235,0.45)', bg: '#eff6ff' };
+  if (est === 'crecimiento') return { border: 'rgba(22,163,74,0.45)', bg: '#f0fdf4' };
+  if (est === 'madurez') return { border: 'rgba(217,119,6,0.5)', bg: '#fffbeb' };
+  return { border: 'rgba(220,38,38,0.45)', bg: '#fef2f2' };
+}
+
+function renderTorreLista() {
+  const el = document.getElementById('torreListaVista');
+  if (!el) return;
+  const cfg = state.configTorre || {};
+  const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
+  const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS;
+  let h = '<div class="torre-lista-block">';
+  for (let n = 0; n < N; n++) {
+    h += '<div class="torre-lista-nivel-title">Nivel ' + (n + 1) + '</div>';
+    h += '<div class="torre-lista-grid">';
+    for (let c = 0; c < C; c++) {
+      const dat = state.torre?.[n]?.[c] || {};
+      const col = torreListaColorCesta(n, c);
+      const tit = dat.variedad ? String(dat.variedad) : 'Vacía';
+      const titEsc = tit.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      const sub = dias !== null ? dias + ' d' : 'Sin fecha';
+      h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
+        'style="border-color:' + col.border + ';background:' + col.bg + '">';
+      h += '<div class="tl-c">Cesta ' + (c + 1) + '</div>';
+      h += '<div class="tl-t">' + titEsc + '</div>';
+      h += '<div class="tl-s">' + sub + '</div>';
+      h += '</button>';
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+  el.onclick = (e) => {
+    const btn = e.target.closest('.torre-lista-cesta-btn');
+    if (!btn) return;
+    const n = parseInt(btn.getAttribute('data-n'), 10);
+    const c = parseInt(btn.getAttribute('data-c'), 10);
+    torreOnCestaActivada(n, c);
+  };
+}
+
+function torreOnCestaActivada(n, c) {
+  ocultarTorreQuickTip();
+  if (torreInteraccionModo === 'asignar') {
+    const v = document.getElementById('torreAssignVariedad')?.value?.trim();
+    if (!v) {
+      showToast('Elige primero el cultivo en la lista de arriba', true);
+      return;
+    }
+    if (torreAsignarInstantaneo) {
+      aplicarCultivoACestaUna(n, c, v);
+      saveState();
+      renderTorre();
+      updateTorreStats();
+      calcularRotacion();
+      setTimeout(renderCompatGrid, 50);
+      const cult = getCultivoDB(v);
+      mostrarBarraSeleccionCesta(n, c);
+      showToast(((cult && cult.emoji) ? cult.emoji + ' ' : '🌱 ') + v + ' · N' + (n + 1) + ' C' + (c + 1));
+    } else {
+      const k = n + ',' + c;
+      if (torreCestasMultiSel.has(k)) torreCestasMultiSel.delete(k);
+      else torreCestasMultiSel.add(k);
+      actualizarBarraMultiSel();
+      mostrarBarraSeleccionCesta(n, c);
+      renderTorre();
+    }
+  } else {
+    mostrarBarraSeleccionCesta(n, c);
+    openModal(n, c);
+  }
+}
+
 /** Solo las cestas de un nivel (girar sin regenerar depósito/defs/animaciones). */
 function generarSVGTorreCestasNivelHTML(n, rot) {
+  const ta = torreSvgAnimacionesActivas();
   const cfg = state.configTorre || {};
   const numCestas = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS;
   const SVG_W     = 360;
@@ -6694,7 +7102,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
 
     if (b.est === 'cosecha') {
       out += `<circle cx="${(b.cx2 + r - 2).toFixed(1)}" cy="${(b.cy2 - r + 2).toFixed(1)}" r="${(5*b.scale).toFixed(1)}" fill="#dc2626">
-        <animate attributeName="r" from="${(4*b.scale).toFixed(1)}" to="${(6*b.scale).toFixed(1)}" dur="0.7s" repeatCount="indefinite" direction="alternate"/>
+        ${ta ? `<animate attributeName="r" from="${(4*b.scale).toFixed(1)}" to="${(6*b.scale).toFixed(1)}" dur="0.7s" repeatCount="indefinite" direction="alternate"/>` : ''}
       </circle>`;
       out += `<text x="${(b.cx2 + r - 2).toFixed(1)}" y="${(b.cy2 - r + 6).toFixed(1)}" font-size="${(7*b.scale).toFixed(1)}" text-anchor="middle" fill="white">!</text>`;
     }
@@ -6728,7 +7136,7 @@ function generarSVGTorre() {
   const DEP_GAP   = 18;   // espacio entre torre y depósito
   const TORRE_W   = 190;  // ancho visual del cilindro
   const TORRE_RX  = 86;   // radio X para cestas alrededor
-  const TORRE_RY  = 18;   // radio Y (profundidad) para efecto 3D
+  const TORRE_RY  = 18;   // profundidad isométrica (maqueta simplificada)
 
   const torreaH = numNiveles * NIVEL_H + (numNiveles - 1) * NIVEL_GAP;
   const SVG_H   = MARG_T + torreaH + DEP_GAP + DEP_H + 30;
@@ -6744,33 +7152,34 @@ function generarSVGTorre() {
   const nut        = getNutrienteTorre();
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
   const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
+  const ta = torreSvgAnimacionesActivas();
 
   let s = '';
 
-  // ── DEFS ──────────────────────────────────────────────────────────────────
+  // ── DEFS (paleta diagrama técnico, baja saturación) ───────────────────────
   s += `<defs>
     <linearGradient id="ejeGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4ade80"/>
-      <stop offset="100%" stop-color="#15803d"/>
+      <stop offset="0%" stop-color="#86efac"/>
+      <stop offset="100%" stop-color="#22c55e"/>
     </linearGradient>
     <linearGradient id="torreBodyGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#e5e7eb"/>
-      <stop offset="18%" stop-color="#f9fafb"/>
-      <stop offset="50%" stop-color="#d1d5db"/>
-      <stop offset="82%" stop-color="#f9fafb"/>
-      <stop offset="100%" stop-color="#e5e7eb"/>
+      <stop offset="0%" stop-color="#e8ebf0"/>
+      <stop offset="22%" stop-color="#f8fafc"/>
+      <stop offset="50%" stop-color="#dce1e8"/>
+      <stop offset="78%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e8ebf0"/>
     </linearGradient>
     <linearGradient id="torreGlowGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#86efac" stop-opacity="0.18"/>
+      <stop offset="0%" stop-color="#86efac" stop-opacity="0.08"/>
       <stop offset="100%" stop-color="#86efac" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="depAguaGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.9"/>
+      <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.82"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.92"/>
     </linearGradient>
     <linearGradient id="depBodyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#e0f2fe"/>
-      <stop offset="100%" stop-color="#bfdbfe"/>
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
     </linearGradient>
     <clipPath id="depClip">
       <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>
@@ -6781,29 +7190,31 @@ function generarSVGTorre() {
   const ejeTop = MARG_T - 36;
   const ejeBot = DEP_Y + 8;
   s += `<rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
-    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.92"/>`;
+    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.88"/>`;
 
-  // Agua cayendo animada
+  // Agua cayendo (animada si ta)
   s += `<line x1="${CX}" y1="${ejeTop+10}" x2="${CX}" y2="${ejeBot-4}"
-    stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 9" stroke-linecap="round" opacity="0.55">
-    <animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>
+    stroke="#0ea5e9" stroke-width="2.25" stroke-dasharray="7 8" stroke-linecap="round" opacity="0.48">
+    ${ta ? `<animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>` : ''}
   </line>`;
 
   // ── ROCIADOR ──────────────────────────────────────────────────────────────
   s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
-    fill="#86efac" stroke="#16a34a" stroke-width="2"/>`;
-  s += `<text x="${CX}" y="${ejeTop+4}" font-size="13" text-anchor="middle">💧</text>`;
-  // Gotas
-  const gotas = [-20,-10,0,10,20];
-  gotas.forEach((dx,i) => {
-    const delay = i * 0.18;
-    s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
-      <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
-        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" from="0.8" to="0"
-        dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
-    </circle>`;
-  });
+    fill="#ecfdf5" stroke="#94a3b8" stroke-width="1.25"/>`;
+  s += `<text x="${CX}" y="${ejeTop+4}" font-size="12" text-anchor="middle" opacity="0.88">💧</text>`;
+  // Gotas (solo con animación)
+  if (ta) {
+    const gotas = [-20,-10,0,10,20];
+    gotas.forEach((dx, i) => {
+      const delay = i * 0.18;
+      s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
+        <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
+          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" from="0.8" to="0"
+          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
+      </circle>`;
+    });
+  }
 
   // ── NIVELES Y CESTAS ──────────────────────────────────────────────────────
   for (let n = 0; n < numNiveles; n++) {
@@ -6815,7 +7226,7 @@ function generarSVGTorre() {
 
     // Cuerpo de cilindro por nivel (modular, queda más “torre redonda”)
     s += `<rect x="${bodyX}" y="${bodyY}" width="${TORRE_W}" height="${bodyH}" rx="18"
-      fill="url(#torreBodyGrad)" stroke="#e5e7eb" stroke-width="1.2" opacity="${activo ? 1 : 0.35}"/>`;
+      fill="url(#torreBodyGrad)" stroke="#cbd5e1" stroke-width="1" opacity="${activo ? 1 : 0.38}"/>`;
     // Glow suave cuando está activo
     if (activo) {
       s += `<rect x="${bodyX+2}" y="${bodyY+2}" width="${TORRE_W-4}" height="${bodyH-4}" rx="16"
@@ -6823,8 +7234,8 @@ function generarSVGTorre() {
     }
 
     // Etiqueta nivel
-    s += `<text x="${bodyX-10}" y="${ny+4}" font-family="Syne,sans-serif" font-size="11" font-weight="800"
-      fill="${activo ? '#15803d' : '#9ca3af'}" text-anchor="end">N${n+1}</text>`;
+    s += `<text x="${bodyX-10}" y="${ny+4}" font-family="Syne,sans-serif" font-size="10" font-weight="800"
+      fill="${activo ? '#166534' : '#94a3b8'}" text-anchor="end" letter-spacing="0.06em">N${n+1}</text>`;
 
     if (!activo) continue;
 
@@ -6835,25 +7246,25 @@ function generarSVGTorre() {
   // ── DEPÓSITO ──────────────────────────────────────────────────────────────
   // Cuerpo exterior
   s += `<rect x="${DEP_X}" y="${DEP_Y}" width="${DEP_W}" height="${DEP_H}"
-    rx="14" fill="url(#depBodyGrad)" stroke="#60a5fa" stroke-width="2.5"/>`;
+    rx="12" fill="url(#depBodyGrad)" stroke="#94a3b8" stroke-width="1.2"/>`;
 
   // Nivel del agua
   const aguaH   = Math.round(volPct * (DEP_H - 20));
   const aguaY   = DEP_Y + DEP_H - 10 - aguaH;
-  const aguaCol = volPct < 0.5 ? '#ef4444' : volPct < 0.7 ? '#f59e0b' : '#3b82f6';
+  const aguaCol = volPct < 0.5 ? '#e11d48' : volPct < 0.7 ? '#d97706' : '#0284c7';
   s += `<rect x="${DEP_X+3}" y="${aguaY}" width="${DEP_W-6}" height="${aguaH+7}"
     rx="0" fill="url(#depAguaGrad)" clip-path="url(#depClip)" opacity="0.8">
-    <animate attributeName="y" from="${aguaY+2}" to="${aguaY-2}" dur="2s" repeatCount="indefinite" direction="alternate"/>
+    ${ta ? `<animate attributeName="y" from="${aguaY+2}" to="${aguaY-2}" dur="2s" repeatCount="indefinite" direction="alternate"/>` : ''}
   </rect>`;
   // Espejo del agua (superficie)
   s += `<ellipse cx="${CX}" cy="${aguaY}" rx="${(DEP_W-16)/2}" ry="5"
     fill="${aguaCol}" opacity="0.3">
-    <animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
+    ${ta ? `<animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
   </ellipse>`;
 
   // Texto volumen
   s += `<text x="${CX}" y="${aguaY - 8}" font-family="Syne,sans-serif"
-    font-size="11" font-weight="800" fill="${aguaCol}" text-anchor="middle">${volActual}L</text>`;
+    font-size="10.5" font-weight="800" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volActual}L</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
@@ -6864,7 +7275,7 @@ function generarSVGTorre() {
       rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.5"/>`;
     // Luz piloto
     s += `<circle cx="${hx}" cy="${DEP_Y+DEP_H-44}" r="4" fill="#fbbf24">
-      <animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>
+      ${ta ? `<animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
     </circle>`;
     s += `<text x="${hx}" y="${DEP_Y+DEP_H-52}" font-size="9" text-anchor="middle" fill="#ea580c" font-weight="700">🌡️</text>`;
     s += `<text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
@@ -6885,23 +7296,25 @@ function generarSVGTorre() {
       fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>`;
     s += `<ellipse cx="${ax}" cy="${ay}" rx="10" ry="4" fill="#d1d5db" opacity="0.6"/>`;
 
-    // Burbujas animadas
-    const burbs = [[-8,0], [-3,0], [2,0], [7,0], [-5,0], [4,0]];
-    burbs.forEach(([dx], i) => {
-      const bx    = ax + dx + (i%3 - 1) * 3;
-      const byStart = ay - 5;
-      const byEnd   = aguaY - 10;
-      const delay   = (i * 0.28).toFixed(2);
-      const dur     = (1.2 + i * 0.15).toFixed(2);
-      s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i%2)*0.5}" fill="#93c5fd" opacity="0">
-        <animate attributeName="cy" from="${byStart}" to="${byEnd}"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
-        <animate attributeName="opacity" values="0;0.8;0.8;0"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
-        <animate attributeName="r" from="1.5" to="3"
-          dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
-      </circle>`;
-    });
+    // Burbujas (animadas si ta)
+    if (ta) {
+      const burbs = [[-8,0], [-3,0], [2,0], [7,0], [-5,0], [4,0]];
+      burbs.forEach(([dx], i) => {
+        const bx    = ax + dx + (i%3 - 1) * 3;
+        const byStart = ay - 5;
+        const byEnd   = aguaY - 10;
+        const delay   = (i * 0.28).toFixed(2);
+        const dur     = (1.2 + i * 0.15).toFixed(2);
+        s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i%2)*0.5}" fill="#93c5fd" opacity="0">
+          <animate attributeName="cy" from="${byStart}" to="${byEnd}"
+            dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
+          <animate attributeName="opacity" values="0;0.8;0.8;0"
+            dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+          <animate attributeName="r" from="1.5" to="3"
+            dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+        </circle>`;
+      });
+    }
 
     s += `<text x="${ax}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
       font-size="8" fill="#6b7280" text-anchor="middle" font-weight="600">AIR</text>`;
@@ -6909,35 +7322,35 @@ function generarSVGTorre() {
 
   // ── ETIQUETA DEPÓSITO ─────────────────────────────────────────────────────
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+4}" font-family="Syne,sans-serif"
-    font-size="11" font-weight="800" fill="#1d4ed8" text-anchor="middle">DEPÓSITO ${VOL_OBJETIVO}L</text>`;
+    font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="0.12em">DEPÓSITO · ${VOL_OBJETIVO}L</text>`;
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
-    font-size="9" fill="#374151" text-anchor="middle">Bomba continua · recirculación</text>`;
+    font-size="8.5" fill="#64748b" text-anchor="middle" font-weight="600">Bomba continua · recirculación</text>`;
 
   // Conexión depósito → eje (tubito de subida)
   s += `<line x1="${CX}" y1="${DEP_Y}" x2="${CX}" y2="${ejeBot}"
-    stroke="#3b82f6" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.4">
-    <animate attributeName="stroke-dashoffset" from="18" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/>
+    stroke="#64748b" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.38">
+    ${ta ? `<animate attributeName="stroke-dashoffset" from="18" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/>` : ''}
   </line>`;
 
   // ── NOTA INFERIOR ─────────────────────────────────────────────────────────
   // Etiqueta depósito configurado
   s += `<text x="${DEP_X+10}" y="${DEP_Y+14}" font-family="Syne,sans-serif"
-    font-size="9" font-weight="700" fill="#6b7280" text-anchor="start">
-    🪣 ${volConfig}L configurados</text>`;
+    font-size="8.5" font-weight="800" fill="#64748b" text-anchor="start" letter-spacing="0.03em">
+    🪣 ${volConfig}L · nominal</text>`;
 
   // Etiqueta nutriente activo junto al depósito
   const nutLabel = (nut.nombre || 'Nutriente').slice(0,22);
   s += `<text x="${DEP_X+10}" y="${DEP_Y+26}" font-family="Syne,sans-serif"
-    font-size="8" font-weight="700" fill="#15803d" text-anchor="start">
+    font-size="8" font-weight="800" fill="#166534" text-anchor="start">
     🧪 ${nutLabel}</text>`;
 
   const pieTxt = torreInteraccionModo === 'asignar'
-    ? 'Asignar: elige cultivo arriba → toca cestas de cara (gira con deslizar para el reverso)'
-    : 'Editar: toca una cesta de cara a la cámara · Desliza para girar';
+    ? 'Asignar: cultivo arriba → toca cestas (esquema o lista). En el dibujo, desliza para el reverso.'
+    : 'Editar: cesta en el esquema o en vista lista · Maqueta simplificada, no escala real';
   s += `<text x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
-    font-size="8.5" fill="#9ca3af" text-anchor="middle">${pieTxt}</text>`;
+    font-size="8" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
 
-  return `<svg width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}"
+  return `<svg class="torre-svg-diagram" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}"
     xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto">${s}</svg>`;
 }
 
@@ -7214,7 +7627,7 @@ function actualizarTorreEditarAyuda() {
     el.textContent = '';
     return;
   }
-  el.innerHTML = 'Toca una cesta de <strong>cara</strong> para abrir su ficha: variedad, fecha, fotos y notas. Gira la torre para alcanzar las demás.';
+  el.innerHTML = 'Toca una cesta en el <strong>esquema</strong> (de cara) o usa <strong>Lista</strong> abajo: ficha con variedad, fecha, fotos y notas. En el dibujo, desliza para ver el reverso.';
 }
 
 function tutorialTorrePestanaCompleta() {
@@ -7294,7 +7707,7 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
         '<div style="padding:10px 12px;background:#fffbeb;border-radius:12px;border:1px solid #fde68a;font-size:12px;color:#374151;line-height:1.45">' +
           '<strong style="color:#b45309">Cestas en la torre</strong> · <em>Editar ficha</em> = detalle de cada hueco. <em>Asignar cultivo</em> = rellenar muchos a la vez (tiene su propio tutorial).</div>' +
         '<div style="padding:10px 12px;background:#fafafa;border-radius:12px;border:1px solid #e5e7eb;font-size:12px;color:#374151;line-height:1.45">' +
-          '<strong>Diagrama</strong> · <em>Desliza</em> para girar. Toca cestas de <strong>cara</strong> (las visibles al frente). Nutriente y depósito se actualizan con tu configuración.</div>' +
+          '<strong>Esquema</strong> · Vista tipo <em>maqueta</em> (simplificada, no escala real). <em>Desliza</em> para girar. Toca cestas de <strong>cara</strong> o prueba <strong>Lista</strong>. Puedes apagar animaciones suaves en la barra inferior del dibujo.</div>' +
       '</div>' +
       '<div style="padding:10px 18px 16px;border-top:1px solid #f3f4f6">' +
         '<button type="button" id="tutorialTorreTabOk" class="btn btn-primary" style="width:100%;padding:12px;border-radius:14px;' +
@@ -7510,6 +7923,9 @@ function limpiarSeleccionCestas() {
 }
 
 function renderTorre() {
+  const chk = document.getElementById('torreChkAnimSuaves');
+  if (chk) chk.checked = state.configTorre?.torreAnimSvg !== false;
+
   const wrap = document.getElementById('torreSVGWrap');
   if (!wrap) return;
   wrap.innerHTML = generarSVGTorre();
@@ -7525,6 +7941,9 @@ function renderTorre() {
   // Actualizar compatibilidad
   setTimeout(renderCompatGrid, 100);
   actualizarTorreEditarAyuda();
+
+  if (state.configTorre?.torreVistaModo === 'lista') renderTorreLista();
+  aplicarVistaTorreUI();
 }
 
 // ── Gestos torre: swipe para rotar con snap ──────────────────────────────────
@@ -7587,6 +8006,13 @@ function initTorreGestos(wrap) {
   };
 
   const onDown = (clientX) => {
+    try {
+      if (localStorage.getItem(TORRE_SWIPE_HINT_LS) !== '1') {
+        localStorage.setItem(TORRE_SWIPE_HINT_LS, '1');
+        const h = document.getElementById('torreSwipeHint');
+        if (h) h.style.display = 'none';
+      }
+    } catch (_) {}
     dragging = true;
     dragRotating = false;
     moved = 0;
@@ -7667,31 +8093,14 @@ function bindTorreCestas(wrap, opts = {}) {
     el.addEventListener('click', () => {
       if (shouldSuppressTap()) return;
       hideTip();
-      if (torreInteraccionModo === 'asignar') {
-        const v = document.getElementById('torreAssignVariedad')?.value?.trim();
-        if (!v) {
-          showToast('Elige primero el cultivo en la lista de arriba', true);
-          return;
-        }
-        if (torreAsignarInstantaneo) {
-          aplicarCultivoACestaUna(n, c, v);
-          saveState();
-          renderTorre();
-          updateTorreStats();
-          calcularRotacion();
-          setTimeout(renderCompatGrid, 50);
-          const cult = getCultivoDB(v);
-          showToast(((cult && cult.emoji) ? cult.emoji + ' ' : '🌱 ') + v + ' · N' + (n + 1) + ' C' + (c + 1));
-        } else {
-          const k = n + ',' + c;
-          if (torreCestasMultiSel.has(k)) torreCestasMultiSel.delete(k);
-          else torreCestasMultiSel.add(k);
-          actualizarBarraMultiSel();
-          renderTorre();
-        }
-      } else {
-        openModal(n, c);
-      }
+      torreOnCestaActivada(n, c);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      if (shouldSuppressTap()) return;
+      hideTip();
+      torreOnCestaActivada(n, c);
     });
 
     // Long-press preview (móvil)
@@ -7702,6 +8111,8 @@ function bindTorreCestas(wrap, opts = {}) {
     el.addEventListener('pointerdown', (ev) => {
       clear();
       hideTip();
+      el.classList.add('hc-cesta-tapflash');
+      setTimeout(() => { try { el.classList.remove('hc-cesta-tapflash'); } catch (_) {} }, 140);
       startX = ev.clientX; startY = ev.clientY;
       t = setTimeout(() => {
         const dat = (state.torre?.[n]?.[c]) || {};
@@ -8031,11 +8442,16 @@ function updateTorreStats() {
     volDepIn.value = String(Math.max(5, Math.min(100, Math.round(vCfg))));
   }
 
-  // Badge nutriente
-  const flagEl = document.getElementById('torreBadgeFlag');
-  const nomEl  = document.getElementById('torreBadgeNombre');
-  if (flagEl) flagEl.textContent = nut.bandera || '🧪';
-  if (nomEl)  nomEl.textContent  = nut.nombre  || '—';
+  // Badge nutriente (tarjeta inferior + bandera strip)
+  const flagEl   = document.getElementById('torreBadgeFlag');
+  const bandEl   = document.getElementById('torreBadgeBandera');
+  const nomStrip = document.getElementById('torreBadgeStripNombre');
+  const nomCard  = document.getElementById('torreBadgeNombre');
+  const nb       = nut.nombre || '—';
+  if (flagEl)   flagEl.textContent = nut.bandera || '🧪';
+  if (bandEl)   bandEl.textContent = nut.bandera || '🧪';
+  if (nomStrip) nomStrip.textContent = nb;
+  if (nomCard)  nomCard.textContent = nb;
 }
 
 /** Editar volumen nominal del depósito desde la pestaña Torre (mismaclave que el asistente). */
@@ -13826,27 +14242,27 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const leyendaBlanda = aguaK === 'grifo'
     ? `Columnas destilada/ósmosis = guía si mezclas con <strong>agua blanca</strong> (con CalMag en filas que lo requieren). Tu tipo de agua en Mediciones: <strong>${aguaNom}</strong>.`
     : `Tipo de agua (torre/Mediciones): <strong>${aguaNom}</strong>. CalMag en esas columnas: <strong>${prefCM ? 'sí' : 'no'}</strong> (pref. checklist).`;
-  const rows = NUTRIENTES_DB.map(nut => {
-    const ref = getRefDosisFabricante(nut.id);
-    const cSoft = buildLineasCeldaDosis(ref, nut, V, 'soft');
-    const cGrifo = buildLineasCeldaDosis(ref, nut, V, 'grifo');
-    return `
+
+  const nutActivo = getNutrienteTorre();
+  const ref = getRefDosisFabricante(nutActivo.id);
+  const cSoft = buildLineasCeldaDosis(ref, nutActivo, V, 'soft');
+  const cGrifo = buildLineasCeldaDosis(ref, nutActivo, V, 'grifo');
+  const rows = `
       <tr>
-        <td>${meteoEscHtml(nut.bandera || '')} ${meteoEscHtml(nut.nombre)}
+        <td>${meteoEscHtml(nutActivo.bandera || '')} ${meteoEscHtml(nutActivo.nombre)}
           <div class="consejo-dosis18-fuente">${meteoEscHtml(ref.fuente)}</div>
         </td>
         <td class="consejo-dosis18-cell">${cSoft}</td>
         <td class="consejo-dosis18-cell">${cSoft}</td>
         <td class="consejo-dosis18-cell">${cGrifo}</td>
       </tr>`;
-  }).join('');
 
   return `
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
-      <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
+      <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Valores <strong>ml/g por marca</strong> con la misma regla que el checklist: volumen del depósito, EC arriba y <code>ecPorMl</code>. ${leyendaBlanda}
-        Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). Ficha debajo de cada nombre = orientación fabricante.
+        Solo el <strong>nutriente activo</strong> de la torre (cámbialo en la pestaña Torre o en la configuración). Misma regla que el checklist: volumen del depósito, EC objetivo y <code>ecPorMl</code>. ${leyendaBlanda}
+        Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). La ficha bajo el nombre resume la orientación del fabricante.
         <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
       </div>
       <table class="consejo-dosis18-table">
@@ -13875,7 +14291,7 @@ function buildHtmlTablaConsejosPersonal() {
         <div class="consejo-titulo" style="margin-bottom:6px">Tu tabla (volumen a medida)</div>
         <div class="consejo-ecph-note">
           Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
-          Verás las mismas filas que arriba pero <strong>escaladas</strong> a tu volumen.
+          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen.
         </div>
       </div>`;
   }
@@ -17057,12 +17473,16 @@ function actualizarBadgesNutriente() {
   const headerBtn = document.getElementById('torreActivaNombre');
   if (headerBtn) headerBtn.textContent = (torre.emoji || '🌿') + ' ' + (torre.nombre || 'Torre 1');
 
-  // Pestaña Torre — badge junto al SVG
+  // Pestaña Torre — strip superior + tarjeta nutriente
   const torreBandera = document.getElementById('torreBadgeBandera');
-  const torreNombre  = document.getElementById('torreBadgeNombre');
+  const torreNomStrip = document.getElementById('torreBadgeStripNombre');
+  const torreNomCard  = document.getElementById('torreBadgeNombre');
   const torreEC      = document.getElementById('torreBadgeEC');
+  const torreFlagCard = document.getElementById('torreBadgeFlag');
   if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
-  if (torreNombre)  torreNombre.textContent  = nut.nombre;
+  if (torreNomStrip) torreNomStrip.textContent = nut.nombre;
+  if (torreNomCard)  torreNomCard.textContent  = nut.nombre;
+  if (torreFlagCard) torreFlagCard.textContent = nut.bandera || '🧪';
   if (torreEC) {
     const ecMinT = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
     const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
@@ -17080,6 +17500,8 @@ function actualizarBadgesNutriente() {
     medirEC.textContent = 'EC objetivo: ' + ecMin + '-' + ecMax + ' µS/cm · pH ' +
       (nut.pHRango ? nut.pHRango[0] + '-' + nut.pHRango[1] : '5.5-6.5');
   }
+
+  refreshConsejosSiVisible();
 }
 
 function cambiarNutriente() {
