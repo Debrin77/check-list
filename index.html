@@ -763,21 +763,33 @@ body::before { display: none; }
   padding: 4px 0 2px 10px;
   border-left: 3px solid #15803d;
 }
+/* Lista torre: cestas como círculos; 2 columnas en móvil (tamaño táctil), más columnas si hay anchura */
 .torre-lista-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 12px;
+  align-items: start;
+}
+@media (min-width: 540px) {
+  .torre-lista-grid {
+    grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  }
 }
 .torre-lista-cesta-btn {
-  text-align: left;
-  padding: 12px 14px;
-  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 6px 12px;
+  border-radius: 16px;
   cursor: pointer;
   font: inherit;
-  min-height: 54px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  min-height: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.85);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
   transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .torre-lista-cesta-btn:hover {
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
@@ -786,16 +798,74 @@ body::before { display: none; }
 .torre-lista-cesta-btn:active {
   transform: translateY(0);
 }
-.torre-lista-cesta-btn .tl-c { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.04em; }
+.torre-lista-cesta-disc {
+  position: relative;
+  overflow: hidden;
+  width: min(96px, 38vw);
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+.torre-lista-disc-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.torre-lista-cesta-num {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  z-index: 2;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.2);
+}
+.torre-lista-cesta-emoji {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
+  line-height: 1;
+}
 .torre-lista-cesta-btn .tl-t {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #0f172a;
-  margin-top: 4px;
-  line-height: 1.3;
+  margin-top: 10px;
+  line-height: 1.25;
   font-family: var(--font-display);
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
 }
-.torre-lista-cesta-btn .tl-s { font-size: 10px; color: #64748b; margin-top: 6px; font-weight: 500; }
+.torre-lista-cesta-btn .tl-s {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .torre-lista-cesta-btn:hover,
@@ -1375,6 +1445,39 @@ body::before { display: none; }
   gap: 8px;
   align-items: flex-start;
 }
+.aviso-cestas-sin-fecha {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 119, 6, 0.5);
+  background: color-mix(in srgb, var(--gold-dim) 82%, transparent);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--white);
+}
+.aviso-cestas-sin-fecha strong {
+  color: var(--orange);
+  font-weight: 800;
+}
+button.aviso-cestas-ir {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(180, 83, 9, 0.45);
+  background: var(--bg2);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--gold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.aviso-cestas-ir:active {
+  opacity: 0.92;
+}
 
 /* ══ SCROLLBAR ══ */
 .content::-webkit-scrollbar { width: 3px; }
@@ -1570,6 +1673,74 @@ button.quick-btn {
 }
 .recarga-nota {
   font-size: 11px;
+  color: var(--muted);
+}
+.recarga-urgente-banner {
+  display: none;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+  border: 1.5px solid #fcd34d;
+  background: rgba(251, 191, 36, 0.12);
+  color: #92400e;
+}
+.recarga-urgente-banner.bad {
+  border-color: #fca5a5;
+  background: rgba(248, 113, 113, 0.1);
+  color: #991b1b;
+}
+.recarga-confirm-panel {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.recarga-confirm-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.recarga-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.btn-recarga-confirm {
+  flex: 1 1 120px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-recarga-confirm:hover {
+  border-color: #86efac;
+  background: rgba(22, 163, 74, 0.12);
+}
+.btn-recarga-confirm.primary {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.15);
+  color: #93c5fd;
+}
+.btn-recarga-confirm.ghost {
+  flex: 1 1 100%;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.recarga-snooze-hint {
+  display: none;
+  margin-top: 8px;
+  font-size: 10px;
   color: var(--muted);
 }
 
@@ -1779,6 +1950,67 @@ button.quick-btn {
 }
 
 /* ══ RIEGO ══ */
+.riego-avanzado-details {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+  overflow: hidden;
+}
+.riego-avanzado-details > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 36px 14px 16px;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.riego-avanzado-details > summary::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.riego-avanzado-details[open] > summary::after {
+  content: '▴';
+}
+.riego-avanzado-details > summary::-webkit-details-marker {
+  display: none;
+}
+.riego-avanzado-details > summary::marker {
+  content: '';
+}
+.riego-avanzado-summary-main {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+.riego-avanzado-summary-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+.riego-avanzado-details[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+.riego-avanzado-details-body {
+  padding: 14px 16px 16px;
+}
+.riego-avanzado-split {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
 .riego-input-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1815,6 +2047,12 @@ button.quick-btn {
 .riego-field input:focus, .riego-field select:focus { border-color: var(--green); }
 .riego-field select option { background: var(--bg2); }
 .riego-field.full { grid-column: 1 / -1; }
+.riego-torre-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 0 0;
+  line-height: 1.45;
+}
 
 /* Resultado riego */
 .riego-resultado {
@@ -3668,6 +3906,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </span>
       </button>
 
+      <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" style="display:none" role="status" aria-live="polite"></div>
+
       <!-- Saludo -->
       <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
       <div class="dash-subtitle">
@@ -3741,6 +3981,19 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="progress-fill-bar" id="recargaBar" style="width:0%;background:var(--green)"></div>
         </div>
         <div class="recarga-nota" id="recargaNota">Registra la fecha de tu última recarga en Mediciones</div>
+        <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
+        <div id="recargaConfirmPanel" class="recarga-confirm-panel">
+          <div class="recarga-confirm-label">¿Has repuesto agua en el depósito?</div>
+          <div class="recarga-confirm-actions">
+            <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
+              aria-label="Registrar reposición solo con agua">💧 Solo agua</button>
+            <button type="button" class="btn-recarga-confirm primary" onclick="confirmarReposicionDeposito('con_nutrientes')"
+              aria-label="Abrir recarga completa con nutrientes">🧪 Agua + nutrientes</button>
+            <button type="button" class="btn-recarga-confirm ghost" onclick="posponerRecordatorioRecarga()"
+              aria-label="Posponer recordatorio de recarga">⏰ Recordar mañana</button>
+          </div>
+          <div id="recargaSnoozeHint" class="recarga-snooze-hint"></div>
+        </div>
       </div>
 
       <!-- Alerta meteorológica -->
@@ -3838,7 +4091,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <li>Enlace automático 24/7 con sondas por WiFi/Bluetooth (la integración prevista es manual salvo ampliaciones futuras).</li>
                 <li>Mapas de humedad en cubo ni software de invernadero profesional con climatización enlazada.</li>
                 <li>Apps cerradas de un kit comercial (garantías, repuestos y flujos de esa marca).</li>
-                <li>Ni calculadora pura de sales NPK (tipo HydroBuddy), ni <strong>informe agronómico “certificado”</strong>: eso sería un <em>documento oficial</em> (p. ej. análisis de laboratorio o dictamen firmado por un agrónomo colegiado con registro profesional). Esta app solo ofrece <strong>cálculos y textos orientativos</strong> en tu dispositivo; no sustituye informes legales ni certificaciones.</li>
+                <li>Hay una <strong>calculadora opcional de sales NPK</strong> en Mediciones (orientativa; con grifo puedes cargar el análisis manual). No es un <strong>informe agronómico certificado</strong> ni sustituye laboratorio ni dictamen profesional.</li>
               </ul>
             </div>
           </div>
@@ -3952,10 +4205,11 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                   style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:8px 10px;width:110px;outline:none"
                   oninput="actualizarECBase()">
                 <span style="font-size:13px;color:var(--muted)">µS/cm</span>
-                <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" rel="noopener noreferrer"
+                <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionMunicipiosCenso.do"
+                  target="_blank" rel="noopener noreferrer"
                   style="font-size:11px;color:#1d4ed8;text-decoration:none;margin-left:auto;font-weight:700;
                          padding:6px 10px;background:#eff6ff;border-radius:6px;border:1px solid #93c5fd">
-                  📋 Abrir SINAC →
+                  📋 SINAC: mi municipio →
                 </a>
               </div>
             </div>
@@ -3968,11 +4222,57 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <div style="margin-bottom:4px"><strong>2. Bicarbonatos (HCO₃)</strong> — > 200 mg/L sube mucho el pH, necesitarás más pH-</div>
                 <div style="margin-bottom:4px"><strong>3. Sodio (Na)</strong> — > 50 mg/L dificulta absorción de calcio y potasio</div>
                 <div style="margin-bottom:4px"><strong>4. Cloro residual</strong> — > 0.5 mg/L puede afectar a las raíces. Dejar reposar 24h o usar vitamina C</div>
-                <div><strong>Cómo llegar:</strong> sinac.sanidad.gob.es → Acceso ciudadano → Información actual → Elige provincia y municipio → Busca "Conductividad" en la tabla de parámetros</div>
+                <div><strong>Cómo llegar:</strong> usa el enlace de arriba (consulta por municipio): CCAA → provincia → municipio → red de abastecimiento → calidad / análisis → busca <strong>conductividad</strong>. El antiguo «inicio.do» del ministerio suele dar error 500; es fallo del servidor, no de la app.</div>
               </div>
             </div>
           </div>
           </div>
+        </div>
+
+        <div class="config-section" id="sectionNPKMix">
+          <div class="config-section-title">🧪 Mezcla de sales NPK (opcional)</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 10px">
+            Cálculo <strong>orientativo</strong> de gramos de sales comunes para aportar un objetivo de nutrientes al volumen del depósito.
+            Con <strong>agua de grifo</strong>, rellena el análisis (mg/L del informe) para descontar lo que ya lleva el agua; con destilada u ósmosis se asume aporte iónico nulo.
+            <strong>Comprueba siempre EC y pH</strong> con medidor tras mezclar; el bicarbonato del grifo altera el pH.
+          </p>
+          <div id="npkWrapAnalisisGrifo" style="display:none">
+            <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--white)">Análisis manual del grifo (mg/L)</div>
+            <div style="font-size:10px;color:var(--muted);margin:-4px 0 8px;line-height:1.4">
+              Informes ICP (p. ej. «Calcio», «Magnesio», «Potasio», «Sodio» en <strong>mg/L</strong>): introdúcelos en Ca²⁺, Mg²⁺, K⁺, Na⁺ tal cual.
+              La <strong>dureza total</strong> (mg/L CaCO₃) no sustituye a Ca y Mg por separado. NO₃⁻ / NH₄⁺ / PO₄³⁻ / SO₄²⁻ / Cl⁻ / HCO₃⁻ si el laboratorio los da; si no figuran, déjalos en blanco (≈0).
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;margin-bottom:10px">
+              <label style="font-size:11px;color:var(--muted)">NO₃⁻ <input type="number" id="npk_an_no3" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">NH₄⁺ <input type="number" id="npk_an_nh4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">PO₄³⁻ <input type="number" id="npk_an_po4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">K⁺ <input type="number" id="npk_an_k" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">Ca²⁺ <input type="number" id="npk_an_ca" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">Mg²⁺ <input type="number" id="npk_an_mg" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">SO₄²⁻ <input type="number" id="npk_an_so4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">Na⁺ <input type="number" id="npk_an_na" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">Cl⁻ <input type="number" id="npk_an_cl" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+              <label style="font-size:11px;color:var(--muted)">HCO₃⁻ <input type="number" id="npk_an_hco3" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
+            </div>
+            <button type="button" class="btn btn-ghost" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px"
+              onclick="guardarAnalisisAguaGrifo()">💾 Guardar análisis (torre actual)</button>
+          </div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--white)">Objetivo total en solución (mg/L elementales)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px">
+            <label style="font-size:10px;color:var(--muted)">N <input type="number" id="npk_tgt_n" class="form-input" value="160" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+            <label style="font-size:10px;color:var(--muted)">P <input type="number" id="npk_tgt_p" class="form-input" value="32" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+            <label style="font-size:10px;color:var(--muted)">K <input type="number" id="npk_tgt_k" class="form-input" value="220" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+            <label style="font-size:10px;color:var(--muted)">Ca <input type="number" id="npk_tgt_ca" class="form-input" value="170" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+            <label style="font-size:10px;color:var(--muted)">Mg <input type="number" id="npk_tgt_mg" class="form-input" value="48" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+            <label style="font-size:10px;color:var(--muted)">S <input type="number" id="npk_tgt_s" class="form-input" value="64" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
+          </div>
+          <label style="font-size:12px;color:var(--muted)">Volumen del depósito (L)
+            <input type="number" id="npk_vol_litros" class="form-input" value="18" min="1" step="0.5" inputmode="decimal"
+              style="width:100%;margin-top:4px;padding:8px;max-width:120px">
+          </label>
+          <button type="button" class="btn btn-primary" style="width:100%;margin-top:12px;padding:12px;border-radius:12px;font-weight:800"
+            onclick="calcularMezclaSalesNPK()">⚗️ Calcular gramos de sales a disolver</button>
+          <div id="npkResultado" style="margin-top:12px;font-size:12px;line-height:1.55;color:var(--white)"></div>
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
@@ -4448,6 +4748,9 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <span class="toggle-knob" aria-hidden="true"></span>
           </button>
         </div>
+        <p style="font-size:10px;color:var(--muted);margin:10px 0 0;line-height:1.45">
+          Si solo añades agua sin medir aún, puedes registrarlo al momento desde <strong>Inicio</strong> → «Solo agua» en la tarjeta de recarga.
+        </p>
       </div>
 
       <!-- NOTAS -->
@@ -4495,6 +4798,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="stat-label">Cosechar</div>
         </div>
       </div>
+
+      <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha" style="display:none" role="status"></div>
 
       <!-- Card rotación escalonada -->
       <div id="rotacionCard" style="display:none"></div>
@@ -4818,23 +5123,19 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       </div>
       <div id="riegoDiaInfo" style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center"></div>
 
-      <!-- Inputs plantas y edad -->
+      <!-- Nº plantas visible; edad solo interna (fallback si no hay fechas en torre) -->
       <div class="riego-input-grid">
-        <div class="riego-field">
+        <div class="riego-field full">
           <label for="riegoNPlantas">🌱 Nº plantas</label>
           <input type="number" id="riegoNPlantas" value="15"
-            inputmode="numeric" min="1" max="120" oninput="calcularRiego()">
-        </div>
-        <div class="riego-field">
-          <label for="riegoEdad">📆 Edad (semanas)</label>
-          <input type="number" id="riegoEdad" value="4"
-            inputmode="decimal" step="0.1" min="0.1" max="20" oninput="calcularRiego()"
-            aria-describedby="riegoEdadInfo">
-          <div id="riegoEdadInfo" style="font-size:10px;color:var(--muted);margin-top:4px">
-            Auto: calculando...
-          </div>
+            inputmode="numeric" min="1" max="120" oninput="calcularRiego()"
+            aria-describedby="riegoTorreHint">
+          <input type="hidden" id="riegoEdad" value="4" autocomplete="off">
+          <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Torre; el número de plantas se actualiza solo cuando hay cestas con fecha.</p>
         </div>
       </div>
+
+      <div id="avisoCestasSinFechaRiego" class="aviso-cestas-sin-fecha" style="display:none" role="status"></div>
 
       <!-- Toldo toggle -->
       <div class="toldo-toggle" id="toldoToggle">
@@ -4848,59 +5149,64 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </button>
       </div>
 
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">🌾 Fase de cultivo</div>
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" id="riegoFaseCultivoAuto" checked
-            onchange="persistRiegoAvanzado()"
-            aria-describedby="riegoFaseCultivoHint">
-          <span>Automático según plantas en la torre (fechas + ciclo de cada variedad)</span>
-        </label>
-        <label for="riegoFaseCultivo" class="visually-hidden">Fase de cultivo para el cálculo de riego</label>
-        <select id="riegoFaseCultivo" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
-          onchange="document.getElementById('riegoFaseCultivoAuto').checked=false;persistRiegoAvanzado()">
-          <option value="propagacion">Propagación / plántula — menos transpiración (~×0,84)</option>
-          <option value="vegetativo">Desarrollo vegetativo (~×0,94)</option>
-          <option value="produccion" selected>Producción / engorde — referencia (~×1,0)</option>
-          <option value="cierre">Pre-cosecha, cierre suave (~×0,97)</option>
-        </select>
-        <p id="riegoFaseCultivoHint" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45">
-          Con automático activo, la fase sigue el avance medio del ciclo (mismos tramos que la Kc del riego). Sin plantas con fecha, usa la edad en semanas de arriba (lechuga referencia ~45 d).
-          Modula el índice de demanda tras el clima. Si eliges otra fase en el desplegable, el modo pasa a manual; puedes volver a marcar automático cuando quieras.
-        </p>
-      </div>
-
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">🔀 Mezcla de sustratos</div>
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" id="riegoMezclaActiva" onchange="persistRiegoAvanzado()">
-          <span>Interpolar dos medios (retención + ON/OFF de referencia en proporción)</span>
-        </label>
-        <div id="riegoMezclaCampos" style="display:none">
-          <div class="riego-input-grid" style="margin-bottom:10px">
-            <div class="riego-field">
-              <label for="riegoMezclaA">Componente 1</label>
-              <select id="riegoMezclaA" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
-                onchange="persistRiegoAvanzado()"></select>
-            </div>
-            <div class="riego-field">
-              <label for="riegoMezclaB">Componente 2</label>
-              <select id="riegoMezclaB" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
-                onchange="persistRiegoAvanzado()"></select>
-            </div>
-          </div>
-          <label for="riegoMezclaPctA" id="labelRiegoMezclaPct" style="font-size:12px;color:var(--muted)">Proporción del componente 1</label>
-          <input type="range" id="riegoMezclaPctA" min="10" max="90" step="5" value="70"
-            aria-labelledby="labelRiegoMezclaPct"
-            oninput="document.getElementById('riegoMezclaPctALabel').textContent='Proporción: '+this.value+'% del primer componente · resto el segundo';persistRiegoAvanzado()">
-          <div id="riegoMezclaPctALabel" style="font-size:11px;color:var(--muted);margin-top:4px">
-            Proporción: 70% del primer componente · resto el segundo
-          </div>
-          <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.45">
-            Ej.: coco + perlita 70/30. Si eliges el mismo sustrato dos veces, la mezcla se desactiva sola.
+      <details class="riego-avanzado-details" id="riegoAvanzadoDetails">
+        <summary>
+          <span class="riego-avanzado-summary-main">🌾 Fase de cultivo y mezcla en cestas</span>
+          <span class="riego-avanzado-summary-sub">Opcional — despliega solo si quieres ajustar el cálculo</span>
+        </summary>
+        <div class="riego-avanzado-details-body">
+          <div class="card-title" style="margin-bottom:10px">🌾 Fase</div>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
+            <input type="checkbox" id="riegoFaseCultivoAuto" checked
+              onchange="persistRiegoAvanzado()"
+              aria-describedby="riegoFaseCultivoHint">
+            <span>Automático (fechas de plantas en la torre)</span>
+          </label>
+          <label for="riegoFaseCultivo" class="visually-hidden">Fase de cultivo para el cálculo de riego</label>
+          <select id="riegoFaseCultivo" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+            onchange="document.getElementById('riegoFaseCultivoAuto').checked=false;persistRiegoAvanzado()">
+            <option value="propagacion">Plántula / propagación</option>
+            <option value="vegetativo">Vegetativo</option>
+            <option value="produccion" selected>Producción</option>
+            <option value="cierre">Pre-cosecha</option>
+          </select>
+          <p id="riegoFaseCultivoHint" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45">
+            Sin fechas válidas en la torre, la fase automática usa un valor interno de referencia. Cambiar el desplegable desactiva el automático (puedes volver a marcarlo).
           </p>
+
+          <div class="riego-avanzado-split">
+            <div class="card-title" style="margin-bottom:10px">🔀 Mezcla</div>
+            <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-bottom:10px">
+              <input type="checkbox" id="riegoMezclaActiva" onchange="persistRiegoAvanzado()">
+              <span>Dos sustratos a la vez (p. ej. coco + perlita)</span>
+            </label>
+            <div id="riegoMezclaCampos" style="display:none">
+              <div class="riego-input-grid" style="margin-bottom:10px">
+                <div class="riego-field">
+                  <label for="riegoMezclaA">Medio 1</label>
+                  <select id="riegoMezclaA" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+                    onchange="persistRiegoAvanzado()"></select>
+                </div>
+                <div class="riego-field">
+                  <label for="riegoMezclaB">Medio 2</label>
+                  <select id="riegoMezclaB" class="form-input" style="width:100%;font-size:14px;padding:10px;border-radius:10px"
+                    onchange="persistRiegoAvanzado()"></select>
+                </div>
+              </div>
+              <label for="riegoMezclaPctA" id="labelRiegoMezclaPct" style="font-size:12px;color:var(--muted)">Cuánto del medio 1</label>
+              <input type="range" id="riegoMezclaPctA" min="10" max="90" step="5" value="70"
+                aria-labelledby="labelRiegoMezclaPct"
+                oninput="document.getElementById('riegoMezclaPctALabel').textContent='Medio 1: '+this.value+'% · medio 2: '+(100-this.value)+'%';persistRiegoAvanzado()">
+              <div id="riegoMezclaPctALabel" style="font-size:11px;color:var(--muted);margin-top:4px">
+                Medio 1: 70% · medio 2: 30%
+              </div>
+              <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Mismo medio en ambos desactiva la mezcla.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
 
       <!-- Loader -->
       <div id="riegoLoader" class="info-banner" style="display:none">
@@ -5901,11 +6207,16 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
     <!-- Opción 1: SINAC ciudadano -->
     <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px">
       <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:4px">🏛️ SINAC — Ministerio de Sanidad</div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:8px">Portal oficial. Puede estar caído. Si carga: Acceso Ciudadano → tu municipio → análisis Completo → busca <strong>Conductividad</strong></div>
-      <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionEntrada.do"
+      <div style="font-size:12px;color:#64748b;margin-bottom:8px">Portal oficial. Evita la URL antigua <code style="font-size:10px">inicio.do</code> (suele responder error 500). Entrada recomendada: búsqueda por municipio o menú ciudadano.</div>
+      <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionMunicipiosCenso.do"
         target="_blank" rel="noopener noreferrer"
-        style="display:block;text-align:center;padding:8px;background:#1d4ed8;color:white;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">
-        Abrir SINAC →
+        style="display:block;text-align:center;padding:8px;background:#1d4ed8;color:white;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;margin-bottom:6px">
+        SINAC — Buscar por municipio →
+      </a>
+      <a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicioCiudadanoAction.do"
+        target="_blank" rel="noopener noreferrer"
+        style="display:block;text-align:center;padding:8px;background:#f1f5f9;color:#1e293b;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;border:1px solid #e2e8f0">
+        SINAC — Portal ciudadano (menú) →
       </a>
     </div>
 
@@ -6433,6 +6744,8 @@ function initState() {
     modo: 'lechuga',
     ultimaMedicion: null,
     ultimaRecarga: null,
+    /** epoch ms — oculta aviso urgente de recarga hasta esa hora */
+    recargaSnoozeHasta: null,
     configAgua: 'destilada',
     configSustrato: 'esponja'
   };
@@ -6810,6 +7123,15 @@ function goTab(tab) {
   }
 }
 
+/** Desde Consejos → ir a Mediciones y desplazar al bloque mezcla NPK. */
+function irMedicionesSeccionNPK() {
+  goTab('mediciones');
+  setTimeout(function () {
+    const el = document.getElementById('sectionNPKMix');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 120);
+}
+
 // ══════════════════════════════════════════════════
 // TORRE — RENDER
 // ══════════════════════════════════════════════════
@@ -6946,7 +7268,7 @@ function renderTorreLista() {
   let h = '<div class="torre-lista-block">';
   for (let n = 0; n < N; n++) {
     h += '<div class="torre-lista-nivel-title">Nivel ' + (n + 1) + '</div>';
-    h += '<div class="torre-lista-grid">';
+    h += '<div class="torre-lista-grid" role="group" aria-label="Cestas del nivel ' + (n + 1) + '">';
     for (let c = 0; c < C; c++) {
       const dat = state.torre?.[n]?.[c] || {};
       const col = torreListaColorCesta(n, c);
@@ -6954,17 +7276,30 @@ function renderTorreLista() {
       const titEsc = tit.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
       const sub = dias !== null ? dias + ' d' : 'Sin fecha';
+      const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const emoji = dat.variedad ? (cult && cult.emoji ? cult.emoji : '🌱') : '⚪';
+      const keys = Array.isArray(dat.fotoKeys) ? dat.fotoKeys : [];
+      const ultFotoKey = keys.length ? keys[keys.length - 1] : '';
+      const fkAttr = ultFotoKey
+        ? ' data-foto-key="' + String(ultFotoKey).replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'
+        : '';
+      const ariaLabel = ('Cesta ' + (c + 1) + ', ' + tit + ', ' + sub)
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
-        'style="border-color:' + col.border + ';background:' + col.bg + '">';
-      h += '<div class="tl-c">Cesta ' + (c + 1) + '</div>';
-      h += '<div class="tl-t">' + titEsc + '</div>';
-      h += '<div class="tl-s">' + sub + '</div>';
+        'aria-label="' + ariaLabel + '">';
+      h += '<span class="torre-lista-cesta-disc"' + fkAttr + ' style="border-color:' + col.border + ';background:' + col.bg + '">';
+      h += '<span class="torre-lista-cesta-num" aria-hidden="true">' + (c + 1) + '</span>';
+      h += '<span class="torre-lista-cesta-emoji" aria-hidden="true">' + emoji + '</span>';
+      h += '</span>';
+      h += '<span class="tl-t">' + titEsc + '</span>';
+      h += '<span class="tl-s">' + sub + '</span>';
       h += '</button>';
     }
     h += '</div>';
   }
   h += '</div>';
   el.innerHTML = h;
+  void hydrateTorreListaFotosDisc(el);
   el.onclick = (e) => {
     const btn = e.target.closest('.torre-lista-cesta-btn');
     if (!btn) return;
@@ -6972,6 +7307,27 @@ function renderTorreLista() {
     const c = parseInt(btn.getAttribute('data-c'), 10);
     torreOnCestaActivada(n, c);
   };
+}
+
+/** Última foto de la cesta (IndexedDB) como fondo del círculo en vista Lista */
+async function hydrateTorreListaFotosDisc(container) {
+  if (!container) return;
+  const discs = container.querySelectorAll('.torre-lista-cesta-disc[data-foto-key]');
+  for (const disc of discs) {
+    const key = disc.getAttribute('data-foto-key');
+    if (!key) continue;
+    try {
+      const o = await leerFotoIDB(key);
+      if (!o || !o.data) continue;
+      const emojiEl = disc.querySelector('.torre-lista-cesta-emoji');
+      const img = document.createElement('img');
+      img.className = 'torre-lista-disc-img';
+      img.src = o.data;
+      img.alt = '';
+      disc.insertBefore(img, disc.firstChild);
+      if (emojiEl) emojiEl.style.display = 'none';
+    } catch (_) { /* sin foto en IDB */ }
+  }
 }
 
 function torreOnCestaActivada(n, c) {
@@ -8432,6 +8788,96 @@ function getDias(fecha) {
   return Math.max(0, Math.floor(diff / 86400000));
 }
 
+/** Fecha de plantación/trasplante anotada y parseable (no vacía ni inválida). */
+function cestaTieneFechaValida(fecha) {
+  if (fecha == null) return false;
+  const s = String(fecha).trim();
+  if (!s) return false;
+  const t = new Date(s).getTime();
+  return Number.isFinite(t);
+}
+
+/** Cesta con cultivo y fecha válida: entra en riego (N plantas, Kc), fases automáticas y medias de días. */
+function cestaCuentaParaRiegoYMetricas(c) {
+  return !!(c && c.variedad && cestaTieneFechaValida(c.fecha));
+}
+
+function contarPlantasTorreConFechaValida() {
+  let n = 0;
+  getNivelesActivos().forEach(niv => {
+    (state.torre[niv] || []).forEach(c => {
+      if (cestaCuentaParaRiegoYMetricas(c)) n++;
+    });
+  });
+  return n;
+}
+
+function contarPlantasTorreConVariedad() {
+  let n = 0;
+  getNivelesActivos().forEach(niv => {
+    (state.torre[niv] || []).forEach(c => {
+      if (c && c.variedad) n++;
+    });
+  });
+  return n;
+}
+
+/**
+ * Cestas con cultivo elegido pero sin fecha válida (afecta edad auto, riego, días media en inicio).
+ * @returns {{ count: number, items: { nivel: number, cesta: number }[] }} índices 1-based para mensajes al usuario
+ */
+function getCestasVariedadSinFecha() {
+  const items = [];
+  getNivelesActivos().forEach(n => {
+    (state.torre[n] || []).forEach((c, i) => {
+      if (c && c.variedad && !cestaTieneFechaValida(c.fecha)) {
+        items.push({ nivel: n + 1, cesta: i + 1 });
+      }
+    });
+  });
+  return { count: items.length, items };
+}
+
+/** Muestra u oculta avisos en Inicio, Torre y Riego si hay cestas sin fecha. */
+function actualizarAvisoCestasSinFecha() {
+  const { count } = getCestasVariedadSinFecha();
+  const inicio = document.getElementById('avisoCestasSinFechaInicio');
+  const torre = document.getElementById('avisoCestasSinFechaTorre');
+  const riego = document.getElementById('avisoCestasSinFechaRiego');
+  const hide = (el) => {
+    if (!el) return;
+    el.style.display = 'none';
+    el.innerHTML = '';
+  };
+  if (count === 0) {
+    hide(inicio);
+    hide(torre);
+    hide(riego);
+    return;
+  }
+  const pl = count === 1 ? 'cesta' : 'cestas';
+  const nStr = '<strong>' + count + '</strong>';
+  if (inicio) {
+    inicio.style.display = 'block';
+    inicio.innerHTML =
+      '⚠️ Hay ' + nStr + ' ' + pl + ' con cultivo pero <strong>sin fecha</strong>. No se usan en el riego ni en la media de días (solo cuentan cestas con fecha válida). ' +
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'torre\')">Ir a Torre</button>';
+  }
+  if (torre) {
+    torre.style.display = 'block';
+    torre.innerHTML =
+      count === 1
+        ? '⚠️ Una cesta tiene cultivo <strong>sin fecha</strong>. Abre su ficha y marca trasplante o siembra.'
+        : '⚠️ ' + nStr + ' cestas tienen cultivo <strong>sin fecha</strong>. Abre cada ficha y completa la fecha.';
+  }
+  if (riego) {
+    riego.style.display = 'block';
+    riego.innerHTML =
+      '⚠️ Con ' + nStr + ' ' + pl + ' sin fecha, <strong>no entran</strong> en plantas/Kc del riego ni en la media de días del inicio (solo las fechas válidas). ' +
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'torre\')">Completar en Torre</button>';
+  }
+}
+
 function getEstado(variedad, dias) {
   const total = DIAS_COSECHA[variedad] || 50;
   if (dias < 7) return 'plantula';
@@ -8448,6 +8894,7 @@ function getEmoji(estado) {
 function updateTorreStats() {
   let totalPlantas = 0;
   let totalDias = 0;
+  let plantasConFecha = 0;
   let cosechas = 0;
 
   const nivelesActivos = getNivelesActivos();
@@ -8455,15 +8902,18 @@ function updateTorreStats() {
     (state.torre[n] || []).forEach(c => {
       if (c.variedad) {
         totalPlantas++;
-        const dias = getDias(c.fecha);
-        totalDias += dias;
-        if (getEstado(c.variedad, dias) === 'cosecha') cosechas++;
+        if (cestaTieneFechaValida(c.fecha)) {
+          const dias = getDias(c.fecha);
+          totalDias += dias;
+          plantasConFecha++;
+          if (getEstado(c.variedad, dias) === 'cosecha') cosechas++;
+        }
       }
     });
   });
 
   document.getElementById('statPlantas').textContent = totalPlantas;
-  document.getElementById('statDiasMedia').textContent = totalPlantas > 0 ? Math.round(totalDias / totalPlantas) : '—';
+  document.getElementById('statDiasMedia').textContent = plantasConFecha > 0 ? Math.round(totalDias / plantasConFecha) : '—';
   document.getElementById('statCosechas').textContent = cosechas;
 
   // Actualizar depósito y nutriente dinámicamente
@@ -8498,6 +8948,8 @@ function updateTorreStats() {
   if (bandEl)   bandEl.textContent = nut.bandera || '🧪';
   if (nomStrip) nomStrip.textContent = nb;
   if (nomCard)  nomCard.textContent = nb;
+
+  actualizarAvisoCestasSinFecha();
 }
 
 /** Editar volumen nominal del depósito desde la pestaña Torre (mismaclave que el asistente). */
@@ -10034,7 +10486,7 @@ function hayPlantulasNuevas() {
   const nivelesActivos = getNivelesActivos();
   return nivelesActivos.some(n =>
     (state.torre[n] || []).some(c => {
-      if (!c.variedad || !c.fecha) return false;
+      if (!cestaCuentaParaRiegoYMetricas(c)) return false;
       const dias = Math.floor((Date.now() - new Date(c.fecha)) / 86400000);
       return dias <= 5;
     })
@@ -11341,7 +11793,7 @@ function riegoPctCicloMedioTorre(edadSemManual) {
   let sum = 0, n = 0;
   getNivelesActivos().forEach(nv => {
     (state.torre[nv] || []).forEach(c => {
-      if (!c || !c.variedad) return;
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
       sum += riegoPctCicloPlanta(c, edadSemManual);
       n++;
     });
@@ -11528,7 +11980,7 @@ async function detectarMunicipio() {
           mostrarGeoEstado('info',
             `📍 Ubicación: <strong>${ciudad}</strong><br>` +
             `No está en nuestra base de datos. Introduce la EC manualmente o consulta el ` +
-            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/inicio.do" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;font-weight:600">SINAC</a>.`
+            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionMunicipiosCenso.do" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;font-weight:600">SINAC (por municipio)</a>.`
           );
           document.getElementById('inputBuscarMunicipio').value = ciudad;
           resetGeoBtn();
@@ -11705,6 +12157,7 @@ function setAgua(tipo) {
   cargarLocalidadMeteoUI();
   refreshConsejosSiVisible();
   syncMedirAguaResumen();
+  syncNpkGrifoWrap();
 }
 
 function toggleMedirOpcionesAgua() {
@@ -11766,6 +12219,17 @@ function setSustrato(tipo) {
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
 }
 
+/** Abre el bloque colapsable de riego si hay ajustes no por defecto (fase manual o mezcla activa). */
+function actualizarRiegoAvanzadoDetailsOpen() {
+  const det = document.getElementById('riegoAvanzadoDetails');
+  if (!det || !state.configTorre) return;
+  ensureSustratoMezclaDefaults();
+  const m = state.configTorre.sustratoMezcla;
+  const mezclaActiva = !!(m && m.activa);
+  const faseManual = state.configTorre.faseCultivoRiegoAuto === false;
+  if (faseManual || mezclaActiva) det.open = true;
+}
+
 function syncRiegoAvanzadoUI() {
   const fSel = document.getElementById('riegoFaseCultivo');
   const cbFaseAuto = document.getElementById('riegoFaseCultivoAuto');
@@ -11804,7 +12268,11 @@ function syncRiegoAvanzadoUI() {
   }
   if (rng) rng.value = m.pctA != null ? m.pctA : 70;
   if (wrap) wrap.style.display = m.activa ? 'block' : 'none';
-  if (lab && rng) lab.textContent = 'Proporción: ' + rng.value + '% del primer componente · resto el segundo';
+  if (lab && rng) {
+    const v = parseInt(rng.value, 10) || 70;
+    lab.textContent = 'Medio 1: ' + v + '% · medio 2: ' + (100 - v) + '%';
+  }
+  actualizarRiegoAvanzadoDetailsOpen();
 }
 
 function fillRiegoMezclaSelectIfEmpty(sel) {
@@ -11846,7 +12314,10 @@ function persistRiegoAvanzado() {
   const wrap = document.getElementById('riegoMezclaCampos');
   const lab = document.getElementById('riegoMezclaPctALabel');
   if (wrap) wrap.style.display = m.activa ? 'block' : 'none';
-  if (lab && rng) lab.textContent = 'Proporción: ' + rng.value + '% del primer componente · resto el segundo';
+  if (lab && rng) {
+    const v = parseInt(rng.value, 10) || 70;
+    lab.textContent = 'Medio 1: ' + v + '% · medio 2: ' + (100 - v) + '%';
+  }
   guardarEstadoTorreActual();
   saveState();
   syncRiegoAvanzadoUI();
@@ -12249,6 +12720,206 @@ function initConfigUI() {
       CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
     }
   }
+  cargarAnalisisAguaGrifoUI();
+  syncNpkGrifoWrap();
+}
+
+/** Análisis manual grifo (mg/L) guardado por torre — solo orientativo. */
+function ensureAnalisisAguaGrifo() {
+  if (!state.configTorre) state.configTorre = {};
+  if (!state.configTorre.analisisAguaGrifo || typeof state.configTorre.analisisAguaGrifo !== 'object') {
+    state.configTorre.analisisAguaGrifo = {
+      no3: '', nh4: '', po4: '', k: '', ca: '', mg: '', so4: '', na: '', cl: '', hco3: ''
+    };
+  }
+  return state.configTorre.analisisAguaGrifo;
+}
+
+function syncNpkGrifoWrap() {
+  const w = document.getElementById('npkWrapAnalisisGrifo');
+  if (w) w.style.display = (state.configAgua === 'grifo') ? 'block' : 'none';
+}
+
+function leerAnalisisAguaGrifoDesdeDOM() {
+  const a = {};
+  ['no3', 'nh4', 'po4', 'k', 'ca', 'mg', 'so4', 'na', 'cl', 'hco3'].forEach(function (k) {
+    const el = document.getElementById('npk_an_' + k);
+    a[k] = el ? String(el.value || '').trim() : '';
+  });
+  return a;
+}
+
+function waterElementalFromAnalysisMgL(a) {
+  const no3 = parseFloat(a.no3);
+  const nh4 = parseFloat(a.nh4);
+  const po4 = parseFloat(a.po4);
+  const k = parseFloat(a.k);
+  const ca = parseFloat(a.ca);
+  const mg = parseFloat(a.mg);
+  const so4 = parseFloat(a.so4);
+  const na = parseFloat(a.na);
+  const cl = parseFloat(a.cl);
+  const hco3 = parseFloat(a.hco3);
+  const N = (isFinite(no3) ? no3 * 14.0067 / 62.0049 : 0) + (isFinite(nh4) ? nh4 * 14.0067 / 18.0385 : 0);
+  const P = isFinite(po4) ? po4 * 30.9738 / 94.9714 : 0;
+  const S = isFinite(so4) ? so4 * 32.065 / 96.061 : 0;
+  return {
+    N: N, P: P, K: isFinite(k) ? k : 0, Ca: isFinite(ca) ? ca : 0, Mg: isFinite(mg) ? mg : 0, S: S,
+    Na: isFinite(na) ? na : 0, Cl: isFinite(cl) ? cl : 0, HCO3: isFinite(hco3) ? hco3 : 0
+  };
+}
+
+function cargarAnalisisAguaGrifoUI() {
+  ensureAnalisisAguaGrifo();
+  const a = state.configTorre.analisisAguaGrifo;
+  ['no3', 'nh4', 'po4', 'k', 'ca', 'mg', 'so4', 'na', 'cl', 'hco3'].forEach(function (k) {
+    const el = document.getElementById('npk_an_' + k);
+    if (!el) return;
+    const v = a[k];
+    el.value = (v != null && v !== '') ? String(v) : '';
+  });
+  const volEl = document.getElementById('npk_vol_litros');
+  if (volEl) {
+    const v = state.configTorre.volDeposito;
+    volEl.value = String((v != null && v > 0) ? v : VOL_OBJETIVO);
+  }
+}
+
+function guardarAnalisisAguaGrifo() {
+  if (!state.torres || !state.torres[state.torreActiva || 0]) {
+    showToast('No hay torre activa para guardar el análisis.', true);
+    return;
+  }
+  ensureAnalisisAguaGrifo();
+  const dom = leerAnalisisAguaGrifoDesdeDOM();
+  state.configTorre.analisisAguaGrifo = dom;
+  guardarEstadoTorreActual();
+  saveState();
+  showToast('Análisis de agua (grifo) guardado en esta torre', false);
+}
+
+/** Fracciones másicas elementales en sales hidropónicas habituales (aprox.). */
+var NPK_SALT_FRAC = {
+  caNo3: { label: 'Ca(NO₃)₂·4H₂O', n: 28.0134 / 236.1478, k: 0, p: 0, ca: 40.078 / 236.1478, mg: 0, s: 0 },
+  kno3: { label: 'KNO₃', n: 14.0067 / 101.1032, k: 39.0983 / 101.1032, p: 0, ca: 0, mg: 0, s: 0 },
+  kh2po4: { label: 'KH₂PO₄', n: 0, k: 39.0983 / 136.0857, p: 30.9738 / 136.0857, ca: 0, mg: 0, s: 0 },
+  mgso4: { label: 'MgSO₄·7H₂O', n: 0, k: 0, p: 0, ca: 0, mg: 24.305 / 246.4746, s: 32.065 / 246.4746 },
+  k2so4: { label: 'K₂SO₄', n: 0, k: 78.1966 / 174.2576, p: 0, ca: 0, mg: 0, s: 32.065 / 174.2576 }
+};
+
+function npkContribPpm(key, grams, volL) {
+  const V = volL > 0 ? volL : VOL_OBJETIVO;
+  const f = NPK_SALT_FRAC[key];
+  const m = 1000 / V;
+  return {
+    N: grams * (f.n || 0) * m,
+    P: grams * (f.p || 0) * m,
+    K: grams * (f.k || 0) * m,
+    Ca: grams * (f.ca || 0) * m,
+    Mg: grams * (f.mg || 0) * m,
+    S: grams * (f.s || 0) * m
+  };
+}
+
+function npkSubRem(rem, c) {
+  rem.N = Math.max(0, rem.N - (c.N || 0));
+  rem.P = Math.max(0, rem.P - (c.P || 0));
+  rem.K = Math.max(0, rem.K - (c.K || 0));
+  rem.Ca = Math.max(0, rem.Ca - (c.Ca || 0));
+  rem.Mg = Math.max(0, rem.Mg - (c.Mg || 0));
+  rem.S = Math.max(0, rem.S - (c.S || 0));
+}
+
+function calcularMezclaSalesNPK() {
+  const out = document.getElementById('npkResultado');
+  if (!out) return;
+  const V = Math.max(0.5, parseFloat(document.getElementById('npk_vol_litros') && document.getElementById('npk_vol_litros').value) || VOL_OBJETIVO);
+  const aguaTipo = state.configAgua || 'destilada';
+  var w;
+  if (aguaTipo === 'grifo') {
+    w = waterElementalFromAnalysisMgL(leerAnalisisAguaGrifoDesdeDOM());
+  } else {
+    w = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Na: 0, Cl: 0, HCO3: 0 };
+  }
+  function readTgt(id, defVal) {
+    const el = document.getElementById(id);
+    const x = el ? parseFloat(el.value) : NaN;
+    if (!isFinite(x) || x < 0) return defVal;
+    return x;
+  }
+  const tgt = {
+    N: readTgt('npk_tgt_n', 160),
+    P: readTgt('npk_tgt_p', 32),
+    K: readTgt('npk_tgt_k', 220),
+    Ca: readTgt('npk_tgt_ca', 170),
+    Mg: readTgt('npk_tgt_mg', 48),
+    S: readTgt('npk_tgt_s', 64)
+  };
+  var rem = {
+    N: Math.max(0, tgt.N - w.N),
+    P: Math.max(0, tgt.P - w.P),
+    K: Math.max(0, tgt.K - w.K),
+    Ca: Math.max(0, tgt.Ca - w.Ca),
+    Mg: Math.max(0, tgt.Mg - w.Mg),
+    S: Math.max(0, tgt.S - w.S)
+  };
+  var grams = {};
+  var f = NPK_SALT_FRAC;
+
+  if (rem.Ca > 1e-6) {
+    var g1 = rem.Ca * V / (1000 * f.caNo3.ca);
+    grams.caNo3 = (grams.caNo3 || 0) + g1;
+    npkSubRem(rem, npkContribPpm('caNo3', g1, V));
+  }
+  if (rem.N > 1e-6) {
+    var g2 = rem.N * V / (1000 * f.kno3.n);
+    grams.kno3 = (grams.kno3 || 0) + g2;
+    npkSubRem(rem, npkContribPpm('kno3', g2, V));
+  }
+  if (rem.P > 1e-6) {
+    var g3 = rem.P * V / (1000 * f.kh2po4.p);
+    grams.kh2po4 = (grams.kh2po4 || 0) + g3;
+    npkSubRem(rem, npkContribPpm('kh2po4', g3, V));
+  }
+  if (rem.Mg > 1e-6) {
+    var g4 = rem.Mg * V / (1000 * f.mgso4.mg);
+    grams.mgso4 = (grams.mgso4 || 0) + g4;
+    npkSubRem(rem, npkContribPpm('mgso4', g4, V));
+  }
+  var needK = rem.K > 1e-6;
+  var needS = rem.S > 1e-6;
+  if (needK || needS) {
+    var gK = needK ? rem.K * V / (1000 * f.k2so4.k) : 0;
+    var gS = needS ? rem.S * V / (1000 * f.k2so4.s) : 0;
+    var g5 = Math.max(gK, gS);
+    grams.k2so4 = (grams.k2so4 || 0) + g5;
+    npkSubRem(rem, npkContribPpm('k2so4', g5, V));
+  }
+  var lines = [];
+  lines.push('<strong>Aporte estimado del agua</strong> (mg/L elementales): N ' + w.N.toFixed(1) + ', P ' + w.P.toFixed(1) + ', K ' + w.K.toFixed(0) + ', Ca ' + w.Ca.toFixed(0) + ', Mg ' + w.Mg.toFixed(0) + ', S ' + w.S.toFixed(1));
+  if (aguaTipo === 'grifo' && (w.Na > 0 || w.Cl > 0 || w.HCO3 > 0)) {
+    lines.push('Otros (referencia, no entran en la receta): Na⁺ ' + w.Na.toFixed(0) + ', Cl⁻ ' + w.Cl.toFixed(0) + ', HCO₃⁻ ' + w.HCO3.toFixed(0) + ' mg/L.');
+  }
+  lines.push('<strong>Disolver en ' + V.toFixed(1) + ' L</strong> (redondea en báscula de cocina; disolver bien antes de medir EC/pH):');
+  var order = ['caNo3', 'kno3', 'kh2po4', 'mgso4', 'k2so4'];
+  var any = false;
+  for (var i = 0; i < order.length; i++) {
+    var k = order[i];
+    var g = grams[k];
+    if (g != null && g > 0.001) {
+      any = true;
+      lines.push('• <strong>' + f[k].label + '</strong>: ~' + g.toFixed(2) + ' g');
+    }
+  }
+  if (!any) {
+    lines.push('• Con los datos actuales no hace falta añadir sales (o el agua ya supera el objetivo). Revisa objetivos o el análisis.');
+  }
+  var remSum = rem.N + rem.P + rem.K + rem.Ca + rem.Mg + rem.S;
+  if (remSum > 3) {
+    lines.push('<span style="color:var(--warn,#f5a623)">Queda déficit no cubierto con este juego de sales (~N ' + rem.N.toFixed(0) + ', P ' + rem.P.toFixed(0) + ', K ' + rem.K.toFixed(0) + ', Ca ' + rem.Ca.toFixed(0) + ', Mg ' + rem.Mg.toFixed(0) + ', S ' + rem.S.toFixed(0) + ' mg/L). Ajusta objetivos o añade otras sales.</span>');
+  }
+  lines.push('<span style="color:var(--muted);font-size:11px">Receta secuencial orientativa (Ca nitrato → K nitrato → fosfato mono → sulfato Mg → sulfato K). Verifica siempre con medidor.</span>');
+  out.innerHTML = '<div style="padding:10px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.08)">' + lines.join('<br>') + '</div>';
 }
 
 // ══════════════════════════════════════════════════
@@ -13156,6 +13827,7 @@ async function finalizarChecklist() {
 
   // Actualizar estado del sistema
   state.ultimaRecarga = now.toISOString().split('T')[0];
+  state.recargaSnoozeHasta = null;
   const prevHum = state.ultimaMedicion?.humSustrato;
   state.ultimaMedicion = {
     fecha, hora,
@@ -13538,6 +14210,33 @@ function importarMedicionesAlRegistro() {
   showToast('✅ ' + meds.length + ' entradas importadas al registro');
 }
 
+function escRegistroAttr(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+/** Miniaturas de entradas tipo «foto» cargadas desde IndexedDB */
+async function hydrateRegistroFotoThumbs(container) {
+  if (!container) return;
+  for (const slot of container.querySelectorAll('.registro-foto-thumb')) {
+    const key = slot.getAttribute('data-foto-key');
+    if (!key) continue;
+    try {
+      const o = await leerFotoIDB(key);
+      if (!o || !o.data) continue;
+      const variedad = slot.getAttribute('data-variedad') || 'Planta';
+      const fecha = slot.getAttribute('data-fecha') || '';
+      const img = document.createElement('img');
+      img.src = o.data;
+      img.alt = 'Foto: ' + variedad;
+      img.style.cssText =
+        'width:100%;max-width:220px;max-height:180px;object-fit:cover;border-radius:10px;' +
+        'border:1px solid #e5e7eb;cursor:pointer;display:block;margin-top:8px';
+      img.addEventListener('click', () => verFotoCompletaDiario(o.data, variedad, fecha));
+      slot.replaceWith(img);
+    } catch (_) { /* clave ausente en IDB */ }
+  }
+}
+
 function renderRegistro() {
   const lista   = document.getElementById('registroLista');
   const entries = (state.registro || []).slice(0, 100);
@@ -13557,7 +14256,7 @@ function renderRegistro() {
     }
     lista.innerHTML =
       '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
-      '📋 El registro agrupa mediciones, recargas del checklist y cosechas en una sola línea de tiempo.' +
+      '📋 El registro agrupa mediciones, recargas, <strong>reposiciones rápidas de agua</strong>, cosechas y fotos de plantas en una línea de tiempo.' +
       extra + '</div>';
     return;
   }
@@ -13566,6 +14265,8 @@ function renderRegistro() {
     medicion: { bg:'#f0fdf4', border:'#16a34a', color:'#15803d',  icon:'📊' },
     recarga:  { bg:'#eff6ff', border:'#2563eb', color:'#1d4ed8',  icon:'🔄' },
     cosecha:  { bg:'#fef3c7', border:'#d97706', color:'#b45309',  icon:'✂️' },
+    foto:       { bg:'#faf5ff', border:'#9333ea', color:'#7e22ce',  icon:'📸' },
+    reposicion: { bg:'#ecfeff', border:'#06b6d4', color:'#0e7490',  icon:'💧' },
   };
 
   // Agrupar por fecha
@@ -13578,7 +14279,7 @@ function renderRegistro() {
 
   lista.innerHTML = Object.entries(porFecha).map(([fecha, evs]) => {
     const cols = evs.map(e => {
-      const c = colores[e.tipo] || colores.medicion;
+      const c = colores[e.tipo] || { bg:'#f8fafc', border:'#94a3b8', color:'#475569', icon:'📌' };
       let detalle = '';
       if (e.tipo === 'medicion') {
         detalle = [
@@ -13603,6 +14304,24 @@ function renderRegistro() {
         if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+      } else if (e.tipo === 'foto') {
+        detalle = (e.variedad || 'Planta');
+        if (e.nivel != null && e.cesta != null) detalle += ' · N' + e.nivel + ' C' + e.cesta;
+        if (e.diasCultivo != null && e.diasCultivo !== '') detalle += ' · día ' + e.diasCultivo;
+        if (e.fotoFecha) detalle += ' · 📅 ' + e.fotoFecha;
+        if (e.fotoKey) {
+          detalle +=
+            '<div class="registro-foto-thumb" data-foto-key="' + escRegistroAttr(e.fotoKey) + '" ' +
+            'data-variedad="' + escRegistroAttr(e.variedad || 'Planta') + '" ' +
+            'data-fecha="' + escRegistroAttr(e.fotoFecha || e.fecha || '') + '" ' +
+            'style="margin-top:8px;width:100%;max-width:220px;aspect-ratio:4/3;background:#f3f4f6;' +
+            'border-radius:10px;border:1px solid #e5e7eb;display:flex;align-items:center;' +
+            'justify-content:center;font-size:28px;color:#9ca3af">📸</div>';
+        }
+      } else if (e.tipo === 'reposicion') {
+        detalle = e.modo === 'solo_agua'
+          ? 'Solo agua añadida al depósito (confirmación rápida). Conviene medir EC y pH en Mediciones si luego añades nutrientes.'
+          : (e.notas || 'Reposición registrada');
       }
       const globalIdx = entries.indexOf(e);
       return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:10px;' +
@@ -13610,7 +14329,8 @@ function renderRegistro() {
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
-              c.icon + ' ' + (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)) +
+              c.icon + ' ' + (e.tipo === 'foto' ? 'Foto' : e.tipo === 'reposicion' ? 'Reposición' :
+                (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
             '</span>' +
             (e.torreNombre && state.torres && state.torres.length > 1 ?
               '<span style="font-size:9px;font-weight:700;color:#15803d;background:#f0fdf4;' +
@@ -13635,6 +14355,7 @@ function renderRegistro() {
         'border-bottom:1px solid var(--border)">' + fecha + '</div>' +
       cols + '</div>';
   }).join('');
+  void hydrateRegistroFotoThumbs(lista);
 }
 
 
@@ -13793,9 +14514,12 @@ const CONSEJOS_DATA = {
       { icono:'🔃', titulo:'Rotación escalonada',
         texto:'Con 3 niveles activos, rota cada 12-15 días: cosecha nivel 5 → todo sube un nivel → nuevas plántulas en nivel 1. Así tienes producción continua y el depósito siempre tiene plantas en todas las etapas.',
         alerta:{ tipo:'info', txt:'ℹ️ Al rotar, ajusta la EC del depósito al estado del cultivo predominante.' } },
-      { icono:'🌿', titulo:'Mizuna y Komatsuna',
-        texto:'Las asiáticas crecen más rápido que las lechugas (35-40 días). Son perfectas para el nivel 1 mientras esperas trasplantar nuevas plántulas. <strong>Son compatibles con lechugas</strong> en el mismo depósito.',
-        alerta:{ tipo:'ok', txt:'✅ La Mizuna aguanta mejor el calor que las lechugas — buena opción para verano en Castelló.' } },
+      { icono:'📅', titulo:'Fecha de trasplante en la ficha',
+        texto:'Cada cesta debe llevar <strong>variedad + fecha</strong> desde que plantas o trasplantas. Sin fecha, el riego automático, las medias de edad y el calendario no reflejan lo que hay en la torre: puedes regar como si fueran plántulas cuando ya van por la mitad del ciclo (o al revés).',
+        alerta:{ tipo:'ok', txt:'✅ Un momento al trasplantar: abre la ficha, elige cultivo y fecha. Así fotos, registro y cálculo de riego quedan alineados con tus plantas reales.' } },
+      { icono:'🧩', titulo:'Cultivos compatibles o no (y por qué)',
+        texto:'En una torre con <strong>un solo depósito</strong> todas las cestas comparten la <strong>misma agua</strong>: misma EC y mismo pH. Por eso solo conviene mezclar grupos con necesidades parecidas. <strong>Lechugas entre sí</strong> y con muchas <strong>asiáticas</strong> de hoja (p. ej. mizuna, komatsuna) suele funcionar si ajustas la EC con cuidado. Las <strong>hojas verdes</strong> más exigentes (espinaca, acelga) suelen pedir <strong>más nutrientes</strong> que una torre solo lechuga. Los <strong>frutos</strong> (tomate, pepino, pimiento…) y varias <strong>hierbas de EC alta</strong> (menta, orégano, cebollino) descompensan a las lechugas: mejor <strong>otro circuito o torre</strong>. Además del agua, piensa en la <strong>luz</strong>: una planta muy grande arriba deja a las inferiores a la sombra.',
+        alerta:{ tipo:'info', txt:'ℹ️ En <strong>Torre → Compatibilidad de cultivos</strong> la app te avisa si mezclas grupos poco recomendables en el mismo depósito.' } },
     ]
   },
   agua: {
@@ -14314,6 +15038,19 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
   return lines.join('<br>');
 }
 
+function buildHtmlNotaSalesNPKConsejos() {
+  return `
+    <div class="consejo-dosis18-wrap" style="margin-top:14px" id="consejos-enlace-npk">
+      <div class="consejo-titulo" style="margin-bottom:6px">⚗️ Sales a mano y agua de grifo (análisis de laboratorio)</div>
+      <div class="consejo-ecph-note" style="margin-bottom:0">
+        En <strong>Mediciones</strong> hay una calculadora <strong>orientativa</strong>: introduces los mg/L del informe (o ceros en lo que no venga) y resta ese fondo frente a un objetivo N–P–K–Ca–Mg–S.
+        Para cotejar con <strong>HydroBuddy</strong>, usa el <strong>mismo volumen (L)</strong>, los <strong>mismos mg/L de agua</strong> y un <strong>objetivo equivalente</strong>; los gramos deberían ser <strong>del mismo orden</strong> si eliges el mismo juego de sales (Ca nitrato, K nitrato, fosfato monopotásico, sulfato de magnesio, sulfato potásico). Diferencias habituales: microelementos, chelados, otro orden de optimización o sales extra en HydroBuddy.
+      </div>
+      <button type="button" class="btn btn-ghost" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;font-weight:700"
+        onclick="irMedicionesSeccionNPK()">Ir a Mediciones → mezcla NPK</button>
+    </div>`;
+}
+
 function buildHtmlTablaPreparacionFabricante18L() {
   const cfg = state.configTorre || {};
   const Vraw = (cfg.volDeposito != null && cfg.volDeposito > 0) ? cfg.volDeposito : VOL_OBJETIVO;
@@ -14673,7 +15410,7 @@ function renderConsejosLista() {
   const lista = document.getElementById('consejosLista');
 
   if (cat.soloTabla) {
-    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlTablaConsejosPersonal();
+    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlNotaSalesNPKConsejos() + buildHtmlTablaConsejosPersonal();
     return;
   }
 
@@ -15342,7 +16079,7 @@ function calcularEdadAutomatica() {
 
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
-      if (c && c.variedad && c.fecha) {
+      if (cestaCuentaParaRiegoYMetricas(c)) {
         const dias = getDias(c.fecha);
         totalDias += dias;
         totalPlantas++;
@@ -15371,41 +16108,64 @@ function getCoordsActivas() {
 
 // Sincronizar inputs de riego con la torre activa
 function sincronizarInputsRiego() {
-  const nivelesActivos = getNivelesActivos();
-  let totalPlantas = 0;
-  nivelesActivos.forEach(n => {
-    (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
-  });
+  const nConFecha = contarPlantasTorreConFechaValida();
+  const nVariedad = contarPlantasTorreConVariedad();
   const riegoNPl = document.getElementById('riegoNPlantas');
-  if (riegoNPl) riegoNPl.value = Math.max(1, totalPlantas) || 15;
+  const tIdx = state.torreActiva || 0;
+  const savedN = parseInt(state.torres?.[tIdx]?.riego?.nPlantas, 10);
+  if (riegoNPl && document.activeElement !== riegoNPl) {
+    if (nConFecha > 0) {
+      riegoNPl.value = String(nConFecha);
+    } else if (Number.isFinite(savedN) && savedN >= 1) {
+      riegoNPl.value = String(savedN);
+    } else if (nVariedad === 0) {
+      riegoNPl.value = '15';
+    } else {
+      riegoNPl.value = String(Math.max(1, nVariedad));
+    }
+  }
 
-  // Edad automática desde las plantas reales de esta torre
+  // Edad interna (campo oculto): sincronizada con torre o fallback guardado — no se muestra en UI
   const edadAuto = calcularEdadAutomatica();
   const riegoEd = document.getElementById('riegoEdad');
-  const riegoInfo = document.getElementById('riegoEdadInfo');
+  const hintEl = document.getElementById('riegoTorreHint');
   if (edadAuto && riegoEd) {
-    riegoEd.value = Math.round(edadAuto.semanas * 10) / 10;
-    if (riegoInfo) {
-      riegoInfo.textContent = 'Auto: ' + edadAuto.plantas + ' plantas · mín ' + Math.round(edadAuto.semanas * 7) + 'd';
-      riegoInfo.style.color = 'var(--green)';
-    }
+    riegoEd.value = String(Math.round(edadAuto.semanas * 10) / 10);
   } else if (riegoEd) {
-    // Restaurar edad guardada para esta torre si existe
     const riegoGuardado = state.torres?.[state.torreActiva || 0]?.riego;
-    if (riegoGuardado?.edadSem) {
-      riegoEd.value = riegoGuardado.edadSem;
+    if (riegoGuardado?.edadSem != null && riegoGuardado.edadSem !== '') {
+      riegoEd.value = String(riegoGuardado.edadSem);
     } else {
-      riegoEd.value = 4; // default
+      riegoEd.value = '4';
     }
-    if (riegoInfo) {
-      riegoInfo.textContent = totalPlantas > 0 ? 'Manual' : 'Sin plantas — valor manual';
-      riegoInfo.style.color = 'var(--muted)';
+  }
+
+  const sinF = getCestasVariedadSinFecha().count;
+  if (hintEl) {
+    hintEl.style.color = '';
+    if (nConFecha > 0 && sinF === 0) {
+      hintEl.textContent =
+        'El riego usa las plantas con fecha en Torre. Si cambias cultivos o trasplantes, actualízalos ahí.';
+    } else if (nConFecha > 0 && sinF > 0) {
+      hintEl.textContent =
+        'Hay ' + sinF + ' cesta' + (sinF === 1 ? '' : 's') + ' con cultivo pero sin fecha: completar en Torre mejora el cálculo. El resto ya cuenta con fecha.';
+      hintEl.style.color = 'var(--gold)';
+    } else if (nVariedad > 0) {
+      hintEl.textContent =
+        'Añade la fecha de trasplante en cada cesta (Torre) para ajustar el riego a tu cultivo. Mientras tanto se usa un valor de referencia interno.';
+      hintEl.style.color = 'var(--muted)';
+    } else {
+      hintEl.textContent =
+        'Cuando registres plantas con fecha en Torre, el número de plantas y el riego se actualizarán solos.';
+      hintEl.style.color = 'var(--muted)';
     }
   }
 
   // Nota: el toldo NO se sincroniza aquí — si no, cada calcularRiego() machacaba el interruptor
   // con el valor guardado antes del último toggle. Se carga solo en cargarEstadoTorre() y tras toggleToldo().
   syncRiegoAvanzadoUI();
+
+  actualizarAvisoCestasSinFecha();
 }
 
 
@@ -15419,7 +16179,7 @@ function calcularFactorCultivo() {
   let sumFactores = 0, nPlantas = 0;
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
-      if (!c || !c.variedad) return;
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
       const cultivo = getCultivoDB(c.variedad);
       const grupo = cultivo?.grupo || 'lechugas';
       sumFactores += (factoresPorGrupo[grupo] || 1.0);
@@ -15435,7 +16195,7 @@ function calcularFactorEdad() {
   let sumaFactores = 0, nPlantas = 0;
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
-      if (!c || !c.variedad || !c.fecha) return;
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
       const dias = getDias(c.fecha);
       const cultivo = getCultivoDB(c.variedad);
       const diasTotal = cultivo?.dias || 45;
@@ -15506,7 +16266,7 @@ function calcularFactorEdadRiego(edadSemManual) {
   let nFecha = 0;
   getNivelesActivos().forEach(n => {
     (state.torre[n] || []).forEach(c => {
-      if (c && c.variedad && c.fecha) nFecha++;
+      if (cestaCuentaParaRiegoYMetricas(c)) nFecha++;
     });
   });
   const s = Math.max(0.1, Math.min(24, Number(edadSemManual) || 4));
@@ -15526,7 +16286,7 @@ function riegoPctCicloPlanta(cesta, edadSemManual) {
   const diasTot = Math.max(18, cult.dias || 45);
   const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
   let pct;
-  if (cesta.fecha) {
+  if (cestaTieneFechaValida(cesta.fecha)) {
     pct = getDias(cesta.fecha) / diasTot;
   } else {
     pct = (s * 7) / diasTot;
@@ -15560,7 +16320,7 @@ function calcularKcMedioRiego(edadSemManual) {
   let n = 0;
   getNivelesActivos().forEach(nv => {
     (state.torre[nv] || []).forEach(c => {
-      if (!c || !c.variedad) return;
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
       const cult = getCultivoDB(c.variedad) || { dias: 45, grupo: 'lechugas' };
       const pct = riegoPctCicloPlanta(c, edadSemManual);
       sum += riegoKcDesdePctYGrupo(pct, cult.grupo || 'lechugas');
@@ -15611,6 +16371,18 @@ function riegoMinutosDesdeDemanda(demanda, nPlantas, kc, sustrato, esInterior) {
   };
 }
 
+/**
+ * Riego al aire libre — cadena de cálculo (orden):
+ * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) del día índice 0|1;
+ *    UV (modelo best_match) y ET₀ FAO horaria sumada a mm/día del mismo día.
+ * 2) Toldo: si activo, UV y ET₀ efectivos ↓, ΔT zona planta (VPD día) −2 °C.
+ * 3) VPD (Magnus–Tetens) con tª media + ajuste toldo; VPD 13–15 h con pico según UV para tramo mediodía.
+ * 4) Demanda relativa riegoIndiceDemanda (VPD, viento, UV, prob. lluvia, ET₀) → ~0.48–1.58; × fase cultivo; × sensor sustrato opcional.
+ * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
+ * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
+ * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
+ * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
+ */
 async function calcularRiego() {
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
@@ -15618,7 +16390,9 @@ async function calcularRiego() {
   // Sincronizar siempre con la torre activa antes de calcular
   sincronizarInputsRiego();
 
-  const nPlantas = parseInt(riegoNPl.value) || 15;
+  const nConFecha = contarPlantasTorreConFechaValida();
+  const nPlantasInp = parseInt(riegoNPl.value, 10) || 15;
+  const nPlantas = nConFecha > 0 ? nConFecha : nPlantasInp;
   const edadSem = parseFloat(document.getElementById('riegoEdad').value) || 4;
 
   document.getElementById('riegoLoader').style.display = 'flex';
@@ -15862,6 +16636,8 @@ function updateDashboard() {
   // Recarga
   updateRecargaBar();
 
+  actualizarAvisoCestasSinFecha();
+
   // Meteo
   fetchMeteoAlert();
 }
@@ -15905,27 +16681,29 @@ function updateTiles(m) {
 }
 
 function updateDashTorre() {
-  let plantas = 0, totalDias = 0, cosechas = 0, proxDias = 999;
+  let plantas = 0, totalDias = 0, plantasConFecha = 0, cosechas = 0, proxDias = 999;
   const nivelesActivos = getNivelesActivos();
 
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
       if (c.variedad) {
         plantas++;
-        const dias = getDias(c.fecha);
-        totalDias += dias;
-        const estado = getEstado(c.variedad, dias);
-        if (estado === 'cosecha') cosechas++;
-        // Próxima cosecha
-        const totalDiasVariedad = DIAS_COSECHA[c.variedad] || 50;
-        const diasRestantes = Math.max(0, totalDiasVariedad - dias);
-        if (diasRestantes > 0 && diasRestantes < proxDias) proxDias = diasRestantes;
+        if (cestaTieneFechaValida(c.fecha)) {
+          const dias = getDias(c.fecha);
+          totalDias += dias;
+          plantasConFecha++;
+          const estado = getEstado(c.variedad, dias);
+          if (estado === 'cosecha') cosechas++;
+          const totalDiasVariedad = DIAS_COSECHA[c.variedad] || 50;
+          const diasRestantes = Math.max(0, totalDiasVariedad - dias);
+          if (diasRestantes > 0 && diasRestantes < proxDias) proxDias = diasRestantes;
+        }
       }
     });
   });
 
   document.getElementById('dashPlantas').textContent = plantas;
-  document.getElementById('dashDias').textContent = plantas > 0 ? Math.round(totalDias / plantas) : '—';
+  document.getElementById('dashDias').textContent = plantasConFecha > 0 ? Math.round(totalDias / plantasConFecha) : '—';
   document.getElementById('dashCosecha').textContent = cosechas;
   document.getElementById('dashProxCosecha').textContent = proxDias < 999 ? proxDias + 'd' : '—';
 }
@@ -15990,6 +16768,88 @@ function updateRecargaBar() {
     notaEl.textContent = 'Registra la fecha de tu última recarga';
     notaEl.style.color = '#6b7280';
   }
+
+  const nPlantasTorre = contarPlantasTorreConVariedad();
+  updateRecargaConfirmUI(
+    state.ultimaRecarga ? pct : 0,
+    state.ultimaRecarga ? diasTranscurridos : 0,
+    state.ultimaRecarga ? diasRestantes : 15,
+    nPlantasTorre
+  );
+}
+
+/**
+ * Aviso si hace falta confirmar reposición y acciones rápidas (solo agua / checklist / posponer).
+ */
+function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas) {
+  const banner = document.getElementById('recargaUrgenteBanner');
+  const snoozeHint = document.getElementById('recargaSnoozeHint');
+  if (!banner || !snoozeHint) return;
+
+  const snoozeMs = state.recargaSnoozeHasta;
+  const snooze = snoozeMs != null && Date.now() < snoozeMs;
+
+  snoozeHint.style.display = snooze ? 'block' : 'none';
+  if (snooze) {
+    const horas = Math.max(1, Math.round((snoozeMs - Date.now()) / 3600000));
+    snoozeHint.textContent =
+      'Recordatorio urgente pospuesto (unas ' + horas + ' h). Puedes seguir usando los botones de confirmación.';
+  }
+
+  const urgente = !snooze && (
+    (!state.ultimaRecarga && nPlantas > 0) ||
+    (state.ultimaRecarga && pct >= 72)
+  );
+
+  if (!urgente) {
+    banner.style.display = 'none';
+    banner.textContent = '';
+    banner.classList.remove('bad');
+    return;
+  }
+
+  banner.style.display = 'block';
+  if (!state.ultimaRecarga && nPlantas > 0) {
+    banner.classList.add('bad');
+    banner.textContent =
+      '⚠️ No consta ninguna recarga en la app. Si ya añadiste agua, confírmalo abajo; si no, usa Mediciones o el checklist cuando rellenes el depósito.';
+  } else if (pct >= 85) {
+    banner.classList.add('bad');
+    banner.textContent =
+      '🔴 Llevas ' + diasTranscurridos + ' días desde la última recarga registrada. ¿Has repuesto agua sin registrarlo?';
+  } else {
+    banner.classList.remove('bad');
+    banner.textContent =
+      '⚠️ Pronto toca revisar el depósito (' +
+      (diasRestantes <= 0 ? 'según calendario, hoy' : 'quedan ~' + diasRestantes + ' d') +
+      '). Indica si ya añadiste agua.';
+  }
+}
+
+function confirmarReposicionDeposito(modo) {
+  if (modo === 'con_nutrientes') {
+    abrirChecklist(false);
+    showToast('🧪 Sigue el checklist para registrar la recarga con nutrientes');
+    return;
+  }
+  if (modo !== 'solo_agua') return;
+  const now = new Date();
+  state.ultimaRecarga = now.toISOString().split('T')[0];
+  state.recargaSnoozeHasta = null;
+  addRegistro('reposicion', { modo: 'solo_agua', icono: '💧' });
+  guardarEstadoTorreActual();
+  saveState();
+  updateRecargaBar();
+  if (document.getElementById('tab-historial')?.classList.contains('active')) cargarHistorial();
+  showToast('✅ Agua registrada. Mide EC/pH en Mediciones cuando mezcles nutrientes.');
+}
+
+function posponerRecordatorioRecarga() {
+  state.recargaSnoozeHasta = Date.now() + 86400000;
+  guardarEstadoTorreActual();
+  saveState();
+  updateRecargaBar();
+  showToast('⏰ Te volvemos a avisar en 24 h');
 }
 
 async function fetchMeteoAlert() {
@@ -16499,6 +17359,7 @@ async function guardarMedicion() {
   // Si es una recarga marcada
   if (esRecarga) {
     state.ultimaRecarga = now.toISOString().split('T')[0];
+    state.recargaSnoozeHasta = null;
     esRecarga = false;
     const rsw = document.getElementById('recargaSwitch');
     rsw.className = 'toggle-switch';
@@ -17176,13 +18037,14 @@ function cambiarTorreActiva(idx) {
   if (_pA) _pA.style.display = 'none';
   actualizarBarraMultiSel();
   // Recalcular plantas para la nueva torre en el input de riego
-  const nivelesActivos = getNivelesActivos();
-  let totalPlantas = 0;
-  nivelesActivos.forEach(n => {
-    (state.torre[n] || []).forEach(c => { if (c && c.variedad) totalPlantas++; });
-  });
+  const nCf = contarPlantasTorreConFechaValida();
+  const nV = contarPlantasTorreConVariedad();
   const riegoNPl = document.getElementById('riegoNPlantas');
-  if (riegoNPl) riegoNPl.value = Math.max(1, totalPlantas) || 15;
+  if (riegoNPl) {
+    if (nCf > 0) riegoNPl.value = String(nCf);
+    else if (nV === 0) riegoNPl.value = '15';
+    else riegoNPl.value = String(Math.max(1, nV));
+  }
 
   // Toast con nombre de la torre
   const t = state.torres[idx];
