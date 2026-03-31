@@ -3716,84 +3716,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 .rotacion-alerta.pronto  { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; }
 .rotacion-alerta.ok      { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; }
 
-/* Expectativas / comparación con el mercado (Inicio) */
-.expectativas-wrap {
-  margin-top: 14px;
-  margin-bottom: 8px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg2);
-  overflow: hidden;
-}
-.expectativas-wrap summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 12px 14px;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  -webkit-tap-highlight-color: transparent;
-}
-.expectativas-wrap summary:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
-}
-.expectativas-wrap summary::-webkit-details-marker { display: none; }
-.expectativas-wrap summary::after {
-  content: '▾';
-  font-size: 12px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.expectativas-wrap[open] summary::after { content: '▴'; }
-.expectativas-body {
-  padding: 0 14px 14px;
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--muted);
-}
-.expectativas-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
-@media (max-width: 380px) {
-  .expectativas-cols { grid-template-columns: 1fr; }
-}
-.expectativas-col {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-.expectativas-col h4 {
-  margin: 0 0 8px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--green);
-}
-.expectativas-col.no h4 { color: var(--gold); }
-.expectativas-col ul {
-  margin: 0;
-  padding-left: 18px;
-}
-.expectativas-col li { margin-bottom: 6px; }
-.expectativas-nota {
-  margin-top: 12px;
-  font-size: 11px;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-}
-
 /* ══ PLACEHOLDER TABS ══ */
 .coming-soon {
   display: flex;
@@ -4067,40 +3989,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </button>
       </div>
 
-      <details class="expectativas-wrap" id="panelExpectativasMercado">
-        <summary>ℹ️ Qué es esta app y qué no promete <span style="font-weight:600;color:var(--muted);font-size:11px">(vs otras apps y páginas)</span></summary>
-        <div class="expectativas-body">
-          <p style="margin:0 0 4px;color:var(--white);font-weight:600">
-            Herramienta integrada para torre(s) vertical(es): riego según clima y sustrato, nutrientes, mediciones e historial. Los datos se guardan en tu dispositivo.
-          </p>
-          <div class="expectativas-cols">
-            <div class="expectativas-col">
-              <h4>Sí cubre bien</h4>
-              <ul>
-                <li>VPD, viento, UV, lluvia y ET₀ (Open‑Meteo) para afinar pulsos de riego al aire libre.</li>
-                <li>Interior: horas de luz, tipo de luz y sala (VPD aprox.) sin depender del tiempo exterior.</li>
-                <li>Varias torres, cestas, calendario, checklist de recarga y registro de EC/pH/volumen.</li>
-                <li>Orientada a España (agua por municipio) sin obligar a cuenta ni hardware propio.</li>
-                <li>Tablas y consejos de referencia (EC/pH, cultivo…) en la pestaña <strong>Consejos</strong>.</li>
-                <li>Si usas sondas o medidores, puedes indicarlo en <strong>Configuración</strong> (Mediciones) y registrar sus lecturas a mano — ver guía allí.</li>
-              </ul>
-            </div>
-            <div class="expectativas-col no">
-              <h4>No sustituye</h4>
-              <ul>
-                <li>Enlace automático 24/7 con sondas por WiFi/Bluetooth (la integración prevista es manual salvo ampliaciones futuras).</li>
-                <li>Mapas de humedad en cubo ni software de invernadero profesional con climatización enlazada.</li>
-                <li>Apps cerradas de un kit comercial (garantías, repuestos y flujos de esa marca).</li>
-                <li>Hay una <strong>calculadora opcional de sales NPK</strong> en Mediciones (orientativa; con grifo puedes cargar el análisis manual). No es un <strong>informe agronómico certificado</strong> ni sustituye laboratorio ni dictamen profesional.</li>
-              </ul>
-            </div>
-          </div>
-          <p class="expectativas-nota">
-            <strong style="color:var(--white)">Frente al mercado:</strong> suele ser más completa que una calculadora suelta de nutrientes y más abierta que una app ligada a un solo fabricante; menos especializada que plataformas con telemetría continua y climatización enlazada. Los nombres de productos del mercado son solo referencias generales.
-          </p>
-        </div>
-      </details>
-
     </div>
     <!-- FIN TAB INICIO -->
 
@@ -4227,52 +4115,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </div>
           </div>
           </div>
-        </div>
-
-        <div class="config-section" id="sectionNPKMix">
-          <div class="config-section-title">🧪 Mezcla de sales NPK (opcional)</div>
-          <p style="font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 10px">
-            Cálculo <strong>orientativo</strong> de gramos de sales comunes para aportar un objetivo de nutrientes al volumen del depósito.
-            Con <strong>agua de grifo</strong>, rellena el análisis (mg/L del informe) para descontar lo que ya lleva el agua; con destilada u ósmosis se asume aporte iónico nulo.
-            <strong>Comprueba siempre EC y pH</strong> con medidor tras mezclar; el bicarbonato del grifo altera el pH.
-          </p>
-          <div id="npkWrapAnalisisGrifo" style="display:none">
-            <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--white)">Análisis manual del grifo (mg/L)</div>
-            <div style="font-size:10px;color:var(--muted);margin:-4px 0 8px;line-height:1.4">
-              Informes ICP (p. ej. «Calcio», «Magnesio», «Potasio», «Sodio» en <strong>mg/L</strong>): introdúcelos en Ca²⁺, Mg²⁺, K⁺, Na⁺ tal cual.
-              La <strong>dureza total</strong> (mg/L CaCO₃) no sustituye a Ca y Mg por separado. NO₃⁻ / NH₄⁺ / PO₄³⁻ / SO₄²⁻ / Cl⁻ / HCO₃⁻ si el laboratorio los da; si no figuran, déjalos en blanco (≈0).
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;margin-bottom:10px">
-              <label style="font-size:11px;color:var(--muted)">NO₃⁻ <input type="number" id="npk_an_no3" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">NH₄⁺ <input type="number" id="npk_an_nh4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">PO₄³⁻ <input type="number" id="npk_an_po4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">K⁺ <input type="number" id="npk_an_k" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">Ca²⁺ <input type="number" id="npk_an_ca" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">Mg²⁺ <input type="number" id="npk_an_mg" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">SO₄²⁻ <input type="number" id="npk_an_so4" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">Na⁺ <input type="number" id="npk_an_na" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">Cl⁻ <input type="number" id="npk_an_cl" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-              <label style="font-size:11px;color:var(--muted)">HCO₃⁻ <input type="number" id="npk_an_hco3" class="form-input" inputmode="decimal" step="0.1" min="0" placeholder="0" style="width:100%;margin-top:4px;padding:8px"></label>
-            </div>
-            <button type="button" class="btn btn-ghost" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px"
-              onclick="guardarAnalisisAguaGrifo()">💾 Guardar análisis (torre actual)</button>
-          </div>
-          <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--white)">Objetivo total en solución (mg/L elementales)</div>
-          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px">
-            <label style="font-size:10px;color:var(--muted)">N <input type="number" id="npk_tgt_n" class="form-input" value="160" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-            <label style="font-size:10px;color:var(--muted)">P <input type="number" id="npk_tgt_p" class="form-input" value="32" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-            <label style="font-size:10px;color:var(--muted)">K <input type="number" id="npk_tgt_k" class="form-input" value="220" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-            <label style="font-size:10px;color:var(--muted)">Ca <input type="number" id="npk_tgt_ca" class="form-input" value="170" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-            <label style="font-size:10px;color:var(--muted)">Mg <input type="number" id="npk_tgt_mg" class="form-input" value="48" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-            <label style="font-size:10px;color:var(--muted)">S <input type="number" id="npk_tgt_s" class="form-input" value="64" min="0" step="1" style="width:100%;margin-top:4px;padding:8px"></label>
-          </div>
-          <label style="font-size:12px;color:var(--muted)">Volumen del depósito (L)
-            <input type="number" id="npk_vol_litros" class="form-input" value="18" min="1" step="0.5" inputmode="decimal"
-              style="width:100%;margin-top:4px;padding:8px;max-width:120px">
-          </label>
-          <button type="button" class="btn btn-primary" style="width:100%;margin-top:12px;padding:12px;border-radius:12px;font-weight:800"
-            onclick="calcularMezclaSalesNPK()">⚗️ Calcular gramos de sales a disolver</button>
-          <div id="npkResultado" style="margin-top:12px;font-size:12px;line-height:1.55;color:var(--white)"></div>
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
@@ -7121,15 +6963,6 @@ function goTab(tab) {
     calcularRiego();
     window._riegoObsoleto = false;
   }
-}
-
-/** Desde Consejos → ir a Mediciones y desplazar al bloque mezcla NPK. */
-function irMedicionesSeccionNPK() {
-  goTab('mediciones');
-  setTimeout(function () {
-    const el = document.getElementById('sectionNPKMix');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 120);
 }
 
 // ══════════════════════════════════════════════════
@@ -12157,7 +11990,6 @@ function setAgua(tipo) {
   cargarLocalidadMeteoUI();
   refreshConsejosSiVisible();
   syncMedirAguaResumen();
-  syncNpkGrifoWrap();
 }
 
 function toggleMedirOpcionesAgua() {
@@ -12720,206 +12552,6 @@ function initConfigUI() {
       CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
     }
   }
-  cargarAnalisisAguaGrifoUI();
-  syncNpkGrifoWrap();
-}
-
-/** Análisis manual grifo (mg/L) guardado por torre — solo orientativo. */
-function ensureAnalisisAguaGrifo() {
-  if (!state.configTorre) state.configTorre = {};
-  if (!state.configTorre.analisisAguaGrifo || typeof state.configTorre.analisisAguaGrifo !== 'object') {
-    state.configTorre.analisisAguaGrifo = {
-      no3: '', nh4: '', po4: '', k: '', ca: '', mg: '', so4: '', na: '', cl: '', hco3: ''
-    };
-  }
-  return state.configTorre.analisisAguaGrifo;
-}
-
-function syncNpkGrifoWrap() {
-  const w = document.getElementById('npkWrapAnalisisGrifo');
-  if (w) w.style.display = (state.configAgua === 'grifo') ? 'block' : 'none';
-}
-
-function leerAnalisisAguaGrifoDesdeDOM() {
-  const a = {};
-  ['no3', 'nh4', 'po4', 'k', 'ca', 'mg', 'so4', 'na', 'cl', 'hco3'].forEach(function (k) {
-    const el = document.getElementById('npk_an_' + k);
-    a[k] = el ? String(el.value || '').trim() : '';
-  });
-  return a;
-}
-
-function waterElementalFromAnalysisMgL(a) {
-  const no3 = parseFloat(a.no3);
-  const nh4 = parseFloat(a.nh4);
-  const po4 = parseFloat(a.po4);
-  const k = parseFloat(a.k);
-  const ca = parseFloat(a.ca);
-  const mg = parseFloat(a.mg);
-  const so4 = parseFloat(a.so4);
-  const na = parseFloat(a.na);
-  const cl = parseFloat(a.cl);
-  const hco3 = parseFloat(a.hco3);
-  const N = (isFinite(no3) ? no3 * 14.0067 / 62.0049 : 0) + (isFinite(nh4) ? nh4 * 14.0067 / 18.0385 : 0);
-  const P = isFinite(po4) ? po4 * 30.9738 / 94.9714 : 0;
-  const S = isFinite(so4) ? so4 * 32.065 / 96.061 : 0;
-  return {
-    N: N, P: P, K: isFinite(k) ? k : 0, Ca: isFinite(ca) ? ca : 0, Mg: isFinite(mg) ? mg : 0, S: S,
-    Na: isFinite(na) ? na : 0, Cl: isFinite(cl) ? cl : 0, HCO3: isFinite(hco3) ? hco3 : 0
-  };
-}
-
-function cargarAnalisisAguaGrifoUI() {
-  ensureAnalisisAguaGrifo();
-  const a = state.configTorre.analisisAguaGrifo;
-  ['no3', 'nh4', 'po4', 'k', 'ca', 'mg', 'so4', 'na', 'cl', 'hco3'].forEach(function (k) {
-    const el = document.getElementById('npk_an_' + k);
-    if (!el) return;
-    const v = a[k];
-    el.value = (v != null && v !== '') ? String(v) : '';
-  });
-  const volEl = document.getElementById('npk_vol_litros');
-  if (volEl) {
-    const v = state.configTorre.volDeposito;
-    volEl.value = String((v != null && v > 0) ? v : VOL_OBJETIVO);
-  }
-}
-
-function guardarAnalisisAguaGrifo() {
-  if (!state.torres || !state.torres[state.torreActiva || 0]) {
-    showToast('No hay torre activa para guardar el análisis.', true);
-    return;
-  }
-  ensureAnalisisAguaGrifo();
-  const dom = leerAnalisisAguaGrifoDesdeDOM();
-  state.configTorre.analisisAguaGrifo = dom;
-  guardarEstadoTorreActual();
-  saveState();
-  showToast('Análisis de agua (grifo) guardado en esta torre', false);
-}
-
-/** Fracciones másicas elementales en sales hidropónicas habituales (aprox.). */
-var NPK_SALT_FRAC = {
-  caNo3: { label: 'Ca(NO₃)₂·4H₂O', n: 28.0134 / 236.1478, k: 0, p: 0, ca: 40.078 / 236.1478, mg: 0, s: 0 },
-  kno3: { label: 'KNO₃', n: 14.0067 / 101.1032, k: 39.0983 / 101.1032, p: 0, ca: 0, mg: 0, s: 0 },
-  kh2po4: { label: 'KH₂PO₄', n: 0, k: 39.0983 / 136.0857, p: 30.9738 / 136.0857, ca: 0, mg: 0, s: 0 },
-  mgso4: { label: 'MgSO₄·7H₂O', n: 0, k: 0, p: 0, ca: 0, mg: 24.305 / 246.4746, s: 32.065 / 246.4746 },
-  k2so4: { label: 'K₂SO₄', n: 0, k: 78.1966 / 174.2576, p: 0, ca: 0, mg: 0, s: 32.065 / 174.2576 }
-};
-
-function npkContribPpm(key, grams, volL) {
-  const V = volL > 0 ? volL : VOL_OBJETIVO;
-  const f = NPK_SALT_FRAC[key];
-  const m = 1000 / V;
-  return {
-    N: grams * (f.n || 0) * m,
-    P: grams * (f.p || 0) * m,
-    K: grams * (f.k || 0) * m,
-    Ca: grams * (f.ca || 0) * m,
-    Mg: grams * (f.mg || 0) * m,
-    S: grams * (f.s || 0) * m
-  };
-}
-
-function npkSubRem(rem, c) {
-  rem.N = Math.max(0, rem.N - (c.N || 0));
-  rem.P = Math.max(0, rem.P - (c.P || 0));
-  rem.K = Math.max(0, rem.K - (c.K || 0));
-  rem.Ca = Math.max(0, rem.Ca - (c.Ca || 0));
-  rem.Mg = Math.max(0, rem.Mg - (c.Mg || 0));
-  rem.S = Math.max(0, rem.S - (c.S || 0));
-}
-
-function calcularMezclaSalesNPK() {
-  const out = document.getElementById('npkResultado');
-  if (!out) return;
-  const V = Math.max(0.5, parseFloat(document.getElementById('npk_vol_litros') && document.getElementById('npk_vol_litros').value) || VOL_OBJETIVO);
-  const aguaTipo = state.configAgua || 'destilada';
-  var w;
-  if (aguaTipo === 'grifo') {
-    w = waterElementalFromAnalysisMgL(leerAnalisisAguaGrifoDesdeDOM());
-  } else {
-    w = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Na: 0, Cl: 0, HCO3: 0 };
-  }
-  function readTgt(id, defVal) {
-    const el = document.getElementById(id);
-    const x = el ? parseFloat(el.value) : NaN;
-    if (!isFinite(x) || x < 0) return defVal;
-    return x;
-  }
-  const tgt = {
-    N: readTgt('npk_tgt_n', 160),
-    P: readTgt('npk_tgt_p', 32),
-    K: readTgt('npk_tgt_k', 220),
-    Ca: readTgt('npk_tgt_ca', 170),
-    Mg: readTgt('npk_tgt_mg', 48),
-    S: readTgt('npk_tgt_s', 64)
-  };
-  var rem = {
-    N: Math.max(0, tgt.N - w.N),
-    P: Math.max(0, tgt.P - w.P),
-    K: Math.max(0, tgt.K - w.K),
-    Ca: Math.max(0, tgt.Ca - w.Ca),
-    Mg: Math.max(0, tgt.Mg - w.Mg),
-    S: Math.max(0, tgt.S - w.S)
-  };
-  var grams = {};
-  var f = NPK_SALT_FRAC;
-
-  if (rem.Ca > 1e-6) {
-    var g1 = rem.Ca * V / (1000 * f.caNo3.ca);
-    grams.caNo3 = (grams.caNo3 || 0) + g1;
-    npkSubRem(rem, npkContribPpm('caNo3', g1, V));
-  }
-  if (rem.N > 1e-6) {
-    var g2 = rem.N * V / (1000 * f.kno3.n);
-    grams.kno3 = (grams.kno3 || 0) + g2;
-    npkSubRem(rem, npkContribPpm('kno3', g2, V));
-  }
-  if (rem.P > 1e-6) {
-    var g3 = rem.P * V / (1000 * f.kh2po4.p);
-    grams.kh2po4 = (grams.kh2po4 || 0) + g3;
-    npkSubRem(rem, npkContribPpm('kh2po4', g3, V));
-  }
-  if (rem.Mg > 1e-6) {
-    var g4 = rem.Mg * V / (1000 * f.mgso4.mg);
-    grams.mgso4 = (grams.mgso4 || 0) + g4;
-    npkSubRem(rem, npkContribPpm('mgso4', g4, V));
-  }
-  var needK = rem.K > 1e-6;
-  var needS = rem.S > 1e-6;
-  if (needK || needS) {
-    var gK = needK ? rem.K * V / (1000 * f.k2so4.k) : 0;
-    var gS = needS ? rem.S * V / (1000 * f.k2so4.s) : 0;
-    var g5 = Math.max(gK, gS);
-    grams.k2so4 = (grams.k2so4 || 0) + g5;
-    npkSubRem(rem, npkContribPpm('k2so4', g5, V));
-  }
-  var lines = [];
-  lines.push('<strong>Aporte estimado del agua</strong> (mg/L elementales): N ' + w.N.toFixed(1) + ', P ' + w.P.toFixed(1) + ', K ' + w.K.toFixed(0) + ', Ca ' + w.Ca.toFixed(0) + ', Mg ' + w.Mg.toFixed(0) + ', S ' + w.S.toFixed(1));
-  if (aguaTipo === 'grifo' && (w.Na > 0 || w.Cl > 0 || w.HCO3 > 0)) {
-    lines.push('Otros (referencia, no entran en la receta): Na⁺ ' + w.Na.toFixed(0) + ', Cl⁻ ' + w.Cl.toFixed(0) + ', HCO₃⁻ ' + w.HCO3.toFixed(0) + ' mg/L.');
-  }
-  lines.push('<strong>Disolver en ' + V.toFixed(1) + ' L</strong> (redondea en báscula de cocina; disolver bien antes de medir EC/pH):');
-  var order = ['caNo3', 'kno3', 'kh2po4', 'mgso4', 'k2so4'];
-  var any = false;
-  for (var i = 0; i < order.length; i++) {
-    var k = order[i];
-    var g = grams[k];
-    if (g != null && g > 0.001) {
-      any = true;
-      lines.push('• <strong>' + f[k].label + '</strong>: ~' + g.toFixed(2) + ' g');
-    }
-  }
-  if (!any) {
-    lines.push('• Con los datos actuales no hace falta añadir sales (o el agua ya supera el objetivo). Revisa objetivos o el análisis.');
-  }
-  var remSum = rem.N + rem.P + rem.K + rem.Ca + rem.Mg + rem.S;
-  if (remSum > 3) {
-    lines.push('<span style="color:var(--warn,#f5a623)">Queda déficit no cubierto con este juego de sales (~N ' + rem.N.toFixed(0) + ', P ' + rem.P.toFixed(0) + ', K ' + rem.K.toFixed(0) + ', Ca ' + rem.Ca.toFixed(0) + ', Mg ' + rem.Mg.toFixed(0) + ', S ' + rem.S.toFixed(0) + ' mg/L). Ajusta objetivos o añade otras sales.</span>');
-  }
-  lines.push('<span style="color:var(--muted);font-size:11px">Receta secuencial orientativa (Ca nitrato → K nitrato → fosfato mono → sulfato Mg → sulfato K). Verifica siempre con medidor.</span>');
-  out.innerHTML = '<div style="padding:10px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.08)">' + lines.join('<br>') + '</div>';
 }
 
 // ══════════════════════════════════════════════════
@@ -15038,19 +14670,6 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
   return lines.join('<br>');
 }
 
-function buildHtmlNotaSalesNPKConsejos() {
-  return `
-    <div class="consejo-dosis18-wrap" style="margin-top:14px" id="consejos-enlace-npk">
-      <div class="consejo-titulo" style="margin-bottom:6px">⚗️ Sales a mano y agua de grifo (análisis de laboratorio)</div>
-      <div class="consejo-ecph-note" style="margin-bottom:0">
-        En <strong>Mediciones</strong> hay una calculadora <strong>orientativa</strong>: introduces los mg/L del informe (o ceros en lo que no venga) y resta ese fondo frente a un objetivo N–P–K–Ca–Mg–S.
-        Para cotejar con <strong>HydroBuddy</strong>, usa el <strong>mismo volumen (L)</strong>, los <strong>mismos mg/L de agua</strong> y un <strong>objetivo equivalente</strong>; los gramos deberían ser <strong>del mismo orden</strong> si eliges el mismo juego de sales (Ca nitrato, K nitrato, fosfato monopotásico, sulfato de magnesio, sulfato potásico). Diferencias habituales: microelementos, chelados, otro orden de optimización o sales extra en HydroBuddy.
-      </div>
-      <button type="button" class="btn btn-ghost" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;font-weight:700"
-        onclick="irMedicionesSeccionNPK()">Ir a Mediciones → mezcla NPK</button>
-    </div>`;
-}
-
 function buildHtmlTablaPreparacionFabricante18L() {
   const cfg = state.configTorre || {};
   const Vraw = (cfg.volDeposito != null && cfg.volDeposito > 0) ? cfg.volDeposito : VOL_OBJETIVO;
@@ -15410,7 +15029,7 @@ function renderConsejosLista() {
   const lista = document.getElementById('consejosLista');
 
   if (cat.soloTabla) {
-    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlNotaSalesNPKConsejos() + buildHtmlTablaConsejosPersonal();
+    lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlTablaConsejosPersonal();
     return;
   }
 
