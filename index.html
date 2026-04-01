@@ -16203,10 +16203,43 @@ function riegoMinutosDesdeDemanda(demanda, nPlantas, kc, sustrato, esInterior) {
   };
 }
 
+/** Coincidencia por fecha YYYY-MM-DD (misma convención que Open-Meteo en timezone=auto). */
+function riegoHourlyIndicesPorFecha(timesIso, ymd) {
+  if (!ymd || !Array.isArray(timesIso) || timesIso.length === 0) return null;
+  const out = [];
+  for (let i = 0; i < timesIso.length; i++) {
+    if (String(timesIso[i]).slice(0, 10) === ymd) out.push(i);
+  }
+  return out.length ? out : null;
+}
+
+function riegoMediaDeIndices(arr, indices) {
+  if (!Array.isArray(arr) || !indices || indices.length === 0) return NaN;
+  let s = 0;
+  let n = 0;
+  for (let j = 0; j < indices.length; j++) {
+    const v = arr[indices[j]];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      s += v;
+      n++;
+    }
+  }
+  return n > 0 ? s / n : NaN;
+}
+
+/** Índices horarios 13:00–15:xx del día (hora en el propio ISO de la API, sin depender del huso del navegador). */
+function riegoIndicesMediodiaPorIso(dayIndices, timesIso) {
+  if (!dayIndices || !timesIso) return [];
+  return dayIndices.filter(i => {
+    const h = parseInt(String(timesIso[i]).slice(11, 13), 10);
+    return h >= 13 && h <= 15;
+  });
+}
+
 /**
  * Riego al aire libre — cadena de cálculo (orden):
- * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) del día índice 0|1;
- *    UV (modelo best_match) y ET₀ FAO horaria sumada a mm/día del mismo día.
+ * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
+ *    UV (modelo best_match) y ET₀ FAO horaria sumada a mm/día de ese mismo día (no bloques fijos 24 h desde el inicio de la serie).
  * 2) Toldo: si activo, UV y ET₀ efectivos ↓, ΔT zona planta (VPD día) −2 °C.
  * 3) VPD (Magnus–Tetens) con tª media + ajuste toldo; VPD 13–15 h con pico según UV para tramo mediodía.
  * 4) Demanda relativa riegoIndiceDemanda (VPD, viento, UV, prob. lluvia, ET₀) → ~0.48–1.58; × fase cultivo; × sensor sustrato opcional.
@@ -16232,10 +16265,11 @@ async function calcularRiego() {
 
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
-    // ECMWF para temperatura y humedad (más preciso para Castelló)
-    const diasForecast = diaRiego === 'manana' ? 2 : 1;
-    const idx = diaRiego === 'manana' ? 1 : 0; // índice del día en el array
-    const offsetHoras = idx * 24; // offset para datos horarios
+    const idx = diaRiego === 'manana' ? 1 : 0;
+    const offsetHoras = idx * 24;
+
+    /* ≥3 días: cubre mañana completa a cualquier hora; evita que "hoy"/"mañana" compartan el mismo trozo horario cuando la serie no empieza a medianoche. */
+    const diasForecast = 3;
 
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
@@ -16257,16 +16291,6 @@ async function calcularRiego() {
     const [resECMWF, resUV] = await Promise.all([fetch(urlECMWF), fetch(urlUV)]);
     const data   = await resECMWF.json();
     const dataUV = await resUV.json();
-    let et0Day = null;
-    try {
-      const resET0 = await fetch(urlET0);
-      const dEt0 = await resET0.json();
-      const etArr = dEt0.hourly?.et0_fao_evapotranspiration;
-      if (Array.isArray(etArr) && etArr.length >= offsetHoras + 24) {
-        const sl = etArr.slice(offsetHoras, offsetHoras + 24);
-        et0Day = sl.reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
-      }
-    } catch (_) { /* ET₀ opcional (FAO-56 Open-Meteo) */ }
 
     const tempMax  = data.daily.temperature_2m_max[idx];
     const tempMin  = data.daily.temperature_2m_min[idx];
@@ -16275,14 +16299,67 @@ async function calcularRiego() {
     const viento   = data.daily.windspeed_10m_max[idx];
     const probLluvia = data.daily.precipitation_probability_max[idx];
 
-    // Humedad media del día seleccionado (24h correspondientes)
-    const humHoras = data.hourly.relative_humidity_2m.slice(offsetHoras, offsetHoras + 24);
-    const humMedia = Math.round(humHoras.reduce((a,b) => a+b, 0) / humHoras.length);
+    const dailyDateStr = (data.daily?.time && data.daily.time[idx] != null)
+      ? String(data.daily.time[idx]).slice(0, 10)
+      : null;
 
-    // Temp y humedad media 13-15h para VPD mediodía
-    const tempHoras = data.hourly.temperature_2m.slice(offsetHoras, offsetHoras + 24);
-    const temp1315 = Math.round((tempHoras[13] + tempHoras[14] + tempHoras[15]) / 3);
-    const hum1315  = Math.round((humHoras[13] + humHoras[14] + humHoras[15]) / 3);
+    const times = data.hourly?.time;
+    const rhArr = data.hourly?.relative_humidity_2m;
+    const tempHArr = data.hourly?.temperature_2m;
+
+    let et0Day = null;
+    try {
+      const resET0 = await fetch(urlET0);
+      const dEt0 = await resET0.json();
+      const etArr = dEt0.hourly?.et0_fao_evapotranspiration;
+      const etTimes = dEt0.hourly?.time;
+      if (Array.isArray(etArr) && etArr.length) {
+        let etIdx = riegoHourlyIndicesPorFecha(etTimes, dailyDateStr);
+        if (!etIdx && etArr.length >= offsetHoras + 24) {
+          etIdx = [];
+          for (let k = 0; k < 24; k++) etIdx.push(offsetHoras + k);
+        }
+        if (etIdx && etIdx.length) {
+          et0Day = etIdx.reduce((a, i) => a + (typeof etArr[i] === 'number' ? etArr[i] : 0), 0);
+        }
+      }
+    } catch (_) { /* ET₀ opcional (FAO-56 Open-Meteo) */ }
+
+    let dayHourIdx = riegoHourlyIndicesPorFecha(times, dailyDateStr);
+    if (!dayHourIdx && Array.isArray(rhArr) && rhArr.length >= offsetHoras + 24) {
+      dayHourIdx = [];
+      for (let k = 0; k < 24; k++) dayHourIdx.push(offsetHoras + k);
+    }
+
+    let humMedia;
+    let temp1315;
+    let hum1315;
+
+    if (dayHourIdx && dayHourIdx.length && Array.isArray(rhArr) && Array.isArray(tempHArr)) {
+      const hm = riegoMediaDeIndices(rhArr, dayHourIdx);
+      humMedia = Number.isFinite(hm) ? Math.round(hm) : 55;
+      const midI = riegoIndicesMediodiaPorIso(dayHourIdx, times);
+      if (midI.length) {
+        const tM = riegoMediaDeIndices(tempHArr, midI);
+        const hM = riegoMediaDeIndices(rhArr, midI);
+        temp1315 = Number.isFinite(tM) ? Math.round(tM) : Math.round(tempMedia);
+        hum1315 = Number.isFinite(hM) ? Math.round(hM) : humMedia;
+      } else {
+        const tD = riegoMediaDeIndices(tempHArr, dayHourIdx);
+        temp1315 = Number.isFinite(tD) ? Math.round(tD) : Math.round(tempMedia);
+        hum1315 = humMedia;
+      }
+    } else if (Array.isArray(rhArr) && Array.isArray(tempHArr) && rhArr.length >= offsetHoras + 24) {
+      const humHoras = rhArr.slice(offsetHoras, offsetHoras + 24);
+      humMedia = Math.round(humHoras.reduce((a, b) => a + b, 0) / humHoras.length);
+      const tempHoras = tempHArr.slice(offsetHoras, offsetHoras + 24);
+      temp1315 = Math.round((tempHoras[13] + tempHoras[14] + tempHoras[15]) / 3);
+      hum1315 = Math.round((humHoras[13] + humHoras[14] + humHoras[15]) / 3);
+    } else {
+      humMedia = 55;
+      temp1315 = Math.round(tempMedia);
+      hum1315 = humMedia;
+    }
 
     const toldoAct = toldoDesplegado;
     const adjToldo = riegoAjustesToldoActivos(uvMax, et0Day, toldoAct);
