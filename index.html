@@ -3893,31 +3893,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </button>
       </div>
 
-      <!-- Barra recarga depósito -->
-      <div class="recarga-card">
-        <div class="recarga-header">
-          <div class="recarga-title">🔄 Próxima recarga depósito</div>
-          <div class="recarga-dias" id="recargaDias" style="color:var(--green)">—</div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill-bar" id="recargaBar" style="width:0%;background:var(--green)"></div>
-        </div>
-        <div class="recarga-nota" id="recargaNota">Registra la fecha de tu última recarga en Mediciones</div>
-        <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
-        <div id="recargaConfirmPanel" class="recarga-confirm-panel">
-          <div class="recarga-confirm-label">¿Has repuesto agua en el depósito?</div>
-          <div class="recarga-confirm-actions">
-            <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
-              aria-label="Registrar reposición solo con agua">💧 Solo agua</button>
-            <button type="button" class="btn-recarga-confirm primary" onclick="confirmarReposicionDeposito('con_nutrientes')"
-              aria-label="Abrir recarga completa con nutrientes">🧪 Agua + nutrientes</button>
-            <button type="button" class="btn-recarga-confirm ghost" onclick="posponerRecordatorioRecarga()"
-              aria-label="Posponer recordatorio de recarga">⏰ Recordar mañana</button>
-          </div>
-          <div id="recargaSnoozeHint" class="recarga-snooze-hint"></div>
-        </div>
-      </div>
-
       <!-- Alerta meteorológica -->
       <div class="meteo-alert ok" id="meteoAlert">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
@@ -4551,6 +4526,31 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="correccion-box" id="correccionVol"></div>
       </div>
 
+      <!-- Barra recarga depósito (junto al volumen medido) -->
+      <div class="recarga-card" id="recargaCardMediciones" style="margin-top:4px">
+        <div class="recarga-header">
+          <div class="recarga-title">🔄 Próxima recarga depósito</div>
+          <div class="recarga-dias" id="recargaDias" style="color:var(--green)">—</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill-bar" id="recargaBar" style="width:0%;background:var(--green)"></div>
+        </div>
+        <div class="recarga-nota" id="recargaNota">Registra la fecha de tu última recarga o usa el interruptor más abajo</div>
+        <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
+        <div id="recargaConfirmPanel" class="recarga-confirm-panel">
+          <div class="recarga-confirm-label">¿Has repuesto agua en el depósito?</div>
+          <div class="recarga-confirm-actions">
+            <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
+              aria-label="Registrar reposición solo con agua">💧 Solo agua</button>
+            <button type="button" class="btn-recarga-confirm primary" onclick="confirmarReposicionDeposito('con_nutrientes')"
+              aria-label="Abrir recarga completa con nutrientes">🧪 Agua + nutrientes</button>
+            <button type="button" class="btn-recarga-confirm ghost" onclick="posponerRecordatorioRecarga()"
+              aria-label="Posponer recordatorio de recarga">⏰ Recordar mañana</button>
+          </div>
+          <div id="recargaSnoozeHint" class="recarga-snooze-hint"></div>
+        </div>
+      </div>
+
       <!-- HUMEDAD SUSTRATO — solo registro en historial (desplegable) -->
       <div class="config-section config-section-collapsible" id="panelHumSustratoMedicion">
         <button type="button" class="config-section-collapse-head" id="btnCollapseHumSustratoMedicion"
@@ -4591,7 +4591,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </button>
         </div>
         <p style="font-size:10px;color:var(--muted);margin:10px 0 0;line-height:1.45">
-          Si solo añades agua sin medir aún, puedes registrarlo al momento desde <strong>Inicio</strong> → «Solo agua» en la tarjeta de recarga.
+          Si solo añades agua sin medir aún, puedes registrarlo arriba con <strong>«Solo agua»</strong> (debajo del volumen del depósito).
         </p>
       </div>
 
@@ -12552,6 +12552,9 @@ function initConfigUI() {
       CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
     }
   }
+  if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof updateRecargaBar === 'function') {
+    updateRecargaBar();
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -16328,6 +16331,11 @@ function updateDashTorre() {
 }
 
 function updateRecargaBar() {
+  const diasEl = document.getElementById('recargaDias');
+  const barEl  = document.getElementById('recargaBar');
+  const notaEl = document.getElementById('recargaNota');
+  if (!diasEl || !barEl || !notaEl) return;
+
   const diasRecarga = 15;
   let diasTranscurridos = 0;
 
@@ -16338,10 +16346,6 @@ function updateRecargaBar() {
 
   const diasRestantes = Math.max(0, diasRecarga - diasTranscurridos);
   const pct = Math.min(100, (diasTranscurridos / diasRecarga) * 100);
-
-  const diasEl = document.getElementById('recargaDias');
-  const barEl  = document.getElementById('recargaBar');
-  const notaEl = document.getElementById('recargaNota');
 
   diasEl.textContent = diasRestantes > 0 ? diasRestantes + 'd' : '¡HOY!';
 
@@ -16431,7 +16435,7 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
   if (!state.ultimaRecarga && nPlantas > 0) {
     banner.classList.add('bad');
     banner.textContent =
-      '⚠️ No consta ninguna recarga en la app. Si ya añadiste agua, confírmalo abajo; si no, usa Mediciones o el checklist cuando rellenes el depósito.';
+      '⚠️ No consta ninguna recarga en la app. Si ya añadiste agua, confírmalo con los botones de abajo; si rellenas con nutrientes, usa el checklist cuando toque.';
   } else if (pct >= 85) {
     banner.classList.add('bad');
     banner.textContent =
