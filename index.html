@@ -839,34 +839,72 @@ body::before { display: none; }
   justify-content: center;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.2);
 }
-.torre-lista-fase-centro {
+.torre-lista-cesta-emoji {
   position: relative;
   z-index: 1;
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(1.35rem, 6.5vw, 1.85rem);
-  font-weight: 900;
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
   line-height: 1;
-  letter-spacing: -0.02em;
-  user-select: none;
+}
+.cultivo-emoji-mark {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+.consejo-ecph-table th.consejo-ecph-icon-cell,
+.consejo-ecph-table td.consejo-ecph-icon-cell {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 6px 4px;
+  font-weight: normal;
+  color: inherit;
+}
+.consejo-ecph-table td.consejo-ecph-icon-cell .cultivo-emoji-mark {
+  display: block;
+  margin: 0 auto;
+}
+.setup-grupo-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 6px;
+  min-height: 40px;
+  font-size: 32px;
+  line-height: 1;
 }
 select#torreAssignVariedad option,
 select#editVariedad option {
   padding: 4px 2px;
+}
+.torre-lista-fase-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  z-index: 3;
+  font-size: 13px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 2px 5px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.1);
+  pointer-events: none;
 }
 .torre-lista-cesta-btn .tl-t {
   font-size: 12px;
   font-weight: 800;
   color: #0f172a;
   margin-top: 10px;
-  line-height: 1.25;
+  line-height: 1.3;
   font-family: var(--font-display);
   max-width: 100%;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  text-align: center;
 }
 .torre-lista-cesta-btn .tl-s {
   font-size: 11px;
@@ -2939,7 +2977,7 @@ button.checklist-close {
   color: var(--muted);
   vertical-align: top;
 }
-.consejo-ecph-table td:first-child {
+.consejo-ecph-table td:nth-child(2) {
   font-weight: 700;
   color: var(--white);
 }
@@ -6523,6 +6561,53 @@ function cultivoNombreLista(cultivo, variedadGuardada) {
   return v || '—';
 }
 
+function cultivoEmoji(cultivo) {
+  if (!cultivo) return '⚪';
+  return cultivo.emoji || '🌱';
+}
+
+/** @param {object|null} cultivo fila CULTIVOS_DB; @param {number} [fontRem] tamaño relativo en rem */
+function cultivoEmojiHtml(cultivo, fontRem) {
+  const em = cultivoEmoji(cultivo);
+  const st = fontRem ? ' style="font-size:' + fontRem + 'rem"' : '';
+  return '<span class="cultivo-emoji-mark"' + st + ' aria-hidden="true">' + em + '</span>';
+}
+
+const GRUPO_EMOJI_REP = {
+  lechugas: '🥬', hojas: '🌿', asiaticas: '🍃', hierbas: '🌿', fresas: '🍓',
+  frutos: '🍅', raices: '🥕', microgreens: '🌱',
+};
+
+function grupoEmojiHtml(grupoKey) {
+  const em = GRUPO_EMOJI_REP[grupoKey] || '🌱';
+  return '<span class="setup-grupo-icon" aria-hidden="true">' + em + '</span>';
+}
+
+function refEcPhRowEmojiHtml(row) {
+  const s = String(row.cultivo || '');
+  const byId = function(id) {
+    const c = id ? CULTIVOS_DB.find(x => x.id === id) : null;
+    if (!c) return '<span class="cultivo-emoji-mark" style="font-size:1.35rem" aria-hidden="true">🌱</span>';
+    return cultivoEmojiHtml(c, 1.35);
+  };
+  if (/Tomate/i.test(s)) return byId('tomate');
+  if (/Pimiento|berenjena/i.test(s)) return byId('pimiento');
+  if (/Pepino/i.test(s)) return byId('pepino');
+  if (/Judía|guisante/i.test(s)) return byId('microgreens_mezcla');
+  if (/Fresa|fresón/i.test(s)) return byId('fresa');
+  if (/Brócoli|coliflor/i.test(s)) return byId('col_rizada');
+  if (/Zanahoria|microverdura/i.test(s)) return byId('zanahoria');
+  if (/Melón|sandía/i.test(s)) return byId('calabacin');
+  if (/Flores/i.test(s)) return byId('lavanda');
+  if (/Cilantro|eneldo/i.test(s)) return byId('cilantro');
+  if (/Albahaca|menta|perejil/i.test(s)) return byId('albahaca');
+  if (/Lechuga/i.test(s)) return byId('romana');
+  if (/Espinaca|acelga|kale/i.test(s)) return byId('espinaca');
+  if (/mostaza/i.test(s)) return byId('mostaza');
+  if (/Rúcula|canónigo/i.test(s)) return byId('rucula');
+  return byId(null);
+}
+
 // Grupos con colores y compatibilidad
 const GRUPOS_CULTIVO = {
   lechugas:    { nombre:'Lechugas',           color:'#22c55e', ec:'800-1400',   ph:'5.5-6.5',
@@ -7163,23 +7248,6 @@ function torreListaColorCesta(n, c) {
   return { border: 'rgba(126,34,206,0.45)', bg: '#faf5ff' };
 }
 
-/** Disco lista torre: letra central alineada con esquema (P/V/M/C); · vacía; ? sin fecha. */
-function torreListaFaseCentroDisplay(dat, dias, faseEst) {
-  if (!dat || !dat.variedad) return { letra: '·', color: '#94a3b8', title: '' };
-  if (dias === null) {
-    return { letra: '?', color: '#64748b', title: 'Sin fecha de trasplante' };
-  }
-  const map = {
-    plantula: { letra: 'P', color: '#1d4ed8', title: 'Plántula' },
-    crecimiento: { letra: 'V', color: '#15803d', title: 'Crecimiento' },
-    madurez: { letra: 'M', color: '#b45309', title: 'Maduración' },
-    cosecha: { letra: 'C', color: '#6d28d9', title: 'Listo para cosechar' }
-  };
-  const row = map[faseEst];
-  if (row) return { letra: row.letra, color: row.color, title: row.title };
-  return { letra: '·', color: '#64748b', title: '' };
-}
-
 function renderTorreLista() {
   const el = document.getElementById('torreListaVista');
   if (!el) return;
@@ -7199,11 +7267,11 @@ function renderTorreLista() {
       const titEsc = escHtmlUi(dat.variedad ? titLista : tit);
       const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
       const sub = dias !== null ? dias + ' d' : 'Sin fecha';
+      const emoji = !dat.variedad ? '⚪' : (cult ? cultivoEmoji(cult) : '🌱');
       const faseEst = dat.variedad && dias !== null ? getEstado(dat.variedad, dias) : '';
       const faseLabels = { plantula: 'Plántula', crecimiento: 'Crecimiento', madurez: 'Maduración', cosecha: 'Listo para cosechar' };
       const faseTit = faseEst ? (faseLabels[faseEst] || faseEst) : '';
-      const fc = torreListaFaseCentroDisplay(dat, dias, faseEst);
-      const fcTitEsc = (fc.title || faseTit).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      const faseEmoji = faseEst ? getEmoji(faseEst) : '';
       const keys = Array.isArray(dat.fotoKeys) ? dat.fotoKeys : [];
       const ultFotoKey = keys.length ? keys[keys.length - 1] : '';
       const fkAttr = ultFotoKey
@@ -7216,8 +7284,11 @@ function renderTorreLista() {
         'aria-label="' + ariaLabel + '">';
       h += '<span class="torre-lista-cesta-disc"' + fkAttr + ' style="border-color:' + col.border + ';background:' + col.bg + '">';
       h += '<span class="torre-lista-cesta-num" aria-hidden="true">' + (c + 1) + '</span>';
-      h += '<span class="torre-lista-fase-centro" aria-hidden="true" style="color:' + fc.color + '"' +
-        (fcTitEsc ? ' title="' + fcTitEsc + '"' : '') + '>' + fc.letra + '</span>';
+      h += '<span class="torre-lista-cesta-emoji" aria-hidden="true">' + emoji + '</span>';
+      if (faseEmoji) {
+        const ft = faseTit.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        h += '<span class="torre-lista-fase-badge" title="' + ft + '" aria-hidden="true">' + faseEmoji + '</span>';
+      }
       h += '</span>';
       h += '<span class="tl-t">' + titEsc + '</span>';
       h += '<span class="tl-s">' + sub + '</span>';
@@ -7247,13 +7318,13 @@ async function hydrateTorreListaFotosDisc(container) {
     try {
       const o = await leerFotoIDB(key);
       if (!o || !o.data) continue;
-      const faseEl = disc.querySelector('.torre-lista-fase-centro');
+      const emojiEl = disc.querySelector('.torre-lista-cesta-emoji');
       const img = document.createElement('img');
       img.className = 'torre-lista-disc-img';
       img.src = o.data;
       img.alt = '';
       disc.insertBefore(img, disc.firstChild);
-      if (faseEl) faseEl.style.display = 'none';
+      if (emojiEl) emojiEl.style.display = 'none';
     } catch (_) { /* sin foto en IDB */ }
   }
 }
@@ -7314,13 +7385,13 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const diasT = DIAS_COSECHA[dat.variedad] || 50;
     const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
 
-    /** Etiqueta fase cultivada (P/V/M/C) — legible y sobria, sin emoji decorativos */
-    let fill, stroke, phaseTag;
-    if (!dat.variedad)            { fill='#f8fafc'; stroke='#cbd5e1'; phaseTag=''; }
-    else if (est==='plantula')    { fill='#eff6ff'; stroke='#2563eb'; phaseTag='P'; }
-    else if (est==='crecimiento') { fill='#f0fdf4'; stroke='#15803d'; phaseTag='V'; }
-    else if (est==='madurez')     { fill='#fffbeb'; stroke='#b45309'; phaseTag='M'; }
-    else                          { fill='#fef2f2'; stroke='#b91c1c'; phaseTag='C'; }
+    /** Icono encima de la cesta según etapa de crecimiento (🌱 🌿 🥬 ✂️) */
+    let fill, stroke, phaseEmoji;
+    if (!dat.variedad)            { fill='#f8fafc'; stroke='#cbd5e1'; phaseEmoji=''; }
+    else if (est==='plantula')    { fill='#eff6ff'; stroke='#2563eb'; phaseEmoji=getEmoji(est); }
+    else if (est==='crecimiento') { fill='#f0fdf4'; stroke='#15803d'; phaseEmoji=getEmoji(est); }
+    else if (est==='madurez')     { fill='#fffbeb'; stroke='#b45309'; phaseEmoji=getEmoji(est); }
+    else                          { fill='#fef2f2'; stroke='#b91c1c'; phaseEmoji=getEmoji(est); }
 
     const ang = (Math.PI * 2 * (c / numCestas)) + phase;
     const z = (Math.sin(ang) + 1) / 2;
@@ -7332,7 +7403,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const fotos = (dat.fotos || []).filter(f => f && f.data);
     const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
 
-    baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, phaseTag, pct, est, dias, ultimaFoto });
+    baskets.push({ n, c, cx2, cy2, z, scale, opacity, fill, stroke, phaseEmoji, pct, est, dias, ultimaFoto });
   }
 
   let out = '';
@@ -7392,13 +7463,13 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
         fill="none" stroke="${b.stroke}" stroke-width="${(2.0*b.scale).toFixed(1)}" stroke-linecap="round" opacity="0.55"/>`;
     }
 
-    if (b.phaseTag) {
-      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 5).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(9*b.scale).toFixed(1)}" font-weight="800" fill="${b.stroke}" text-anchor="middle" opacity="0.9">${b.phaseTag}</text>`;
+    if (b.phaseEmoji) {
+      out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 - r - 4).toFixed(1)}" font-size="${(14*b.scale).toFixed(1)}" text-anchor="middle" opacity="0.95">${b.phaseEmoji}</text>`;
     } else if (!b.ultimaFoto?.data) {
       out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + 3.5).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${(12*b.scale).toFixed(1)}" font-weight="600" text-anchor="middle" fill="#cbd5e1">·</text>`;
     }
 
-    if (b.dias && b.dias > 0 && b.phaseTag) {
+    if (b.dias && b.dias > 0 && b.phaseEmoji) {
       out += `<text x="${b.cx2.toFixed(1)}" y="${(b.cy2 + r + 11).toFixed(1)}" font-family="Inconsolata,monospace"
         font-size="${(8*b.scale).toFixed(1)}" font-weight="700" fill="${b.stroke}" text-anchor="middle">${b.dias}d</text>`;
     } else {
@@ -7746,12 +7817,15 @@ function renderTablaVariedades() {
       'align-items:center">' +
       '<span style="font-size:10px;font-weight:800;color:#6b7280">' + (p.n+1) + '·' + (p.ci+1) + '</span>' +
       '<div style="min-width:0">' +
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0">' +
+        '<span style="flex-shrink:0;line-height:0" aria-hidden="true">' + cultivoEmojiHtml(cultRow, 1.4) + '</span>' +
+        '<div style="min-width:0;flex:1">' +
         '<div style="font-size:12px;font-weight:700;color:#111827;white-space:nowrap;' +
           'overflow:hidden;text-overflow:ellipsis">' + escHtmlUi(cultivoNombreLista(cultRow, p.variedad)) + '</div>' +
         (p.pct !== null ? '<div style="height:3px;background:#e5e7eb;border-radius:2px;margin-top:3px">' +
           '<div style="height:100%;width:' + barW + '%;background:' + barColor + ';border-radius:2px"></div>' +
           '</div>' : '') +
-      '</div>' +
+        '</div></div></div>' +
       '<span style="font-size:11px;color:#374151;text-align:center">' + diasText + '</span>' +
       '<span style="font-size:10px;font-weight:700;color:' + barColor + ';' +
         'background:' + barColor + '15;border-radius:6px;padding:2px 6px;text-align:center">' + p.estado + '</span>' +
@@ -7784,7 +7858,7 @@ function poblarTorreAssignSelect() {
     cultivos.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.nombre;
-      opt.innerHTML = escOptionHtml(cultivoNombreLista(c, c.nombre));
+      opt.innerHTML = cultivoEmojiHtml(c, 1.05) + ' ' + escOptionHtml(cultivoNombreLista(c, c.nombre));
       og.appendChild(opt);
     });
     sel.appendChild(og);
@@ -8458,10 +8532,13 @@ function bindTorreCestas(wrap, opts = {}) {
         ].filter(Boolean).join(' · ');
 
         const cultTip = dat.variedad ? getCultivoDB(dat.variedad) : null;
+        const iconTip = dat.variedad
+          ? '<span style="flex-shrink:0;line-height:0;margin-right:8px" aria-hidden="true">' + cultivoEmojiHtml(cultTip, 1.5) + '</span>'
+          : '';
         const nomTip = cultivoNombreLista(cultTip, dat.variedad);
         showTip(
-          '<div style="margin-bottom:4px;font-weight:900;font-family:var(--font-display);font-size:13px;min-width:0">' +
-          escHtmlUi(nomTip) + '</div>' +
+          '<div style="display:flex;align-items:center;margin-bottom:4px">' + iconTip +
+          '<div style="font-weight:900;font-family:var(--font-display);font-size:13px;min-width:0">' + escHtmlUi(nomTip) + '</div></div>' +
           (meta ? `<div style="opacity:0.9">${meta}</div>` : `<div style="opacity:0.9">Toca para editar</div>`),
           ev.clientX, ev.clientY
         );
@@ -8622,7 +8699,8 @@ function renderCompatGrid() {
       '<div style="background:' + g.color + '18;border:1.5px solid ' + g.color + '55;' +
       'border-radius:12px;padding:10px 12px;margin-bottom:8px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">' +
-          '<span style="min-width:0;font-family:var(--font-display);font-size:13px;font-weight:800;color:' + g.color + '">' +
+          '<span style="display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--font-display);font-size:13px;font-weight:800;color:' + g.color + '">' +
+            '<span style="flex-shrink:0;line-height:0;font-size:22px" aria-hidden="true">' + (GRUPO_EMOJI_REP[key] || '🌱') + '</span>' +
             g.nombre + '</span>' +
           '<span style="font-size:10px;background:' + g.color + '22;border-radius:20px;padding:2px 8px;' +
             'color:' + g.color + ';font-weight:700">' + unicas.length + ' var.</span>' +
@@ -10616,7 +10694,9 @@ function showCompatInfo() {
   if (cultivo) {
     const ecOk  = '#15803d';
     const dif   = { fácil:'🟢 Fácil', media:'🟡 Media', difícil:'🔴 Avanzado' };
-    html += '<div style="margin-bottom:8px">';
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">';
+    html += '<span style="flex-shrink:0;line-height:0;margin-top:2px;font-size:2.35rem" aria-hidden="true">' + cultivoEmoji(cultivo) + '</span>';
+    html += '<div style="flex:1;min-width:0">';
     html += '<div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:#111827;margin-bottom:8px">' +
       escHtmlUi(cultivoNombreLista(cultivo, variedad)) + '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
@@ -10644,7 +10724,7 @@ function showCompatInfo() {
           ' · pH ' + datos.ph[0] + '–' + datos.ph[1] + ' · ~' + datos.dias + 'd</div>';
       });
     }
-    html += '</div>';
+    html += '</div></div>';
   }
 
   // Compatibilidad con otros cultivos en la misma torre
@@ -11340,7 +11420,7 @@ function poblarSelectVariedades() {
     cultivos.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.nombre;
-      opt.innerHTML = escOptionHtml(cultivoNombreLista(c, c.nombre));
+      opt.innerHTML = cultivoEmojiHtml(c, 1.05) + ' ' + escOptionHtml(cultivoNombreLista(c, c.nombre));
       og.appendChild(opt);
     });
     sel.appendChild(og);
@@ -14483,6 +14563,7 @@ const REF_CULTIVOS_EC_PH = [
 function buildHtmlTablaEcPh() {
   const rows = REF_CULTIVOS_EC_PH.map(r => `
     <tr>
+      <td class="consejo-ecph-icon-cell" aria-hidden="true">${refEcPhRowEmojiHtml(r)}</td>
       <td>${meteoEscHtml(r.cultivo)}</td>
       <td>${meteoEscHtml(r.ec)}</td>
       <td>${meteoEscHtml(r.ph)}</td>
@@ -14498,6 +14579,7 @@ function buildHtmlTablaEcPh() {
       </div>
       <table class="consejo-ecph-table">
         <thead><tr>
+          <th class="consejo-ecph-icon-cell" scope="col"><span class="visually-hidden">Icono tipo</span></th>
           <th>Cultivo</th>
           <th>EC µS/cm</th>
           <th>pH</th>
@@ -17350,6 +17432,7 @@ function renderSetupPlantasGrid() {
       (sel ? '#16a34a' : '#e5e7eb') + ';border-radius:14px;padding:14px 10px;' +
       'text-align:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent;' +
       'font:inherit;color:inherit;appearance:none;-webkit-appearance:none;margin:0;box-sizing:border-box">' +
+      grupoEmojiHtml(g.key) +
       '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' +
         (sel ? '#15803d' : '#374151') + ';display:block">' + g.label + '</span>' +
       '<span style="font-size:10px;color:#6b7280;margin-top:3px;display:block">' + g.desc + '</span>' +
